@@ -38,7 +38,7 @@ meta_asgard_p2_49 <- meta_asgard_p2[rownames(asgard_filtered_49asvs2), ]
 # Section 2: ヒートマップの作成 / Generate heatmaps
 # ==============================================================================
 
-pdf(file = here::here("output", "ASGARD_hm_processing_5000over.pdf"),
+pdf(file = here::here("output", "heatmaps", "ASGARD_hm_processing_5000over.pdf"),
     width = 20, height = 20)
 
 # h3: 全78サンプル、フィルターサイズ色付き / Full 78-sample heatmap coloured by filter size

@@ -140,8 +140,10 @@ asgard_dbrda_merged_p$filter <- factor(
 clusnum_p_db <- clusnum_p[!names(clusnum_p) %in% c("BOX_6_6", "BOX_6_7", "BOX_6_26")]
 clusnum_p_db <- factor(clusnum_p_db, levels = c("1", "2", "3", "4")) # length 75
 
+pdf(file = here::here("output", "dbrda", "dbrda_ordination.pdf"), width = 10, height = 8)
+
 # ggplot2 で db-RDA を描画 / Plot db-RDA in ggplot2
-ggplot() +
+print(ggplot() +
   geom_point(data = asgard_dbrda_merged_p,
              aes(x = MDS1, y = MDS2, color = clusnum_p_db, size = `NO3(uM)`)) +
   geom_segment(data = asgard_dbrda_vectors_p,
@@ -152,7 +154,7 @@ ggplot() +
             aes(x = CAP1, y = CAP2, label = Variable),
             vjust = -0.5, hjust = 0.5, size = 5) +
   labs(x = "MDS1", y = "MDS2", color = "cluster") +
-  theme_minimal()
+  theme_minimal())
 
 # ==============================================================================
 # Section 6: 環境変数の散布図 (塩分 vs 温度 / NO3)
@@ -180,5 +182,7 @@ plot(x   = a_env$salinity,
      cex = 1.5,
      xlab = "Salinity",
      ylab = "NO3 (µM)")
+
+dev.off()
 
 message("06_dbrda.R: done. asgard_dbrda_merged_p (75 samples) and ANOVA results ready.")

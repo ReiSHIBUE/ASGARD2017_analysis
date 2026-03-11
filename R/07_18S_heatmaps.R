@@ -82,7 +82,7 @@ num_cols_phylum <- sapply(meta_asgard_p_euk_phylum, is.numeric)
 num_df_phylum   <- meta_asgard_p_euk_phylum[, num_cols_phylum]
 
 # 18S class のboxplots / Boxplots for 18S class-level data
-pdf(file = here::here("output", "18Sclass_boxplots_processing.pdf"))
+pdf(file = here::here("output", "boxplots", "18Sclass_boxplots_processing.pdf"))
 
 for (var in colnames(num_df_class)) {
   gg <- ggplot(num_df_class, aes(x = euk_clusnum_p, y = .data[[var]])) +
@@ -96,7 +96,7 @@ for (var in colnames(num_df_class)) {
 dev.off()
 
 # 18S phylum のboxplots / Boxplots for 18S phylum-level data
-pdf(file = here::here("output", "18Sphylum_boxplots_processing.pdf"))
+pdf(file = here::here("output", "boxplots", "18Sphylum_boxplots_processing.pdf"))
 
 for (var in colnames(num_df_phylum)) {
   gg <- ggplot(num_df_phylum, aes(x = euk_clusnum_p, y = .data[[var]])) +
@@ -130,7 +130,7 @@ sample_rgb4 <- sample_rgb3[-c(36, 38, 41, 73)] # 74 colours
 # 16S heatmap を74サンプルで再描画 / Replot 16S heatmap for 74-sample subset
 asgard_filtered_p_hm3 <- asgard_filtered_p_hm2[rownames(asgard_euk_class_hm_filtered), ]
 
-pdf(file = here::here("output", "ASGARD_hm_processing_18S.pdf"), width = 20, height = 20)
+pdf(file = here::here("output", "heatmaps", "ASGARD_hm_processing_18S.pdf"), width = 20, height = 20)
 
 # h3_74: 16S heatmap for 74 samples aligned to 18S data
 h3_74 <- heatmap.2(

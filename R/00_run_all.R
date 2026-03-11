@@ -14,6 +14,12 @@
 
 library(here)
 
+# Create output subdirectories / 出力サブディレクトリを作成
+for (d in c("output/heatmaps", "output/maps", "output/ternary",
+            "output/beta_diversity", "output/dbrda", "output/boxplots")) {
+  dir.create(here(d), showWarnings = FALSE, recursive = TRUE)
+}
+
 scripts <- c(
   "R/00_setup.R",
   "R/01_data_prep.R",

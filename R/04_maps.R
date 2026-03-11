@@ -64,7 +64,7 @@ a <- a %>% filter(Sample != "BOX_6_26") # 77*48
 legend_table <- a[, c("ID", "side")]
 print(legend_table)
 
-pdf(here::here("output", "processing_map.pdf"), width = 20, height = 20)
+pdf(here::here("output", "maps", "processing_map.pdf"), width = 20, height = 20)
 
 # クラスター × 水深で分割 / Faceted by depth and cluster
 map_plot_3 <- ggmap(mapz) +
@@ -110,7 +110,7 @@ esv <- asgard_processing_ggmap %>%
 esv_zero_only <- asgard_processing_ggmap %>%
   select(lat, lon, filter, any_of(zero_cols)) # 78*52
 
-pdf(here::here("output", "maps_pa.pdf"), width = 8, height = 6)
+pdf(here::here("output", "maps", "maps_pa.pdf"), width = 8, height = 6)
 
 asv_cols <- colnames(esv_zero_only)[4:ncol(esv_zero_only)]
 

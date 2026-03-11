@@ -5,7 +5,7 @@
 *.Rproj
 
 # Output PDFs (generated at runtime) / 実行時に生成されるPDF
-output/*.pdf
+output/**/*.pdf
 
 # macOS system files / macOS システムファイル
 .DS_Store

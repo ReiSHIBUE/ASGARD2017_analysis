@@ -73,7 +73,7 @@ esv_asgard_mat <- as.matrix(esv_asgard_filt)
 # 行サイドカラーを共通サンプル順に揃える / Align row colours to common sample order
 sample_rgb_esv <- sample_rgb4[common_esv_samples]
 
-pdf(file = here::here("output", "ASGARD_hm_processing_esv_relabund.pdf"),
+pdf(file = here::here("output", "heatmaps", "ASGARD_hm_processing_esv_relabund.pdf"),
     width = 20, height = 20)
 
 h11 <- heatmap.2(

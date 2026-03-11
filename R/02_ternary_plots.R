@@ -55,7 +55,7 @@ ternary_prop_color$dominant <- factor(
 )
 
 # 三角図を描画 / Draw ternary diagram — 81 samples
-ggtern(data = ternary_prop_color,
+p1 <- ggtern(data = ternary_prop_color,
        aes(x = `0.2 µm`, y = `3 µm`, z = `20 µm`, color = dominant)) +
   geom_point(alpha = 0.6, size = 2) +
   scale_color_manual(values = c(`0.2 µm` = "red", `3 µm` = "green", `20 µm` = "blue")) +
@@ -101,7 +101,7 @@ ternary_prop_color2$dominant <- factor(
   levels = c("0.2 µm", "3 µm", "20 µm")
 )
 
-ggtern(data = ternary_prop_color2,
+p2 <- ggtern(data = ternary_prop_color2,
        aes(x = `0.2 µm`, y = `3 µm`, z = `20 µm`, color = dominant)) +
   geom_point(alpha = 0.6, size = 2) +
   scale_color_manual(values = c(`0.2 µm` = "red", `3 µm` = "green", `20 µm` = "blue")) +
@@ -109,6 +109,12 @@ ggtern(data = ternary_prop_color2,
   theme_bw() +
   theme_showarrows() +
   theme_rotate(-90)
+
+# PDFに保存 / Save both ternary plots to PDF
+pdf(file = here::here("output", "ternary", "ternary_plots.pdf"), width = 8, height = 7)
+print(p1)
+print(p2)
+dev.off()
 
 # ==============================================================================
 # Section 3: ヒートマップ用カラーベクトル / Colour vectors for heatmaps

@@ -50,6 +50,7 @@ asgard_braymat_p <- vegdist(asgard_beta_p, method = "bray")
 asgard_jacmat_p  <- vegdist(asgard_beta_p, method = "jaccard")
 
 # Bray-Curtis 距離のヒートマップ (pheatmap) / Bray-Curtis distance heatmap
+pdf(file = here::here("output", "heatmaps", "bray_distance_heatmap.pdf"), width = 12, height = 10)
 pheatmap(
   asgard_braymat_p,
   clustering_method = "ward",
@@ -57,6 +58,7 @@ pheatmap(
   main  = "Bray-Curtis Distance Heatmap",
   border_color = NA
 )
+dev.off()
 
 # ==============================================================================
 # Section 2: PCoA 計算 / Perform PCoA (principal coordinates analysis)
@@ -116,7 +118,7 @@ rsc_p       <- c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3")
 sample_rgb3 <- rsc_p[clusnum_p]
 clusnum_p_bp <- factor(clusnum_p, levels = c("1", "2", "3", "4"))
 
-pdf(file = here::here("output", "asgard_boxplots_processing.pdf"))
+pdf(file = here::here("output", "beta_diversity", "asgard_boxplots_processing.pdf"))
 
 # PCoA散布図 / PCoA scatter plot coloured by cluster
 plot(asgard_pcoa_df_p$PCoA1_Bray,
