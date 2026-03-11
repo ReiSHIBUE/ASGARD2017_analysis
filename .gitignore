@@ -1,0 +1,11 @@
+# R artifacts / R生成ファイル
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# Output PDFs (generated at runtime) / 実行時に生成されるPDF
+output/*.pdf
+
+# macOS system files / macOS システムファイル
+.DS_Store
