@@ -5,22 +5,17 @@
 ### Run this script to execute the full pipeline in sequence.
 ### このスクリプトを実行すると、全パイプラインが順番に実行されます。
 ###
-### BEFORE RUNNING: the following objects must already exist in your R session
-### (loaded by your upstream de novo / ODV processing script):
-###   - seqtab_16Sprop
-###   - seqtab_16Smat
-###   - seqtab_16Spropcol_mra
-###   - seqtab_filt
-###   - shorternames
-###   - meta_denovo_2
-###
 ### Usage / 使い方:
 ###   setwd("~/Desktop/ASGARD2017_analysis")
 ###   source("R/00_run_all.R")
+###
+### 00_setup.R loads all raw RDS files and builds upstream objects automatically.
+### 00_setup.R がRDSファイルを読み込み、上流オブジェクトを自動的に構築します。
 
 library(here)
 
 scripts <- c(
+  "R/00_setup.R",
   "R/01_data_prep.R",
   "R/02_ternary_plots.R",
   "R/03_heatmaps_16S.R",
