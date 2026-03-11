@@ -1,6 +1,6 @@
-# 🌊 ASGARD2017 Processing Site Analysis
+# 🌊 ASGARD2017 Analysis
 
-R pipeline for 16S/18S amplicon analysis of microbial communities sampled across processing stations during the ASGARD 2017 cruise. Analyzes size-fractionated samples (0.2, 3, and 20 µm filters) to characterize free-living vs. particle-associated prokaryotic and eukaryotic communities.
+R pipeline for 16S/18S amplicon analysis of microbial communities sampled during the ASGARD 2017 cruise. Two parallel pipelines analyze **processing stations** (3 filter size fractions) and **survey stations** (0.2 µm only).
 
 ## 🔭 Overview
 
@@ -11,6 +11,8 @@ The pipeline takes DADA2-processed ASV tables and sample metadata as input and p
 - 🗺️ Geographic maps of sample clusters and particle-associated taxa
 - 📐 Beta diversity ordination (PCoA) and constrained ordination (db-RDA)
 - 📦 Boxplots of environmental variables by microbial community cluster
+- 🌿 Alpha diversity (Shannon, Simpson, Chao1) and taxonomy visualizations
+- 🕸️ ASV co-occurrence networks (Spearman correlation)
 
 ## 📦 Requirements
 
@@ -18,47 +20,66 @@ The pipeline takes DADA2-processed ASV tables and sample metadata as input and p
 ```r
 install.packages(c("tidyverse", "vegan", "gplots", "viridis", "ggtern",
                    "ggmap", "ggrepel", "pheatmap", "RColorBrewer",
-                   "janitor", "scales", "here"))
+                   "janitor", "scales", "here", "igraph", "Rtsne"))
 ```
 
-🗺️ Maps require a [Stadia Maps](https://stadiamaps.com/) API key:
-```r
-ggmap::register_stadiamaps("YOUR_API_KEY")
+🗺️ Maps require a [Stadia Maps](https://stadiamaps.com/) API key stored in `.Renviron`:
+```
+STADIA_MAPS_KEY=your_key_here
 ```
 
 ## 🚀 Usage
 
-Set your working directory to the repo root and source the master script:
-
+Run both pipelines:
 ```r
 setwd("~/Desktop/ASGARD2017_analysis")
 source("R/00_run_all.R")
 ```
 
-📄 Output PDFs are written to `output/`.
+Run only processing or survey:
+```r
+source("R/00_run_processing.R")
+source("R/00_run_survey.R")
+```
 
-To re-run individual scripts, earlier scripts must have already been sourced in the same R session (objects are passed via the global environment):
+📄 Output PDFs are written to `output/` and `output/survey/`.
 
+To re-run individual scripts, earlier scripts must have already been sourced in the same R session:
 ```r
 library(here)
 source(here("R/00_setup.R"))
-source(here("R/01_data_prep.R"))
-source(here("R/03_heatmaps_16S.R"))  # skipping 02 would fail — objects missing
+source(here("R/P01_data_prep.R"))
+source(here("R/P03_heatmaps_16S.R"))  # skipping P02 would fail — objects missing
 ```
 
-## 🧬 Pipeline Scripts
+## 🧬 Processing Pipeline (P01–P08)
 
 | Script | Description | Output |
 |--------|-------------|--------|
-| `00_setup.R` | 📥 Loads raw RDS files, subsets to 16S prokaryote ASVs, filters to ≥1000-read samples, builds taxonomy labels | — |
-| `01_data_prep.R` | 🔧 Filters to ASGARD processing stations, applies abundance cutoffs, creates 81- and 78-sample subsets | — |
-| `02_ternary_plots.R` | 🔺 Plots ASV distributions across filter fractions; identifies particle-associated ASVs (`zero_cols`) | ternary plots (displayed) |
-| `03_heatmaps_16S.R` | 🔥 Bray-Curtis / Ward hierarchical clustering heatmaps; assigns samples to 4 clusters (`clusnum_p`) | `ASGARD_hm_processing_5000over.pdf` |
-| `04_maps.R` | 🗺️ Geographic maps of sample clusters and per-ESV presence/absence | `processing_map.pdf`, `maps_pa.pdf` |
-| `05_beta_diversity_pcoa.R` | 📐 PCoA (Bray-Curtis, Jaccard, Euclidean); boxplots of all variables by cluster | `asgard_boxplots_processing.pdf` |
-| `06_dbrda.R` | 🌡️ Distance-based RDA constrained by temp, salinity, DO, NO₃, fluorescence | — |
-| `07_18S_heatmaps.R` | 🦠 18S eukaryote class- and phylum-level heatmaps and boxplots by cluster | `ASGARD_hm_processing_18S.pdf`, boxplot PDFs |
-| `08_esv_heatmap.R` | 🧫 ESV-level relative abundance heatmap (74 samples shared with 18S) | `ASGARD_hm_processing_esv_relabund.pdf` |
+| `00_setup.R` | 📥 Loads raw RDS files, subsets to 16S prokaryote ASVs, builds taxonomy labels | — |
+| `P01_data_prep.R` | 🔧 Filters to processing stations, applies abundance cutoffs, creates 81- and 78-sample subsets | — |
+| `P02_ternary_plots.R` | 🔺 ASV distributions across filter fractions; identifies particle-associated ASVs | `output/ternary/` |
+| `P03_heatmaps_16S.R` | 🔥 Bray-Curtis / Ward clustering heatmaps; assigns samples to 4 clusters | `output/heatmaps/` |
+| `P04_maps.R` | 🗺️ Geographic maps of clusters and per-ESV presence/absence | `output/maps/` |
+| `P05_beta_diversity_pcoa.R` | 📐 PCoA ordination + boxplots by cluster | `output/beta_diversity/` |
+| `P06_dbrda.R` | 🌡️ db-RDA constrained by temp, salinity, DO, NO₃, fluorescence | `output/dbrda/` |
+| `P07_18S_heatmaps.R` | 🦠 18S eukaryote class/phylum heatmaps and boxplots | `output/heatmaps/` |
+| `P08_esv_heatmap.R` | 🧫 ESV-level relative abundance heatmap (74 samples) | `output/heatmaps/` |
+
+## 🔬 Survey Pipeline (S01–S10)
+
+| Script | Description | Output |
+|--------|-------------|--------|
+| `S01_data_prep.R` | 🔧 Filters to survey stations (181 samples, 0.2 µm only) | — |
+| `S02_heatmaps_16S.R` | 🔥 Clustering heatmap (5 row clusters, 8 col clusters) | `output/survey/heatmaps/` |
+| `S03_seq_depth.R` | 📊 Sequencing depth dot plot + rarefaction curves | `output/survey/alpha_diversity/` |
+| `S04_beta_diversity_pcoa.R` | 📐 PCoA ordination (Bray/Jaccard/Euclidean) + boxplots | `output/survey/beta_diversity/` |
+| `S05_dbrda.R` | 🌡️ db-RDA constrained by temp, salinity, DO, NO₃, fluorescence | `output/survey/dbrda/` |
+| `S06_maps.R` | 🗺️ Geographic maps of survey station clusters | `output/survey/maps/` |
+| `S07_alpha_diversity.R` | 🌿 Shannon, Simpson, Chao1 + Kruskal-Wallis tests | `output/survey/alpha_diversity/` |
+| `S08_taxonomy.R` | 🧬 Stacked bar charts by Order + waffle charts by cluster | `output/survey/taxonomy/` |
+| `S09_network.R` | 🕸️ Co-occurrence network (Spearman \|r\| > 0.6) + tSNE layout | `output/survey/network/` |
+| `S10_permanova.R` | 📏 PERMANOVA, PERMDISP, Mantel tests | `output/survey/beta_diversity/` |
 
 ## 💾 Data
 
@@ -72,25 +93,21 @@ Raw data files are in `data/raw/` (RDS format, from DADA2 + SILVA v132 taxonomy)
 | `names_list.rds` | 🌿 Full SILVA taxonomic strings |
 | `bootout_edit.rds` | 📊 Bootstrap confidence values per taxonomic rank |
 
-Pre-computed 18S relative abundance tables (TSV) used by scripts 07–08 are in `data/`.
+Pre-computed 18S relative abundance tables (TSV) used by P07–P08 are in `data/`.
 
 ## 🗂️ Repository Structure
 
 ```
 R/
-  00_setup.R           # 📥 environment setup
-  00_run_all.R         # 🚀 master run script
-  01_data_prep.R       # 🔧 filtering and subsetting
-  02_ternary_plots.R   # 🔺 size-fraction ternary diagrams
-  03_heatmaps_16S.R    # 🔥 16S hierarchical clustering
-  04_maps.R            # 🗺️ geographic maps
-  05_beta_diversity_pcoa.R
-  06_dbrda.R
-  07_18S_heatmaps.R
-  08_esv_heatmap.R
+  00_setup.R               # 📥 shared environment setup
+  00_run_all.R             # 🚀 master run script (both pipelines)
+  00_run_processing.R      # 🚀 processing pipeline runner
+  00_run_survey.R          # 🚀 survey pipeline runner
+  P01–P08_*.R              # 🔬 processing pipeline scripts
+  S01–S10_*.R              # 🔬 survey pipeline scripts
 data/
-  raw/                 # 💾 input RDS files
-  *.tsv                # 🦠 18S relative abundance tables
-output/                # 📄 generated PDFs (git-ignored)
-archive/               # 🗃️ original monolithic script (ASGARD2017_p.R)
+  raw/                     # 💾 input RDS files
+  *.tsv                    # 🦠 18S relative abundance tables
+output/                    # 📄 processing PDFs (git-ignored)
+  survey/                  # 📄 survey PDFs (git-ignored)
 ```

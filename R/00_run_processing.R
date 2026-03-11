@@ -22,14 +22,14 @@ for (d in c("output/heatmaps", "output/maps", "output/ternary",
 
 scripts <- c(
   "R/00_setup.R",
-  "R/01_data_prep.R",
-  "R/02_ternary_plots.R",
-  "R/03_heatmaps_16S.R",
-  "R/04_maps.R",
-  "R/05_beta_diversity_pcoa.R",
-  "R/06_dbrda.R",
-  "R/07_18S_heatmaps.R",
-  "R/08_esv_heatmap.R"
+  "R/P01_data_prep.R",
+  "R/P02_ternary_plots.R",
+  "R/P03_heatmaps_16S.R",
+  "R/P04_maps.R",
+  "R/P05_beta_diversity_pcoa.R",
+  "R/P06_dbrda.R",
+  "R/P07_18S_heatmaps.R",
+  "R/P08_esv_heatmap.R"
 )
 
 for (script in scripts) {
