@@ -11,5 +11,8 @@ output/**/*.txt
 # macOS system files / macOS システムファイル
 .DS_Store
 
+# R default plot output / Rデフォルトプロット出力
+Rplots.pdf
+
 # Secrets / 機密情報
 .Renviron

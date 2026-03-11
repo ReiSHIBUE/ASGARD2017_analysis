@@ -19,10 +19,6 @@
 ###
 ### OUTPUT:
 ###   output/survey/dbrda/ASGARD_dbrda_survey.pdf
-###
-### NOTE: envfit code from original script (line 1344) referenced asgard_pcoa_bray_cc
-###   which was never defined — that block is omitted here. Use capscale biplot
-###   arrows for equivalent visualisation.
 
 library(vegan)
 library(tidyverse)

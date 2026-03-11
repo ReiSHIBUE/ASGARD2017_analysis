@@ -36,16 +36,6 @@ asgard_jacmat_p  <- vegdist(asgard_beta_p, method = "jaccard")
 # Section 2: 環境変数の選択とスケーリング / Select and scale environmental variables
 # ==============================================================================
 
-# NAの数を確認 / Check NA counts per env variable
-for (var in c("salinity", "temp", "depth_m", "DO", "POC (ug/L)", "chl (ug/l)",
-              "PON (ug/L)", "SPM (ug/L)", "FlECO-AFL(mg/m^3)", "chl depth",
-              "phaeo (ug/l)", "PO4(uM)", "Sil(uM)", "NO2(uM)", "NH4(uM)",
-              "N+N (umol/L)", "NO3(uM)")) {
-  na_count <- sum(is.na(asgard_pcoa_df_p[[var]]))
-  cat(var, ": NA =", na_count, "\n")
-}
-# POC+PON+SPM等: NA=27, NO3: NA=3, DO+temp+sal+FlECO: NA=1, depth: NA=0
-
 # PCoAスコア列 (標準化しない) / PCoA score columns (do not scale)
 asgard_pcoa_df_sub1_p <- asgard_pcoa_df_p %>%
   select(c("Sample", "PCoA1_Bray", "PCoA2_Bray", "PCoA1_Jaccard",
@@ -62,7 +52,7 @@ asgard_pcoa_df_sub_p <- cbind(asgard_pcoa_df_sub1_p, asgard_pcoa_df_sub2_p) # 78
 # Section 3: complete cases のみ使用 / Keep only rows with complete env data
 # ==============================================================================
 
-asgard_filtered_p_frt <- asgard_filtered_p_hm2^.25  # Bug fix: use matrix form (no Sample col)
+asgard_filtered_p_frt <- asgard_filtered_p_hm2^.25
 
 asgard_complete_cases_p <- complete.cases(asgard_pcoa_df_sub_p)
 asgard_pcoa_cc_p <- asgard_pcoa_df_sub_p[asgard_complete_cases_p, ] # 75*12

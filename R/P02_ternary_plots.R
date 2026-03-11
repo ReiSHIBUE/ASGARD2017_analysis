@@ -17,7 +17,7 @@
 ###   asv_names_0.2        - ASVs dominant in 0.2 µm fraction
 ###   asv_names_3          - ASVs dominant in 3 µm fraction
 ###   asv_names_20         - ASVs dominant in 20 µm fraction
-###   zero_cols            - ASV names with zero abundance in 0.2 µm samples  [Bug #3 fix]
+###   zero_cols            - ASV names with zero abundance in 0.2 µm samples
 
 # ggtern のインストールと読み込み / Install and load ggtern
 if (!requireNamespace("ggtern", quietly = TRUE)) install.packages("ggtern")
@@ -134,8 +134,6 @@ sample_rgb2 <- filter_colors[as.character(meta_asgard_p2$filter)] # length 78
 # ==============================================================================
 # Section 4: zero_cols — 0.2 µm サンプルで全て0のASV列を特定
 # Identify ASV columns that are all-zero in the 0.2 µm fraction
-# Bug #3 fix: zero_cols was originally computed at line 797 (after its first use at line 338)
-# バグ修正: zero_colsは元のコードでは使用箇所より後で定義されていた
 # ==============================================================================
 
 # 地図用dfを先に作っておく (mapは04_maps.Rで描画) / Prep the map df (plotting done in 04)

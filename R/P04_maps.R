@@ -10,7 +10,7 @@
 ###   zero_cols                - ASV names absent in 0.2 µm fraction
 ###
 ### PRODUCES:
-###   mapz                     - ggmap basemap object (Bug #7 fix: defined before first use)
+###   mapz                     - ggmap basemap object
 ###   asgard_processing_ggmap  - map-ready df (78*226)
 ###   esv_zero_only            - 0.2 µm-absent ASVs with lat/lon/filter (78*52)
 ###
@@ -28,9 +28,7 @@ library(ggrepel)
 ggmap::register_stadiamaps(Sys.getenv("STADIA_MAPS_KEY"))
 
 # ==============================================================================
-# Section 1: ベースマップの定義 (Bug #7 fix)
-# Define base map — was originally defined AFTER first use at line 499
-# バグ修正: mapz は元のコードでは初めて使用される行499より後(758行目)で定義されていた
+# Section 1: ベースマップの定義 / Define base map
 # ==============================================================================
 
 asgard_processing_ggmap <- asgard_processing2 %>%
@@ -59,10 +57,6 @@ a$ID <- 1:nrow(a)
 a$cluster <- as.factor(clusnum_p)
 a$depth_type <- factor(a$depth_type, levels = c("surf", "mid", "bottom"))
 a <- a %>% filter(Sample != "BOX_6_26") # 77*48
-
-# 番号とサンプル名の対応表 / ID-to-sample-name lookup
-legend_table <- a[, c("ID", "side")]
-print(legend_table)
 
 pdf(here::here("output", "maps", "processing_map.pdf"), width = 20, height = 20)
 

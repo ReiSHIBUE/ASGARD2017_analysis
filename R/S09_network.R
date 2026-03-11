@@ -15,13 +15,6 @@
 ### OUTPUT:
 ###   output/survey/network/ASGARD_network_survey.pdf
 ###
-### Bug fixes:
-###   - asgard_frtprop used throughout (never ASGARD_ASV_filtered_frt).
-###   - Seasonal network plots from original lines 766-798 are omitted entirely:
-###     those referenced undefined objects (network, network_layout, asv_season)
-###     that belong to a separate seasonal analysis pipeline.
-###   - Standalone geom_point(stat="identity") from original line 1527 omitted.
-###
 ### NOTE: igraph required. tSNE layout requires Rtsne:
 ###   install.packages(c("igraph", "Rtsne"))
 

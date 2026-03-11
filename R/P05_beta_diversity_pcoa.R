@@ -10,17 +10,6 @@
 ###   rsc_p                   - 4-colour palette
 ###   sample_rgb3             - row colours by cluster
 ###
-### NOTE on Survey-level objects (Bug #8):
-###   The original script (lines 682-689) called rowSums() on PCoA dataframes that
-###   contained non-numeric character columns, which causes an error.
-###   Those lines referenced asgard_filtered (survey-level, 181 samples) and
-###   freeliving_no_na / suspended_no_na / particleass_no_na2 — objects that belong
-###   to a separate survey-level script, not the processing-only pipeline.
-###   They are commented out below with an explanation.
-###   バグ修正: PCoAデータフレームに非数値列が含まれておりrowSums()エラーが発生する。
-###   これらはsurveyレベルのオブジェクト(asgard_filtered等)を参照しており、
-###   processingのみのスクリプトでは利用不可のため、コメントアウトする。
-###
 ### PRODUCES:
 ###   asgard_pcoa_df_p      - PCoA + metadata df for 78 processing samples (78*52)
 ###   clusnum_p_bp          - clusnum_p as factor, for boxplots
@@ -34,11 +23,6 @@ library(tidyverse)
 
 # ==============================================================================
 # Section 1: ベータ多様性行列の計算 / Compute beta-diversity distance matrices
-# Bug #4 fix: original used asgard_beta_sinking (=asgard_filtered^.25) then
-#             immediately did asgard_beta = asgard_beta[…], where asgard_beta was
-#             never defined. Fixed to use asgard_filtered_p_hm2^.25 consistently.
-# バグ修正: asgard_beta_sinkingとasgard_betaが混在していた。
-#           asgard_filtered_p_hm2^.25 を一貫して使用する。
 # ==============================================================================
 
 asgard_beta_p <- asgard_filtered_p_hm2^.25
@@ -95,18 +79,6 @@ asgard_pcoa_df_p$filter <- factor(
   asgard_pcoa_df_p$filter,
   levels = c("0.2 µm", "3 µm", "20 µm")
 )
-
-# ==============================================================================
-# NOTE: Survey-level PA boxplots (Bug #8 — commented out)
-# 以下はsurveyレベルの解析コードで、processingのみのスクリプトでは動作しない。
-# asgard_filtered (181 samples), freeliving_no_na, suspended_no_na,
-# particleass_no_na2 などはsurveyスクリプトで定義されるため除外。
-# また、rowSums()をPCoAデータフレーム(非数値列を含む)に適用するとエラーになる。
-#
-# meta_asgard_sinking$pct.sinking   <- rowSums(asgard_sinking_Survey_pcoa)
-# meta_asgard_suspended$pct.suspended <- rowSums(asgard_suspended_Survey_pcoa)
-# meta_asgard_freeliving$pct.freeliving <- rowSums(asgard_freeliving_Survey_pcoa)
-# ==============================================================================
 
 # ==============================================================================
 # Section 4: Boxplots — クラスターごとに各変数を可視化

@@ -15,8 +15,6 @@
 ###
 ### NOTE: requires ggmap (Stadia Maps). API key loaded from .Renviron:
 ###   STADIA_MAPS_KEY=your_key_here
-###   Bug fix: hardcoded API key in original script (line 1267) replaced with
-###   Sys.getenv("STADIA_MAPS_KEY").
 
 library(tidyverse)
 library(ggmap)
