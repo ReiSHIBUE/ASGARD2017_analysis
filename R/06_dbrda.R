@@ -62,7 +62,7 @@ asgard_pcoa_df_sub_p <- cbind(asgard_pcoa_df_sub1_p, asgard_pcoa_df_sub2_p) # 78
 # Section 3: complete cases のみ使用 / Keep only rows with complete env data
 # ==============================================================================
 
-asgard_filtered_p_frt <- asgard_filtered_p2^.25
+asgard_filtered_p_frt <- asgard_filtered_p_hm2^.25  # Bug fix: use matrix form (no Sample col)
 
 asgard_complete_cases_p <- complete.cases(asgard_pcoa_df_sub_p)
 asgard_pcoa_cc_p <- asgard_pcoa_df_sub_p[asgard_complete_cases_p, ] # 75*12
