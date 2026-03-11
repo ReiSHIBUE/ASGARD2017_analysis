@@ -9,3 +9,6 @@ output/*.pdf
 
 # macOS system files / macOS システムファイル
 .DS_Store
+
+# Secrets / 機密情報
+.Renviron

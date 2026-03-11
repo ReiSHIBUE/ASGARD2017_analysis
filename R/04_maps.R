@@ -25,6 +25,8 @@ library(tidyverse)
 library(ggmap)
 library(ggrepel)
 
+ggmap::register_stadiamaps(Sys.getenv("STADIA_MAPS_KEY"))
+
 # ==============================================================================
 # Section 1: ベースマップの定義 (Bug #7 fix)
 # Define base map — was originally defined AFTER first use at line 499
