@@ -1,0 +1,28 @@
+=== PERMANOVA by cluster (adonis2) ===
+Permutation test for adonis under reduced model
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = asgard_braymat ~ factor(clusnum), permutations = 999)
+          Df SumOfSqs      R2      F Pr(>F)    
+Model      4   11.754 0.44847 35.779  0.001 ***
+Residual 176   14.455 0.55153                  
+Total    180   26.209 1.00000                  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+=== PERMDISP (betadisper ANOVA) ===
+Analysis of Variance Table
+
+Response: Distances
+           Df  Sum Sq  Mean Sq F value    Pr(>F)    
+Groups      4 0.23301 0.058253  14.943 1.562e-10 ***
+Residuals 176 0.68613 0.003898                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+=== Mantel tests ===
+sal : r = 0.3869 , p = 0.001 
+temp : r = 0.294 , p = 0.001 
+do : r = 0.1254 , p = 0.003 
+no3 : r = 0.1598 , p = 0.001 
