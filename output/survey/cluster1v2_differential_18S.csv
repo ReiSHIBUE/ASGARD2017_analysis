@@ -1,0 +1,11 @@
+"ESV","Genus","direction","mean_1_pct","mean_2_pct","log2FC","pvalue","padj"
+"ESV_441","Acanthamoeba","Enriched in Cluster 1",152.422,8.683,-4.13,4.08e-05,0.0158
+"ESV_534","Dictyocha","Enriched in Cluster 1",195.407,58.172,-1.75,8.5e-05,0.0165
+"ESV_188","Micromonas","Enriched in Cluster 1",103.673,0.142,-9.51,0.000263,0.017
+"ESV_307","Chrysochromulina","Enriched in Cluster 1",95.441,10.026,-3.25,0.000136,0.017
+"ESV_320","Neoceratium","Enriched in Cluster 1",35.505,0,-18.44,0.000183,0.017
+"ESV_406","Polychytrium","Enriched in Cluster 2",0,61.721,19.24,0.000255,0.017
+"ESV_2","Chaetoceros","Enriched in Cluster 2",319.335,847.433,1.41,0.000808,0.0448
+"ESV_167","Teleaulax","Enriched in Cluster 1",146.268,33.274,-2.14,0.000933,0.0452
+"ESV_275","Syndiniales_Group_I_ge","Enriched in Cluster 1",21.266,1.341,-3.99,0.00115,0.0481
+"ESV_1326","Pteridomonas","Enriched in Cluster 2",1.179,24.204,4.36,0.00124,0.0481
