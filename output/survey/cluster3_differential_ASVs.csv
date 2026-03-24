@@ -1,0 +1,53 @@
+"ASV","enriched_in","mean_3a_pct","mean_3b_pct","log2FC","pvalue","padj"
+"Verrucomicrobiales (100); Rubritaleaceae (100); Persicirhabdus (100); ESV_190","3b (northern/DBO3)",0.738,3.713,2.33,1.37e-07,9.79e-06
+"Flavobacteriales (96); NS9_marine_group (92); NS9_marine_group_ge (92); ESV_238","3b (northern/DBO3)",0.237,1.65,2.8,7.19e-08,9.79e-06
+"Verrucomicrobiales (100); Rubritaleaceae (100); Roseibacillus (99); ESV_59","3b (northern/DBO3)",0,0.368,11.84,2.86e-07,1.37e-05
+"Flavobacteriales (100); NS9_marine_group (94); NS9_marine_group_ge (94); ESV_302","3a (southern/Bering Strait)",1.905,0.099,-4.27,4.46e-07,1.59e-05
+"Flavobacteriales (100); Flavobacteriaceae (100); Polaribacter (94); ESV_7","3a (southern/Bering Strait)",7.476,3.389,-1.14,7.37e-07,2.11e-05
+"Flavobacteriales (100); Flavobacteriaceae (100); Tenacibaculum (59); ESV_48","3b (northern/DBO3)",1.186,3.267,1.46,3.67e-06,6.55e-05
+"Oceanospirillales (100); Nitrincolaceae (100); uncultured (100); ESV_76","3b (northern/DBO3)",0.314,1.61,2.36,2.97e-06,6.55e-05
+"Flavobacteriales (100); NS9_marine_group (100); NS9_marine_group_ge (100); ESV_133","3b (northern/DBO3)",0.29,1.242,2.1,3.37e-06,6.55e-05
+"Flavobacteriales (100); NS9_marine_group (100); NS9_marine_group_ge (100); ESV_266","3b (northern/DBO3)",0.41,1.278,1.64,7.26e-06,0.000104
+"Cellvibrionales (100); Porticoccaceae (100); SAR92_clade (100); ESV_478","3b (northern/DBO3)",0.014,0.413,4.86,6.89e-06,0.000104
+"SAR11_clade (100); Clade_I (100); Clade_Ia (100); ESV_1","3a (southern/Bering Strait)",7.078,2.671,-1.41,8.69e-06,0.000113
+"Flavobacteriales (100); Flavobacteriaceae (100); Ulvibacter (98); ESV_139","3b (northern/DBO3)",0.441,1.43,1.7,1.51e-05,0.000177
+"Mycoplasmatales (8); Mycoplasmataceae (8); uncultured (5); ESV_889","3a (southern/Bering Strait)",1.829,0.026,-6.13,1.61e-05,0.000177
+"Chitinophagales (100); Saprospiraceae (100); uncultured (100); ESV_1166","3b (northern/DBO3)",0.031,0.195,2.64,1.98e-05,0.000203
+"Nitrosococcales (88); Methylophagaceae (88); uncultured (78); ESV_156","3b (northern/DBO3)",0.058,0.516,3.15,2.64e-05,0.000248
+"Opitutales (100); Puniceicoccaceae (100); MB11C04_marine_group (100); ESV_652","3b (northern/DBO3)",0.015,0.283,4.19,2.77e-05,0.000248
+"Sphingobacteriales (100); NS11-12_marine_group (100); NS11-12_marine_group_ge (100); ESV_68","3b (northern/DBO3)",1.467,3.586,1.29,3.28e-05,0.000276
+"SAR11_clade (100); Clade_II (100); Clade_II_ge (100); ESV_119","3a (southern/Bering Strait)",0.911,0.159,-2.52,4.4e-05,0.000349
+"Rhodobacterales (100); Rhodobacteraceae (100); Planktomarina (85); ESV_30","3b (northern/DBO3)",2.537,4.027,0.67,8.92e-05,0.000638
+"Cellvibrionales (100); Halieaceae (100); OM60(NOR5)_clade (50); ESV_544","3b (northern/DBO3)",0.138,1.074,2.96,8.62e-05,0.000638
+"Cellvibrionales (63); Halieaceae (49); Luminiphilus (27); ESV_601","3b (northern/DBO3)",0.027,0.433,4.02,0.000149,0.00101
+"Thiomicrospirales (100); Thioglobaceae (100); SUP05_cluster (100); ESV_10","3a (southern/Bering Strait)",5.645,2.267,-1.32,0.000246,0.00153
+"Flavobacteriales (100); Flavobacteriaceae (100); NS2b_marine_group (100); ESV_148","3b (northern/DBO3)",0.233,0.779,1.74,0.00024,0.00153
+"Gammaproteobacteria_Incertae_Sedis (6); Unknown_Family (6); Candidatus_Carsonella (6); ESV_1088","3a (southern/Bering Strait)",0.396,0.008,-5.55,0.00028,0.00167
+"Flavobacteriales (100); Crocinitomicaceae (100); Fluviicola (100); ESV_210","3b (northern/DBO3)",0.027,0.193,2.8,0.000429,0.00246
+"Cytophagales (100); Cyclobacteriaceae (100); Marinoscillum (100); ESV_217","3b (northern/DBO3)",0.313,0.73,1.22,0.000457,0.00251
+"Nitrosopumilales (100); Nitrosopumilaceae (100); Candidatus_Nitrosopumilus (100); ESV_263","3a (southern/Bering Strait)",0.817,0.113,-2.85,0.000609,0.00322
+"Cellvibrionales (100); Porticoccaceae (100); SAR92_clade (100); ESV_626","3b (northern/DBO3)",0,0.732,12.84,0.000659,0.00327
+"Verrucomicrobiales (100); Rubritaleaceae (100); Roseibacillus (100); ESV_800","3a (southern/Bering Strait)",0.544,0,-12.41,0.000662,0.00327
+"Oceanospirillales (100); Pseudohongiellaceae (100); Pseudohongiella (100); ESV_107","3b (northern/DBO3)",0.66,1.223,0.89,0.00127,0.00606
+"SAR86_clade (100); SAR86_clade_fa (100); SAR86_clade_ge (100); ESV_8","3b (northern/DBO3)",0.658,1.327,1.01,0.00193,0.00888
+"Nitrosopumilales (100); Nitrosopumilaceae (100); Candidatus_Nitrosopumilus (100); ESV_910","3b (northern/DBO3)",0,0.15,10.55,0.00265,0.0115
+"Flavobacteriales (100); Flavobacteriaceae (100); Lutimonas (56); ESV_1019","3b (northern/DBO3)",0,0.131,10.35,0.00265,0.0115
+"Flavobacteriales (100); Cryomorphaceae (100); uncultured (100); ESV_959","3b (northern/DBO3)",0.013,0.077,2.62,0.00282,0.0119
+"Diplorickettsiales (5); Diplorickettsiaceae (5); uncultured (5); ESV_2764","3a (southern/Bering Strait)",0.22,0.008,-4.68,0.00323,0.0132
+"uncultured (100); uncultured_fa (100); uncultured_ge (100); ESV_425","3b (northern/DBO3)",0.099,0.33,1.74,0.00375,0.0149
+"Rhodospirillales (54); Magnetospiraceae (40); uncultured (27); ESV_262","3b (northern/DBO3)",0.167,0.425,1.34,0.00392,0.0151
+"Cellvibrionales (100); Halieaceae (100); OM60(NOR5)_clade (99); ESV_15","3b (northern/DBO3)",0.576,1.275,1.15,0.00444,0.0167
+"Oceanospirillales (100); Nitrincolaceae (100); uncultured (100); ESV_4","3b (northern/DBO3)",10.604,13.297,0.33,0.00459,0.0168
+"Pirellulales (100); Pirellulaceae (100); Blastopirellula (100); ESV_2431","3a (southern/Bering Strait)",0.256,0,-11.32,0.00469,0.0168
+"Betaproteobacteriales (100); Burkholderiaceae (81); RS62_marine_group (51); ESV_288","3b (northern/DBO3)",0.221,0.343,0.64,0.00487,0.017
+"Cytophagales (70); Cyclobacteriaceae (69); uncultured (59); ESV_2022","3b (northern/DBO3)",0.09,0.21,1.22,0.00508,0.0173
+"Rhodobacterales (100); Rhodobacteraceae (100); Ascidiaceihabitans (98); ESV_198","3a (southern/Bering Strait)",1.12,0.477,-1.23,0.00542,0.018
+"Spirochaetales (5); Spirochaetaceae (5); uncultured (5); ESV_1032","3a (southern/Bering Strait)",0.133,0,-10.38,0.00732,0.0233
+"Nostocales (5); Phormidiaceae (4); Trichodesmium_IMS101 (4); ESV_3693","3a (southern/Bering Strait)",0.24,0,-11.23,0.00732,0.0233
+"JGI_0000069-P22 (11); JGI_0000069-P22_fa (11); JGI_0000069-P22_ge (11); ESV_1988","3b (northern/DBO3)",0.201,0.604,1.59,0.00827,0.0257
+"Bacteroidales (100); Marinifilaceae (100); uncultured (100); ESV_4665","3b (northern/DBO3)",0,0.032,8.34,0.0103,0.0313
+"Flavobacteriales (100); Crocinitomicaceae (100); Fluviicola (88); ESV_201","3b (northern/DBO3)",0.692,1.166,0.75,0.0119,0.0355
+"Puniceispirillales (100); SAR116_clade (100); SAR116_clade_ge (100); ESV_457","3a (southern/Bering Strait)",0.64,0.267,-1.26,0.0135,0.0393
+"Alteromonadales (100); Alteromonadaceae (100); Paraglaciecola (100); ESV_38","3a (southern/Bering Strait)",1.196,0.656,-0.87,0.017,0.0487
+"Nitrosococcales (96); Methylophagaceae (96); uncultured (80); ESV_763","3a (southern/Bering Strait)",0.445,0.094,-2.25,0.0178,0.049
+"Bdellovibrionales (100); Bacteriovoracaceae (100); Peredibacter (100); ESV_1747","3b (northern/DBO3)",0.031,0.096,1.65,0.0178,0.049
