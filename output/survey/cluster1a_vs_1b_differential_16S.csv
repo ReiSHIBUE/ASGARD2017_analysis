@@ -1,0 +1,15 @@
+"ASV","direction","mean_1a_pct","mean_1b_pct","log2FC","pvalue","padj"
+"Puniceispirillales (100); SAR116_clade (100); SAR116_clade_ge (100); ESV_94","Enriched in 1a",2.445,0.439,-2.48,0.000312,0.00615
+"OM182_clade (100); OM182_clade_fa (100); OM182_clade_ge (100); ESV_102","Enriched in 1b",0.777,2.689,1.79,0.000392,0.00615
+"Parvibaculales (100); OCS116_clade (100); OCS116_clade_ge (100); ESV_376","Enriched in 1b",0.023,0.771,5.08,0.00022,0.00615
+"Cellvibrionales (100); Porticoccaceae (100); SAR92_clade (100); ESV_58","Enriched in 1b",1.249,4.781,1.94,0.00128,0.0151
+"SAR86_clade (100); SAR86_clade_fa (100); SAR86_clade_ge (100); ESV_8","Enriched in 1a",9.522,0.23,-5.37,0.00275,0.0243
+"Rhodobacterales (100); Rhodobacteraceae (100); Sulfitobacter (99); ESV_26","Enriched in 1b",2.314,11.274,2.28,0.00391,0.0243
+"SAR86_clade (100); SAR86_clade_fa (100); SAR86_clade_ge (100); ESV_37","Enriched in 1a",3.573,0.224,-4,0.00414,0.0243
+"Cellvibrionales (100); Spongiibacteraceae (100); uncultured (91); ESV_174","Enriched in 1b",0.526,1.792,1.77,0.00376,0.0243
+"Flavobacteriales (100); Flavobacteriaceae (100); Formosa (83); ESV_6","Enriched in 1b",0,4.922,15.59,0.00676,0.0289
+"Alteromonadales (100); Alteromonadaceae (100); Paraglaciecola (100); ESV_38","Enriched in 1b",0,0.969,13.24,0.00676,0.0289
+"Cellvibrionales (100); Porticoccaceae (100); SAR92_clade (100); ESV_261","Enriched in 1b",0,1.613,13.98,0.00676,0.0289
+"OM182_clade (100); OM182_clade_fa (100); OM182_clade_ge (100); ESV_314","Enriched in 1a",2.153,0.413,-2.38,0.00823,0.0297
+"Puniceispirillales (100); SAR116_clade (100); SAR116_clade_ge (100); ESV_457","Enriched in 1b",0.042,0.885,4.4,0.0077,0.0297
+"uncultured (53); uncultured_fa (53); uncultured_ge (53); ESV_804","Enriched in 1a",0.466,0,-12.19,0.0117,0.0391
