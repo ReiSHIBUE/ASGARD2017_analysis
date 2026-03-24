@@ -1,0 +1,36 @@
+"ESV","marker","Phylum","Class","Order","Family","Genus","enriched_in","mean_3a_pct","mean_3b_pct","log2FC","pvalue","padj"
+"ESV_85","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Mediophyceae","Thalassiosira","3b (northern/DBO3)",35.609,3234.901,6.51,3.98e-08,1.04e-05
+"ESV_2011","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Mediophyceae","Thalassiosira","3b (northern/DBO3)",1.364,59.109,5.44,1.23e-06,0.000162
+"ESV_97","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Mediophyceae","Arcocellulus","3a (southern/Bering Strait)",320.523,3.85,-6.38,1.22e-05,0.00107
+"ESV_406","18S_protist","Chytridiomycota","Incertae_Sedis","Polychytriales","Incertae_Sedis","Polychytrium","3b (northern/DBO3)",1.134,51.17,5.5,2.39e-05,0.00157
+"ESV_443","18S_protist","Chytridiomycota","Incertae_Sedis","Polychytriales","Incertae_Sedis","Polychytrium","3b (northern/DBO3)",8.874,291.546,5.04,3.64e-05,0.00191
+"ESV_120","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Mediophyceae","Chaetoceros","3a (southern/Bering Strait)",178.864,3.527,-5.66,7.67e-05,0.00335
+"ESV_152","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Mediophyceae","Thalassiosira","3a (southern/Bering Strait)",439.054,0,-22.07,0.000123,0.00403
+"ESV_589","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Mediophyceae","Thalassiosira","3a (southern/Bering Strait)",174.073,0,-20.73,0.000123,0.00403
+"ESV_1895","18S_protist","Cercozoa","Thecofilosea","Cryomonadida","Rhizaspididae","Rhogostoma","3b (northern/DBO3)",2.612,39.716,3.93,0.000141,0.00405
+"ESV_7349","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Mediophyceae","Thalassiosira","3b (northern/DBO3)",0.017,13.578,9.66,0.000155,0.00405
+"ESV_795","18S_protist","Ochrophyta","Dictyochophyceae","Pedinellales","Pedinellales_fa","Pteridomonas","3b (northern/DBO3)",1.865,39.361,4.4,0.000364,0.00844
+"ESV_1666","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Mediophyceae","Thalassiosira","3a (southern/Bering Strait)",9.329,0,-16.51,0.000386,0.00844
+"ESV_518","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Bacillariophyceae","Pseudo-nitzschia","3b (northern/DBO3)",7.299,89.965,3.62,0.000535,0.01
+"ESV_533","18S_protist","Cercozoa","Thecofilosea","Cryomonadida","Rhizaspididae","Rhogostoma","3a (southern/Bering Strait)",130.36,1.774,-6.2,0.000524,0.01
+"ESV_353","18S_protist","Chlorophyta_ph","Mamiellophyceae","Mamiellales","Mamiellales_fa","Micromonas","3a (southern/Bering Strait)",62.522,3.266,-4.26,0.00058,0.0101
+"ESV_749","18S_protist","MAST-3","MAST-3F","MAST-3F_or","MAST-3F_fa","MAST-3F_ge","3a (southern/Bering Strait)",30.209,0,-18.2,0.000662,0.0102
+"ESV_1337","18S_protist","Protalveolata","Syndiniales","Syndiniales_or","Syndiniales_Group_I","Syndiniales_Group_I_ge","3b (northern/DBO3)",0,9.588,16.55,0.000659,0.0102
+"ESV_186","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Mediophyceae","Chaetoceros","3b (northern/DBO3)",25.1,109.043,2.12,0.000705,0.0103
+"ESV_89","18S_protist","Chytridiomycota","Incertae_Sedis","Polychytriales","Incertae_Sedis","Polychytrium","3b (northern/DBO3)",23.539,78.198,1.73,0.000808,0.0111
+"ESV_852","18S_protist","Chytridiomycota","Incertae_Sedis","Polychytriales","Incertae_Sedis","Polychytrium","3a (southern/Bering Strait)",30.707,0.382,-6.33,0.000863,0.0113
+"ESV_434","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Mediophyceae","Chaetoceros","3a (southern/Bering Strait)",97.439,11.245,-3.12,0.000911,0.0114
+"ESV_335","18S_protist","Ochrophyta","Dictyochophyceae","Florenciellales","Florenciellales_fa","Pseudochattonella","3a (southern/Bering Strait)",39.259,0,-18.58,0.00111,0.0132
+"ESV_323","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Bacillariophyceae","Nitzschia","3a (southern/Bering Strait)",54.927,1.022,-5.75,0.00141,0.0161
+"ESV_144","18S_protist","Chytridiomycota","Incertae_Sedis","Polychytriales","Incertae_Sedis","Polychytrium","3a (southern/Bering Strait)",136.806,23.636,-2.53,0.00161,0.0169
+"ESV_271","18S_protist","Chlorophyta_ph","Mamiellophyceae","Mamiellales","Mamiellales_fa","Micromonas","3a (southern/Bering Strait)",12.778,0.515,-4.63,0.00155,0.0169
+"ESV_2","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Mediophyceae","Chaetoceros","3a (southern/Bering Strait)",2245.35,783.549,-1.52,0.00202,0.0201
+"ESV_134","18S_protist","Cryptomonadales","Cryptomonadales_cl","Cryptomonadales_or","Cryptomonadales_fa","Cryptomonadales_ge","3a (southern/Bering Strait)",102.532,22.139,-2.21,0.00207,0.0201
+"ESV_67","18S_protist","MAST-3","MAST-3F","MAST-3F_or","MAST-3F_fa","MAST-3F_ge","3a (southern/Bering Strait)",74.912,18.199,-2.04,0.00252,0.0228
+"ESV_646","18S_protist","Chlorophyta_ph","Nephroselmidophyceae","Nephroselmidales","Nephroselmidales_fa","Nephroselmis","3a (southern/Bering Strait)",94.741,4.642,-4.35,0.00246,0.0228
+"ESV_628","18S_protist","MAST-3","MAST-3F","MAST-3F_or","MAST-3F_fa","MAST-3F_ge","3b (northern/DBO3)",2.151,32.37,3.91,0.00296,0.025
+"ESV_840","18S_protist","Prymnesiophyceae","Prymnesiales","Prymnesiales_or","Prymnesiales_fa","Chrysochromulina","3a (southern/Bering Strait)",49.705,0,-18.92,0.00296,0.025
+"ESV_7970","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Mediophyceae","Thalassiosira","3b (northern/DBO3)",0.017,8.188,8.93,0.00311,0.0255
+"ESV_429","18S_protist","Chytridiomycota","Incertae_Sedis","Polychytriales","Incertae_Sedis","Polychytrium","3a (southern/Bering Strait)",48.921,3.8,-3.69,0.00354,0.0281
+"ESV_307","18S_protist","Prymnesiophyceae","Prymnesiales","Prymnesiales_or","Prymnesiales_fa","Chrysochromulina","3a (southern/Bering Strait)",39.316,0,-18.58,0.00469,0.0362
+"ESV_453","18S_protist","Ochrophyta","Diatomea","Bacillariophytina","Mediophyceae","Thalassiosira","3b (northern/DBO3)",75.204,621.191,3.05,0.00508,0.038

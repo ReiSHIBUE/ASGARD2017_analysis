@@ -1,0 +1,5 @@
+"taxon","enriched_in","mean_3a_pct","mean_3b_pct","log2FC","pvalue","padj"
+"Chlorophyta_ph.Mamiellophyceae","3a",176.184,40.74,-2.11,0.00371,0.0379
+"Chlorophyta_ph.Nephroselmidophyceae","3a",94.741,4.642,-4.35,0.00246,0.0379
+"Cryptomonadales.Cryptomonadales_cl","3a",157.117,34.083,-2.2,0.00235,0.0379
+"Ochrophyta.Ochrophyta_cl","3a",50.051,2.816,-4.15,0.00388,0.0379
