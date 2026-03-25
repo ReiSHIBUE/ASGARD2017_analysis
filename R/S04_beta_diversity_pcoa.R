@@ -75,7 +75,6 @@ meta_asgard <- meta_asgard %>%
   mutate(Sample = rownames(asgard_filtered))
 
 asgard_pcoa_df <- left_join(asgard_pcoa_df, meta_asgard, by = "Sample") # 181×52+
-asgard_pcoa_df$cluster <- as.factor(clusnum)
 asgard_pcoa_df$cluster10 <- factor(clusnum10[asgard_pcoa_df$Sample], levels = as.character(1:10))
 
 # ==============================================================================
