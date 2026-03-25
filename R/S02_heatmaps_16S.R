@@ -75,12 +75,43 @@ names(colneworder) <- cololdorder
 colclusnum    <- unname(colneworder[as.character(cololdclus)])
 names(colclusnum) <- names(cololdclus) # length 258, values 1–8
 
-# カラーパレット / Colour palettes
+# カラーパレット (5クラスター) / Colour palettes (5 clusters)
 rsc    <- hue_pal()(nclus)[clusnum]      # row side colours, length 181
 colrsc <- plasma(colnclus)[colclusnum]   # col side colours, length 258
 
 # ==============================================================================
-# Section 4: h2 — クラスター色付きheatmap.2 / heatmap.2 with cluster side colours
+# Section 4: 10クラスターへの分割 / Split into 10 clusters
+# Cluster 1→2分割, 2→3分割, 3→2分割, 5→2分割, 4はそのまま
+# ==============================================================================
+
+c1_sub <- cutree(hclust(vegdist(asgard_frtprop[names(clusnum)[clusnum==1], colSums(asgard_frtprop[names(clusnum)[clusnum==1],])>0], "bray"), "ward.D"), k=2)
+c2_sub <- cutree(hclust(vegdist(asgard_frtprop[names(clusnum)[clusnum==2], colSums(asgard_frtprop[names(clusnum)[clusnum==2],])>0], "bray"), "ward.D"), k=3)
+c3_sub <- cutree(hclust(vegdist(asgard_frtprop[names(clusnum)[clusnum==3], colSums(asgard_frtprop[names(clusnum)[clusnum==3],])>0], "bray"), "ward.D"), k=2)
+c5_sub <- cutree(hclust(vegdist(asgard_frtprop[names(clusnum)[clusnum==5], colSums(asgard_frtprop[names(clusnum)[clusnum==5],])>0], "bray"), "ward.D"), k=2)
+
+# 仮ラベルで割り当て / Assign temporary labels
+tmp10 <- rep(NA_character_, length(clusnum)); names(tmp10) <- names(clusnum)
+tmp10[names(c1_sub)[c1_sub==1]] <- "o1a"; tmp10[names(c1_sub)[c1_sub==2]] <- "o1b"
+tmp10[names(c2_sub)[c2_sub==1]] <- "o2a"; tmp10[names(c2_sub)[c2_sub==2]] <- "o2b"; tmp10[names(c2_sub)[c2_sub==3]] <- "o2c"
+tmp10[names(c3_sub)[c3_sub==1]] <- "o3a"; tmp10[names(c3_sub)[c3_sub==2]] <- "o3b"
+tmp10[names(clusnum)[clusnum==4]] <- "o4"
+tmp10[names(c5_sub)[c5_sub==1]] <- "o5a"; tmp10[names(c5_sub)[c5_sub==2]] <- "o5b"
+
+# デンドログラム順（下→上）で1-10を振り直す / Renumber by dendrogram order (bottom→top)
+dend_order <- as.hclust(h1$rowDendrogram)$order
+sample_names_ordered <- rownames(asgard_frtprop)[dend_order]
+appearance_order <- unique(tmp10[sample_names_ordered])
+remap10 <- setNames(as.character(1:10), appearance_order)
+
+clusnum10 <- remap10[tmp10]; names(clusnum10) <- names(tmp10)
+
+# 10クラスターカラーパレット / 10-cluster colour palette
+cc10 <- hue_pal()(10); names(cc10) <- as.character(1:10)
+rsc10 <- cc10[clusnum10]; names(rsc10) <- names(clusnum10)
+
+# ==============================================================================
+# Section 5: h2 — 10クラスター色付きheatmap.2
+# heatmap.2 with 10-cluster RowSideColors
 # ==============================================================================
 
 h2 <- heatmap.2(
@@ -88,51 +119,41 @@ h2 <- heatmap.2(
   distfun       = function(x) vegdist(x, method = "bray"),
   hclustfun     = function(x) hclust(x, method = "ward.D"),
   col           = viridis,
-  RowSideColors = rsc,
+  RowSideColors = rsc10[rownames(asgard_frtmat)],
   ColSideColors = colrsc,
   Rowv          = h1$rowDendrogram,
   Colv          = h1$colDendrogram,
   margins       = c(15, 15),
   scale         = "none",
-  main          = "ASGARD Survey 16S — Bray/ward.D (5 row clusters, 8 col clusters)",
+  main          = "ASGARD Survey 16S — Bray/ward.D (10 row clusters, 8 col clusters)",
   trace         = "none",
   cexCol        = 0.2,
   cexRow        = 0.3
 )
 
-# ==============================================================================
-# Section 5: h5 — 列クラスター8のサブセット (particle-associated candidates)
-# Subset heatmap for column cluster 8 — these ASVs have an interesting sub-structure
-# ==============================================================================
-
-cc8_names <- names(colclusnum)[colclusnum == 8]
-asgard_frtmat_cc8 <- asgard_frtmat[, cc8_names, drop = FALSE]
-asgard_frtmat_cc8 <- asgard_frtmat_cc8[
-  rowSums(asgard_frtmat_cc8) > 0,
-  colSums(asgard_frtmat_cc8) > 0,
-  drop = FALSE
-]
-
-# 列クラスター8内のサブクラスター抽出 / Sub-cluster within col cluster 8
-h5 <- heatmap.2(
-  asgard_frtmat_cc8,
-  distfun       = function(x) vegdist(x, method = "euclidean"),
+# h2b: station名ラベル付き / With station name labels
+heatmap.2(
+  asgard_frtmat,
+  distfun       = function(x) vegdist(x, method = "bray"),
   hclustfun     = function(x) hclust(x, method = "ward.D"),
   col           = viridis,
-  RowSideColors = rsc[rownames(asgard_frtmat_cc8)],
-  Rowv          = h2$rowDendrogram,
+  RowSideColors = rsc10[rownames(asgard_frtmat)],
+  ColSideColors = colrsc,
+  Rowv          = h1$rowDendrogram,
+  Colv          = h1$colDendrogram,
   margins       = c(15, 15),
   scale         = "none",
-  main          = "ASGARD Survey 16S — col cluster 8 subset",
+  main          = "ASGARD Survey 16S — 10 clusters (station names)",
   trace         = "none",
-  cexCol        = 0.5,
+  cexCol        = 0.2,
   cexRow        = 0.3,
-  labRow        = meta_asgard[rownames(asgard_frtmat_cc8), "depth_type"]
+  labRow        = meta_asgard[rownames(asgard_frtmat), "station"]
 )
 
 dev.off()
 
 message("S02_heatmaps_16S.R: done.")
 message("  clusnum length:    ", length(clusnum), " (", nclus, " row clusters)")
+message("  clusnum10 length:  ", length(clusnum10), " (10 row clusters)")
 message("  colclusnum length: ", length(colclusnum), " (", colnclus, " col clusters)")
 message("  PDF: output/survey/heatmaps/ASGARD_hm_survey_16S.pdf")
