@@ -76,32 +76,36 @@ meta_asgard <- meta_asgard %>%
 
 asgard_pcoa_df <- left_join(asgard_pcoa_df, meta_asgard, by = "Sample") # 181×52+
 asgard_pcoa_df$cluster <- as.factor(clusnum)
+asgard_pcoa_df$cluster10 <- factor(clusnum10[asgard_pcoa_df$Sample], levels = as.character(1:10))
 
 # ==============================================================================
-# Section 4: Boxplots — クラスターごとに各変数を可視化
-# Boxplot + PCoA scatter for every variable, grouped by cluster
+# Section 4: Boxplots — 10クラスターごとに各変数を可視化
+# Boxplot + PCoA scatter for every variable, grouped by 10 clusters
 # ==============================================================================
 
-clusnum_bp <- factor(clusnum, levels = as.character(1:5))
+clusnum10_bp <- factor(clusnum10, levels = as.character(1:10))
 
 pdf(file = here::here("output", "survey", "beta_diversity", "ASGARD_boxplots_survey.pdf"))
 
 plot(asgard_pcoa_df$PCoA1_Bray,
      asgard_pcoa_df$PCoA2_Bray,
-     col = rsc, pch = 19,
-     main = "PCoA Bray-Curtis — Survey Samples",
+     col = rsc10[rownames(asgard_pcoa_df)], pch = 19,
+     main = "PCoA Bray-Curtis — Survey Samples (10 clusters)",
      xlab = "PCoA1", ylab = "PCoA2")
 
 for (var in colnames(asgard_pcoa_df)) {
-  gg <- ggplot(asgard_pcoa_df, aes(x = clusnum_bp, y = .data[[var]])) +
-    geom_boxplot(aes(fill = clusnum_bp), outlier.shape = NA) +
+  gg <- ggplot(asgard_pcoa_df, aes(x = cluster10, y = .data[[var]])) +
+    geom_boxplot(aes(fill = cluster10), outlier.shape = NA) +
     geom_jitter(width = .4, height = 0) +
-    theme(text = element_text(size = 24))
+    scale_fill_manual(values = cc10) +
+    labs(title = var) +
+    theme(text = element_text(size = 14), legend.position = "none")
   print(gg)
 
   gp <- ggplot(asgard_pcoa_df) +
     geom_point(aes(x = PCoA1_Bray, y = PCoA2_Bray,
-                   col = clusnum_bp, size = .data[[var]]))
+                   col = cluster10, size = .data[[var]])) +
+    scale_color_manual(values = cc10)
   print(gp)
 }
 

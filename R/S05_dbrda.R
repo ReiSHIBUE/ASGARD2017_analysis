@@ -102,10 +102,10 @@ asgard_dbrda_df <- merge(asgard_dbrda_scores, asgard_pcoa_cc, by = "Sample", sor
 
 asgard_dbrda_merged <- left_join(
   asgard_dbrda_df,
-  rownames_to_column(as.data.frame(clusnum)),
+  rownames_to_column(as.data.frame(clusnum10)),
   by = c("Sample" = "rowname")
 )
-asgard_dbrda_merged$clusnum <- as.factor(asgard_dbrda_merged$clusnum)
+asgard_dbrda_merged$clusnum10 <- factor(asgard_dbrda_merged$clusnum10, levels = as.character(1:10))
 
 # ==============================================================================
 # Section 6: db-RDA プロットと環境変数散布図 / Plot db-RDA and environmental scatter
@@ -116,7 +116,8 @@ pdf(file = here::here("output", "survey", "dbrda", "ASGARD_dbrda_survey.pdf"),
 
 print(ggplot() +
   geom_point(data = asgard_dbrda_merged,
-             aes(x = MDS1, y = MDS2, color = clusnum, size = `NO3(uM)`)) +
+             aes(x = MDS1, y = MDS2, color = clusnum10, size = `NO3(uM)`)) +
+  scale_color_manual(values = cc10) +
   geom_segment(data = asgard_dbrda_vectors,
                aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
                arrow = arrow(length = unit(0.2, "cm")),
@@ -127,26 +128,26 @@ print(ggplot() +
   labs(x = "MDS1", y = "MDS2", color = "cluster") +
   theme_minimal())
 
-# 環境変数散布図 / Environmental scatter plots coloured by cluster
-clusnum_cc <- factor(
-  clusnum[names(clusnum) %in% asgard_pcoa_cc$Sample],
-  levels = as.character(1:5)
+# 環境変数散布図 / Environmental scatter plots coloured by 10 clusters
+clusnum10_cc <- factor(
+  clusnum10[names(clusnum10) %in% asgard_pcoa_cc$Sample],
+  levels = as.character(1:10)
 )
-col_cc <- hue_pal()(5)[as.integer(clusnum_cc)]
+col_cc <- cc10[as.character(clusnum10_cc)]
 
 plot(x    = asgard_pcoa_cc$salinity,
      y    = asgard_pcoa_cc$temp,
      col  = col_cc,
      pch  = 19, cex = 1.5,
      xlab = "Salinity", ylab = "Temperature (°C)",
-     main = "Salinity vs. Temperature — Survey Samples")
+     main = "Salinity vs. Temperature — Survey (10 clusters)")
 
 plot(x    = asgard_pcoa_cc$salinity,
      y    = asgard_pcoa_cc$`NO3(uM)`,
      col  = col_cc,
      pch  = 19, cex = 1.5,
      xlab = "Salinity", ylab = "NO3 (µM)",
-     main = "Salinity vs. NO3 — Survey Samples")
+     main = "Salinity vs. NO3 — Survey (10 clusters)")
 
 dev.off()
 
