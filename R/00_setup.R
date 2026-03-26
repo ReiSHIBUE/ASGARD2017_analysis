@@ -118,3 +118,4 @@ message("  seqtab_16Smat:        ", nrow(seqtab_16Smat), " x ", ncol(seqtab_16Sm
 message("  seqtab_16Sprop:       ", nrow(seqtab_16Sprop), " x ", ncol(seqtab_16Sprop))
 message("  meta_denovo_2:        ", nrow(meta_denovo_2), " x ", ncol(meta_denovo_2))
 message("  shorternames length:  ", length(shorternames))
+
