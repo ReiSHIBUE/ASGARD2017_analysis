@@ -114,6 +114,7 @@ asgard_dbrda_merged$clusnum10 <- factor(asgard_dbrda_merged$clusnum10, levels = 
 pdf(file = here::here("output", "survey", "dbrda", "ASGARD_dbrda_survey.pdf"),
     width = 10, height = 8)
 
+# Page 1: MDS axes (unconstrained)
 print(ggplot() +
   geom_point(data = asgard_dbrda_merged,
              aes(x = MDS1, y = MDS2, color = clusnum10, size = `NO3(uM)`)) +
@@ -125,7 +126,24 @@ print(ggplot() +
   geom_text(data = asgard_dbrda_vectors,
             aes(x = CAP1, y = CAP2, label = Variable),
             vjust = -0.5, hjust = 0.5, size = 5) +
-  labs(x = "MDS1", y = "MDS2", color = "cluster") +
+  labs(x = "MDS1", y = "MDS2", color = "cluster",
+       title = "db-RDA — MDS axes (unconstrained)") +
+  theme_minimal())
+
+# Page 2: CAP axes (constrained)
+print(ggplot() +
+  geom_point(data = asgard_dbrda_merged,
+             aes(x = CAP1, y = CAP2, color = clusnum10, size = `NO3(uM)`)) +
+  scale_color_manual(values = cc10) +
+  geom_segment(data = asgard_dbrda_vectors,
+               aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               arrow = arrow(length = unit(0.2, "cm")),
+               color = "black", linewidth = 1) +
+  geom_text(data = asgard_dbrda_vectors,
+            aes(x = CAP1, y = CAP2, label = Variable),
+            vjust = -0.5, hjust = 0.5, size = 5) +
+  labs(x = "CAP1", y = "CAP2", color = "cluster",
+       title = "db-RDA — CAP axes (constrained)") +
   theme_minimal())
 
 # 環境変数散布図 / Environmental scatter plots coloured by 10 clusters
