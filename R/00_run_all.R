@@ -111,7 +111,11 @@ survey_scripts <- c(
   "R/S07_alpha_diversity.R",
   "R/S08_taxonomy.R",
   "R/S09_network.R",
-  "R/S10_permanova.R"
+  "R/S10_permanova.R",
+  "R/S11_crosstable.R",
+  "R/S12_indval.R",
+  "R/S13_indval_18S.R",
+  "R/S14_sampling_period.R"
 )
 
 for (script in survey_scripts) {
