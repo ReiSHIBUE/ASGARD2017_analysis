@@ -114,6 +114,14 @@ asgard_dbrda_merged$clusnum10 <- factor(asgard_dbrda_merged$clusnum10, levels = 
 pdf(file = here::here("output", "survey", "dbrda", "ASGARD_dbrda_survey.pdf"),
     width = 10, height = 8)
 
+# Calculate % variance explained per axis from summary
+sm <- summary(asgard_dbrda_model)
+prop_expl <- sm$cont$importance["Proportion Explained", ]
+cap1_pct <- round(prop_expl["CAP1"] * 100, 1)
+cap2_pct <- round(prop_expl["CAP2"] * 100, 1)
+mds1_pct <- round(prop_expl["MDS1"] * 100, 1)
+mds2_pct <- round(prop_expl["MDS2"] * 100, 1)
+
 # Page 1: MDS axes (unconstrained)
 print(ggplot() +
   geom_point(data = asgard_dbrda_merged,
@@ -126,7 +134,9 @@ print(ggplot() +
   geom_text(data = asgard_dbrda_vectors,
             aes(x = CAP1, y = CAP2, label = Variable),
             vjust = -0.5, hjust = 0.5, size = 5) +
-  labs(x = "MDS1", y = "MDS2", color = "cluster",
+  labs(x = paste0("MDS1 (", mds1_pct, "%)"),
+       y = paste0("MDS2 (", mds2_pct, "%)"),
+       color = "cluster",
        title = "db-RDA — MDS axes (unconstrained)") +
   theme_minimal())
 
@@ -142,7 +152,9 @@ print(ggplot() +
   geom_text(data = asgard_dbrda_vectors,
             aes(x = CAP1, y = CAP2, label = Variable),
             vjust = -0.5, hjust = 0.5, size = 5) +
-  labs(x = "CAP1", y = "CAP2", color = "cluster",
+  labs(x = paste0("CAP1 (", cap1_pct, "%)"),
+       y = paste0("CAP2 (", cap2_pct, "%)"),
+       color = "cluster",
        title = "db-RDA — CAP axes (constrained)") +
   theme_minimal())
 
