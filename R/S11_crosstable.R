@@ -92,15 +92,34 @@ dir.create(here("output", "survey"), showWarnings = FALSE, recursive = TRUE)
 ct_df <- as.data.frame.matrix(ct)
 ct_df$cluster <- rownames(ct_df)
 ct_df <- ct_df %>% select(cluster, everything())
-write.csv(ct_df, here("output", "survey", "cluster_watermass_crosstab.csv"), row.names = FALSE)
+dir.create(here("output", "survey", "crosstable"), showWarnings = FALSE, recursive = TRUE)
+write.csv(ct_df, here("output", "survey", "crosstable", "cluster_watermass_crosstab.csv"), row.names = FALSE)
 
 # Proportions
 ct_pct_df <- as.data.frame.matrix(ct_pct)
 ct_pct_df$cluster <- rownames(ct_pct_df)
 ct_pct_df <- ct_pct_df %>% select(cluster, everything())
-write.csv(ct_pct_df, here("output", "survey", "cluster_watermass_proportions.csv"), row.names = FALSE)
+write.csv(ct_pct_df, here("output", "survey", "crosstable", "cluster_watermass_proportions.csv"), row.names = FALSE)
 
-message("cluster_watermass_association.R: done.")
+# ==============================================================================
+# Section 6: Water mass sample counts (total, regardless of cluster)
+# 全サンプルにおける水塊別カウント（クラスター無関係）
+# ==============================================================================
+
+wm_total <- table(df$water_mass)
+wm_total_df <- data.frame(
+  water_mass = names(wm_total),
+  n_samples = as.integer(wm_total),
+  pct = round(as.numeric(wm_total) / sum(wm_total) * 100, 1)
+) %>% arrange(desc(n_samples))
+
+cat("\n=== Water mass sample counts (all 181 samples) ===\n\n")
+print(wm_total_df)
+
+write.csv(wm_total_df, here("output", "survey", "crosstable", "watermass_sample_counts.csv"), row.names = FALSE)
+
+message("\nS11_crosstable.R: done.")
 message("  Chi-squared p-value: ", chi$p.value)
 message("  Fisher p-value: ", fisher$p.value)
-message("  CSV: cluster_watermass_crosstab.csv, cluster_watermass_proportions.csv")
+message("  CSV: cluster_watermass_crosstab.csv, cluster_watermass_proportions.csv, watermass_sample_counts.csv")
+
