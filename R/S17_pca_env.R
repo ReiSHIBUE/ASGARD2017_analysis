@@ -140,6 +140,49 @@ for (v in env_vars) {
   print(p_env)
 }
 
+# Pages 12-20: Per-variable PCA plots faceted by depth_type
+# Each page: all + surf + mid + bottom in one view
+
+pca_scores$depth_type <- factor(df$depth_type[match(pca_scores$sample_id, df$sample_id)],
+                                levels = c("surf", "mid", "bottom"))
+
+for (v in env_vars) {
+  # All depths combined
+  p_all <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = cluster, size = .data[[v]])) +
+    geom_point(alpha = 0.7) +
+    scale_color_manual(values = scales::hue_pal()(10)) +
+    scale_size_continuous(range = c(1, 8), name = env_labels[v]) +
+    coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                    ylim = range(pca_scores$PC2) * 1.1) +
+    labs(x = paste0("PC1 (", pc1_pct, "%)"),
+         y = paste0("PC2 (", pc2_pct, "%)"),
+         color = "Cluster",
+         title = paste0(env_labels[v], " — all depths")) +
+    theme_minimal() +
+    theme(plot.title = element_text(face = "bold", size = 12),
+          legend.position = "right")
+
+  # Faceted by depth_type
+  p_facet <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = cluster, size = .data[[v]])) +
+    geom_point(alpha = 0.7) +
+    scale_color_manual(values = scales::hue_pal()(10)) +
+    scale_size_continuous(range = c(1, 8), name = env_labels[v]) +
+    facet_wrap(~ depth_type) +
+    coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                    ylim = range(pca_scores$PC2) * 1.1) +
+    labs(x = paste0("PC1 (", pc1_pct, "%)"),
+         y = paste0("PC2 (", pc2_pct, "%)"),
+         color = "Cluster",
+         title = paste0(env_labels[v], " — by depth type")) +
+    theme_minimal() +
+    theme(plot.title = element_text(face = "bold", size = 12),
+          strip.text = element_text(face = "bold", size = 11),
+          legend.position = "right")
+
+  # Combine on one page using patchwork-style grid
+  print(gridExtra::grid.arrange(p_all, p_facet, ncol = 1, heights = c(1, 1)))
+}
+
 dev.off()
 
-cat("\nDone: output/survey/beta_diversity/ASGARD_pca_env_survey.pdf (11 pages)\n")
+cat("\nDone: output/survey/beta_diversity/ASGARD_pca_env_survey.pdf (20 pages)\n")
