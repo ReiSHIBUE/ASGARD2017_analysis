@@ -96,9 +96,9 @@ for (i in seq_len(ncol(pairs))) {
 
 # BH correction for multiple comparisons
 pairwise_results$p_adj <- round(p.adjust(pairwise_results$p_value, method = "BH"), 4)
-pairwise_results$sig <- ifelse(pairwise_results$p_adj < 0.001, "***",
-                        ifelse(pairwise_results$p_adj < 0.01, "**",
-                        ifelse(pairwise_results$p_adj < 0.05, "*", "ns")))
+pairwise_results$sig <- ifelse(pairwise_results$p_adj <= 0.001, "***",
+                        ifelse(pairwise_results$p_adj <= 0.01, "**",
+                        ifelse(pairwise_results$p_adj <= 0.05, "*", "ns")))
 
 print(pairwise_results, row.names = FALSE)
 
@@ -166,3 +166,4 @@ write.csv(pairwise_results,
 message("\nS10_permanova.R: done.")
 message("  TXT: output/survey/beta_diversity/ASGARD_permanova_results.txt")
 message("  CSV: output/survey/beta_diversity/pairwise_permanova_10clusters.csv")
+
