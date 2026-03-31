@@ -108,6 +108,38 @@ p2 <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = cluster)) +
   theme(plot.title = element_text(face = "bold", size = 16))
 print(p2)
 
+# Pages 3-11: Per-variable PCA plots (dot size = variable value)
+env_labels <- c("temp" = "Temperature (\u00B0C)",
+                "salinity" = "Salinity",
+                "DO" = "Dissolved Oxygen",
+                "NO3(uM)" = "NO3 (\u00B5M)",
+                "PO4(uM)" = "PO4 (\u00B5M)",
+                "Sil(uM)" = "Silicate (\u00B5M)",
+                "NH4(uM)" = "NH4 (\u00B5M)",
+                "FlECO-AFL(mg/m^3)" = "FlECO-AFL (mg/m\u00B3)",
+                "depth_m" = "Depth (m)")
+
+# Add raw env values to pca_scores
+for (v in env_vars) {
+  pca_scores[[v]] <- env_complete[[v]]
+}
+
+for (v in env_vars) {
+  p_env <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = cluster, size = .data[[v]])) +
+    geom_point(alpha = 0.7) +
+    scale_color_manual(values = scales::hue_pal()(10)) +
+    scale_size_continuous(range = c(1, 8), name = env_labels[v]) +
+    coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                    ylim = range(pca_scores$PC2) * 1.1) +
+    labs(x = paste0("PC1 (", pc1_pct, "%)"),
+         y = paste0("PC2 (", pc2_pct, "%)"),
+         color = "Cluster",
+         title = paste0("PCA — dot size: ", env_labels[v])) +
+    theme_minimal() +
+    theme(plot.title = element_text(face = "bold", size = 16))
+  print(p_env)
+}
+
 dev.off()
 
-cat("\nDone: output/survey/beta_diversity/ASGARD_pca_env_survey.pdf\n")
+cat("\nDone: output/survey/beta_diversity/ASGARD_pca_env_survey.pdf (11 pages)\n")
