@@ -113,6 +113,34 @@ asgard_permdisp_anova <- anova(asgard_permdisp)
 print(asgard_permdisp_anova)
 
 # ==============================================================================
+# Section 4b: Pairwise PERMDISP — ペアワイズ分散均一性検定
+# Pairwise comparison of within-group dispersion (TukeyHSD on betadisper)
+# ==============================================================================
+
+message("\n--- Pairwise PERMDISP (TukeyHSD) ---")
+
+asgard_permdisp_tukey <- TukeyHSD(asgard_permdisp)
+permdisp_pairwise <- as.data.frame(asgard_permdisp_tukey$group)
+permdisp_pairwise$pair <- rownames(permdisp_pairwise)
+permdisp_pairwise$sig <- ifelse(permdisp_pairwise$`p adj` <= 0.001, "***",
+                          ifelse(permdisp_pairwise$`p adj` <= 0.01, "**",
+                          ifelse(permdisp_pairwise$`p adj` <= 0.05, "*", "ns")))
+
+# Reorder columns
+permdisp_pairwise <- permdisp_pairwise[, c("pair", "diff", "lwr", "upr", "p adj", "sig")]
+colnames(permdisp_pairwise) <- c("pair", "diff_dispersion", "CI_lower", "CI_upper", "p_adj", "sig")
+permdisp_pairwise$diff_dispersion <- round(permdisp_pairwise$diff_dispersion, 4)
+permdisp_pairwise$CI_lower <- round(permdisp_pairwise$CI_lower, 4)
+permdisp_pairwise$CI_upper <- round(permdisp_pairwise$CI_upper, 4)
+permdisp_pairwise$p_adj <- round(permdisp_pairwise$p_adj, 4)
+
+# Count significant pairs
+n_sig <- sum(permdisp_pairwise$sig != "ns")
+message("Significant pairwise PERMDISP: ", n_sig, " / ", nrow(permdisp_pairwise))
+
+print(permdisp_pairwise[permdisp_pairwise$sig != "ns", ], row.names = FALSE)
+
+# ==============================================================================
 # Section 5: Mantel test — 距離行列間の相関 / Correlation between distance matrices
 # ==============================================================================
 
@@ -150,6 +178,11 @@ print(pairwise_results, row.names = FALSE)
 cat("\n=== PERMDISP (betadisper ANOVA, 10 clusters) ===\n")
 print(asgard_permdisp_anova)
 
+cat("\n=== Pairwise PERMDISP (TukeyHSD on betadisper) ===\n")
+cat("Significant pairs only (p_adj <= 0.05):\n")
+print(permdisp_pairwise[permdisp_pairwise$sig != "ns", ], row.names = FALSE)
+cat("\nNon-significant pairs: ", sum(permdisp_pairwise$sig == "ns"), " / ", nrow(permdisp_pairwise), "\n")
+
 cat("\n=== Mantel tests (Bray-Curtis vs environmental distance) ===\n")
 for (nm in c("sal", "temp", "do", "no3")) {
   obj <- get(paste0("asgard_mantel_", nm))
@@ -163,7 +196,13 @@ write.csv(pairwise_results,
   here::here("output", "survey", "beta_diversity", "pairwise_permanova_10clusters.csv"),
   row.names = FALSE)
 
+# Save pairwise PERMDISP as CSV
+write.csv(permdisp_pairwise,
+  here::here("output", "survey", "beta_diversity", "pairwise_permdisp_10clusters.csv"),
+  row.names = FALSE)
+
 message("\nS10_permanova.R: done.")
 message("  TXT: output/survey/beta_diversity/ASGARD_permanova_results.txt")
 message("  CSV: output/survey/beta_diversity/pairwise_permanova_10clusters.csv")
+message("  CSV: output/survey/beta_diversity/pairwise_permdisp_10clusters.csv")
 
