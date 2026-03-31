@@ -78,6 +78,67 @@ asgard_pcoa_df <- left_join(asgard_pcoa_df, meta_asgard, by = "Sample") # 181×5
 asgard_pcoa_df$cluster10 <- factor(clusnum10[asgard_pcoa_df$Sample], levels = as.character(1:10))
 
 # ==============================================================================
+# Section 3b: PCoA plots / PCoAプロット（Bray-Curtis, Jaccard, Euclidean）
+# ==============================================================================
+
+# Calculate % variance explained per axis
+bray_eig <- asgard_pcoa_bray$eig
+bray_pct1 <- round(bray_eig[1] / sum(bray_eig[bray_eig > 0]) * 100, 1)
+bray_pct2 <- round(bray_eig[2] / sum(bray_eig[bray_eig > 0]) * 100, 1)
+
+jac_eig <- asgard_pcoa_jaccard$eig
+jac_pct1 <- round(jac_eig[1] / sum(jac_eig[jac_eig > 0]) * 100, 1)
+jac_pct2 <- round(jac_eig[2] / sum(jac_eig[jac_eig > 0]) * 100, 1)
+
+euc_eig <- asgard_pcoa_euclidean$eig
+euc_pct1 <- round(euc_eig[1] / sum(euc_eig[euc_eig > 0]) * 100, 1)
+euc_pct2 <- round(euc_eig[2] / sum(euc_eig[euc_eig > 0]) * 100, 1)
+
+pdf(file = here::here("output", "survey", "beta_diversity", "ASGARD_pcoa_survey.pdf"),
+    width = 10, height = 8)
+
+# Page 1: Bray-Curtis PCoA
+print(ggplot(asgard_pcoa_df, aes(x = PCoA1_Bray, y = PCoA2_Bray, color = cluster10)) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_color_manual(values = cc10) +
+  coord_cartesian(xlim = range(asgard_pcoa_df$PCoA1_Bray) * 1.1,
+                  ylim = range(asgard_pcoa_df$PCoA2_Bray) * 1.1) +
+  labs(x = paste0("PCoA1 (", bray_pct1, "%)"),
+       y = paste0("PCoA2 (", bray_pct2, "%)"),
+       color = "Cluster",
+       title = "PCoA — Bray-Curtis (10 clusters)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16)))
+
+# Page 2: Jaccard PCoA
+print(ggplot(asgard_pcoa_df, aes(x = PCoA1_Jaccard, y = PCoA2_Jaccard, color = cluster10)) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_color_manual(values = cc10) +
+  coord_cartesian(xlim = range(asgard_pcoa_df$PCoA1_Jaccard) * 1.1,
+                  ylim = range(asgard_pcoa_df$PCoA2_Jaccard) * 1.1) +
+  labs(x = paste0("PCoA1 (", jac_pct1, "%)"),
+       y = paste0("PCoA2 (", jac_pct2, "%)"),
+       color = "Cluster",
+       title = "PCoA — Jaccard (10 clusters)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16)))
+
+# Page 3: Euclidean PCoA
+print(ggplot(asgard_pcoa_df, aes(x = PCoA1_Euclidean, y = PCoA2_Euclidean, color = cluster10)) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_color_manual(values = cc10) +
+  coord_cartesian(xlim = range(asgard_pcoa_df$PCoA1_Euclidean) * 1.1,
+                  ylim = range(asgard_pcoa_df$PCoA2_Euclidean) * 1.1) +
+  labs(x = paste0("PCoA1 (", euc_pct1, "%)"),
+       y = paste0("PCoA2 (", euc_pct2, "%)"),
+       color = "Cluster",
+       title = "PCoA — Euclidean (10 clusters)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16)))
+
+dev.off()
+
+# ==============================================================================
 # Section 4: Boxplots — 10クラスターごとに各変数を可視化
 # Boxplot + PCoA scatter for every variable, grouped by 10 clusters
 # ==============================================================================
