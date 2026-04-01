@@ -11,7 +11,9 @@
 ###   h1               - base heatmap object (provides row/col dendrograms)
 ###   h2               - heatmap.2 with 10-cluster row and 8-cluster col side colours
 ###   clusnum10        - sample cluster assignments, length 181, values 1–10
-###   cc10             - 10-colour palette vector
+###   hier_names       - named vector mapping "1"–"10" to A1,A2,B1,B2,B3,C1–C5
+###   hier_levels      - character vector of cluster names in dendrogram order
+###   cc10             - 10-colour palette vector (named by hier_levels)
 ###   rsc10            - row side colours indexed by clusnum10
 ###   colclusnum       - ASV column cluster assignments, length 258, values 1–8
 ###   colrsc           - 8-colour palette vector indexed by colclusnum
@@ -66,26 +68,42 @@ names(neworder10) <- oldorder10
 clusnum10     <- unname(neworder10[as.character(oldclus10)])
 names(clusnum10) <- names(oldclus10) # length 181, values 1–10
 
-# 列クラスター (ASVs) / Column clusters (ASVs)
-colnclus      <- 8
+# 列クラスター (ASVs) — 6クラスター / Column clusters — 6 clusters
+colnclus      <- 6
 cololdclus    <- cutree(as.hclust(h1$colDendrogram), k = colnclus)
 cololdorder   <- unname(rle(cololdclus[as.hclust(h1$colDendrogram)$order])$values)
 colneworder   <- (1:colnclus)
 names(colneworder) <- cololdorder
 colclusnum    <- unname(colneworder[as.character(cololdclus)])
-names(colclusnum) <- names(cololdclus) # length 258, values 1–8
+names(colclusnum) <- names(cololdclus) # length 258, values 1–6
 
-# カラーパレット / Colour palettes
-cc10   <- hue_pal()(nclus10)
-names(cc10) <- as.character(1:nclus10)
-rsc10  <- cc10[as.character(clusnum10)]
+# 階層命名 / Hierarchical naming based on binary dendrogram splits
+# k=3: A, B, C.  Then each subtree split recursively:
+#   A → A1(9), A2(15)
+#   B → B1(17), B2 → B2a(17), B2b(26)
+#   C → C1 → C1a(14), C1b(30); C2 → C2a(12), C2b → C2b1(12), C2b2(29)
+hier_names <- c("1"="A1",  "2"="A2",   "3"="B1",   "4"="B2a",  "5"="B2b",
+                "6"="C1a", "7"="C1b",  "8"="C2a",  "9"="C2b1", "10"="C2b2")
+hier_levels <- unname(hier_names)  # dendrogram order
+
+# カラーパレット / Colour palettes (A=赤系, B=緑系, C=青系)
+cc10 <- c(
+  "A1"   = "#E31A1C",  "A2"   = "#FF7F00",
+  "B1"   = "#33A02C",  "B2a"  = "#B2DF8A",  "B2b"  = "#A6D854",
+  "C1a"  = "#1F78B4",  "C1b"  = "#6A3D9A",  "C2a"  = "#A6CEE3",
+  "C2b1" = "#CAB2D6",  "C2b2" = "#B3B3B3"
+)
+rsc10  <- cc10[hier_names[as.character(clusnum10)]]
 names(rsc10) <- names(clusnum10)
 
-colrsc <- plasma(colnclus)[colclusnum]   # col side colours, length 258
+colclus_colors <- c("1"="#E41A1C", "2"="#377EB8", "3"="#4DAF4A",
+                     "4"="#FF7F00", "5"="#984EA3", "6"="#A65628")
+colrsc <- colclus_colors[as.character(colclusnum)]
+names(colrsc) <- names(colclusnum)  # ASV名で名前付け
 
 # ==============================================================================
-# Section 4: h2 — 10クラスター色付きheatmap.2
-# heatmap.2 with 10-cluster RowSideColors
+# Section 4: h2 — 10行クラスター + 6列クラスター色付きheatmap.2
+# heatmap.2 with 10-cluster RowSideColors + 6-cluster ColSideColors
 # ==============================================================================
 
 h2 <- heatmap.2(
@@ -94,12 +112,12 @@ h2 <- heatmap.2(
   hclustfun     = function(x) hclust(x, method = "ward.D"),
   col           = viridis,
   RowSideColors = rsc10[rownames(asgard_frtmat)],
-  ColSideColors = colrsc,
+  ColSideColors = colrsc[colnames(asgard_frtmat)],
   Rowv          = h1$rowDendrogram,
   Colv          = h1$colDendrogram,
   margins       = c(15, 15),
   scale         = "none",
-  main          = "ASGARD Survey 16S — Bray/ward.D (10 row clusters, 8 col clusters)",
+  main          = "ASGARD Survey 16S — 10 row clusters, 6 col clusters",
   trace         = "none",
   cexCol        = 0.2,
   cexRow        = 0.3
@@ -112,7 +130,7 @@ heatmap.2(
   hclustfun     = function(x) hclust(x, method = "ward.D"),
   col           = viridis,
   RowSideColors = rsc10[rownames(asgard_frtmat)],
-  ColSideColors = colrsc,
+  ColSideColors = colrsc[colnames(asgard_frtmat)],
   Rowv          = h1$rowDendrogram,
   Colv          = h1$colDendrogram,
   margins       = c(15, 15),
@@ -124,9 +142,28 @@ heatmap.2(
   labRow        = meta_asgard[rownames(asgard_frtmat), "station"]
 )
 
+# ラベルなし版 / No row/col labels
+heatmap.2(
+  asgard_frtmat,
+  distfun       = function(x) vegdist(x, method = "bray"),
+  hclustfun     = function(x) hclust(x, method = "ward.D"),
+  col           = viridis,
+  RowSideColors = rsc10[rownames(asgard_frtmat)],
+  ColSideColors = colrsc[colnames(asgard_frtmat)],
+  Rowv          = h1$rowDendrogram,
+  Colv          = h1$colDendrogram,
+  margins       = c(2, 2),
+  scale         = "none",
+  main          = "ASGARD Survey 16S — 10 row clusters, 6 col clusters",
+  trace         = "none",
+  labRow        = FALSE,
+  labCol        = FALSE
+)
+
 dev.off()
 
 message("S02_heatmaps_16S.R: done.")
 message("  clusnum10 length:  ", length(clusnum10), " (", nclus10, " row clusters)")
+message("  hier_names: ", paste(hier_names, collapse = ", "))
 message("  colclusnum length: ", length(colclusnum), " (", colnclus, " col clusters)")
 message("  PDF: output/survey/heatmaps/ASGARD_hm_survey_16S.pdf")
