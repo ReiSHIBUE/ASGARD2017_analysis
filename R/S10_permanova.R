@@ -10,6 +10,8 @@
 ###   asgard_pcoa_df   - PCoA + metadata df (181x53+)
 ###   meta_asgard      - metadata 181x45
 ###   clusnum10        - 10-cluster assignments (from S02)
+###   hier_names       - hierarchical cluster names (from S02)
+###   hier_levels      - cluster name order (from S02)
 ###
 ### PRODUCES:
 ###   asgard_permanova - adonis2() result for 10-cluster model
@@ -41,16 +43,18 @@ res_no3 <- adonis2(bray_no3 ~ asgard_pcoa_df$`NO3(uM)`[no3_ok], permutations = 9
 message("NO3(uM): R2 = ", round(res_no3$R2[1], 4), ", p = ", res_no3$`Pr(>F)`[1])
 
 # ==============================================================================
-# Section 2: PERMANOVA — 10クラスター / By 10-cluster assignment
+# Section 2: PERMANOVA — 10クラスター（階層名） / By 10 clusters (hier names)
 # ==============================================================================
 
 message("\n--- PERMANOVA (adonis2) by 10 clusters ---")
 
-cluster10_factor <- factor(clusnum10[rownames(as.matrix(asgard_braymat))],
-                           levels = as.character(1:10))
+cluster_hier <- factor(
+  hier_names[as.character(clusnum10[rownames(as.matrix(asgard_braymat))])],
+  levels = hier_levels
+)
 
 asgard_permanova <- adonis2(
-  asgard_braymat ~ cluster10_factor,
+  asgard_braymat ~ cluster_hier,
   permutations = 999
 )
 print(asgard_permanova)
@@ -61,8 +65,7 @@ print(asgard_permanova)
 
 message("\n--- Pairwise PERMANOVA (10 clusters, 45 pairs) ---")
 
-clusters <- as.character(1:10)
-pairs <- combn(clusters, 2)
+pairs <- combn(hier_levels, 2)
 pairwise_results <- data.frame(
   pair = character(),
   F_value = numeric(),
@@ -71,15 +74,18 @@ pairwise_results <- data.frame(
   stringsAsFactors = FALSE
 )
 
+# クラスター名→サンプル名のマッピング
+cl_map <- hier_names[as.character(clusnum10)]
+names(cl_map) <- names(clusnum10)
+
 for (i in seq_len(ncol(pairs))) {
   cl_a <- pairs[1, i]
   cl_b <- pairs[2, i]
 
-  samps_a <- names(clusnum10)[clusnum10 == cl_a]
-  samps_b <- names(clusnum10)[clusnum10 == cl_b]
+  samps_a <- names(cl_map)[cl_map == cl_a]
+  samps_b <- names(cl_map)[cl_map == cl_b]
   samps_ab <- c(samps_a, samps_b)
 
-  # Subset distance matrix
   mat_sub <- as.matrix(asgard_braymat)[samps_ab, samps_ab]
   dist_sub <- as.dist(mat_sub)
   group_sub <- factor(c(rep(cl_a, length(samps_a)), rep(cl_b, length(samps_b))))
@@ -94,7 +100,7 @@ for (i in seq_len(ncol(pairs))) {
   ))
 }
 
-# BH correction for multiple comparisons
+# BH correction
 pairwise_results$p_adj <- round(p.adjust(pairwise_results$p_value, method = "BH"), 4)
 pairwise_results$sig <- ifelse(pairwise_results$p_adj <= 0.001, "***",
                         ifelse(pairwise_results$p_adj <= 0.01, "**",
@@ -108,7 +114,7 @@ print(pairwise_results, row.names = FALSE)
 
 message("\n--- PERMDISP results (10 clusters) ---")
 
-asgard_permdisp       <- betadisper(asgard_braymat, group = cluster10_factor)
+asgard_permdisp       <- betadisper(asgard_braymat, group = cluster_hier)
 asgard_permdisp_anova <- anova(asgard_permdisp)
 print(asgard_permdisp_anova)
 
@@ -126,7 +132,6 @@ permdisp_pairwise$sig <- ifelse(permdisp_pairwise$`p adj` <= 0.001, "***",
                           ifelse(permdisp_pairwise$`p adj` <= 0.01, "**",
                           ifelse(permdisp_pairwise$`p adj` <= 0.05, "*", "ns")))
 
-# Reorder columns
 permdisp_pairwise <- permdisp_pairwise[, c("pair", "diff", "lwr", "upr", "p adj", "sig")]
 colnames(permdisp_pairwise) <- c("pair", "diff_dispersion", "CI_lower", "CI_upper", "p_adj", "sig")
 permdisp_pairwise$diff_dispersion <- round(permdisp_pairwise$diff_dispersion, 4)
@@ -134,7 +139,6 @@ permdisp_pairwise$CI_lower <- round(permdisp_pairwise$CI_lower, 4)
 permdisp_pairwise$CI_upper <- round(permdisp_pairwise$CI_upper, 4)
 permdisp_pairwise$p_adj <- round(permdisp_pairwise$p_adj, 4)
 
-# Count significant pairs
 n_sig <- sum(permdisp_pairwise$sig != "ns")
 message("Significant pairwise PERMDISP: ", n_sig, " / ", nrow(permdisp_pairwise))
 
@@ -191,12 +195,10 @@ for (nm in c("sal", "temp", "do", "no3")) {
 
 sink()
 
-# Save pairwise results as CSV
 write.csv(pairwise_results,
   here::here("output", "survey", "beta_diversity", "pairwise_permanova_10clusters.csv"),
   row.names = FALSE)
 
-# Save pairwise PERMDISP as CSV
 write.csv(permdisp_pairwise,
   here::here("output", "survey", "beta_diversity", "pairwise_permdisp_10clusters.csv"),
   row.names = FALSE)
@@ -205,4 +207,3 @@ message("\nS10_permanova.R: done.")
 message("  TXT: output/survey/beta_diversity/ASGARD_permanova_results.txt")
 message("  CSV: output/survey/beta_diversity/pairwise_permanova_10clusters.csv")
 message("  CSV: output/survey/beta_diversity/pairwise_permdisp_10clusters.csv")
-
