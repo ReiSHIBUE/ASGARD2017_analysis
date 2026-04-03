@@ -22,7 +22,7 @@ source(here("R", "00_setup.R"), echo = FALSE)
 message("\nOverriding meta_denovo_2 with corrected xlsx file...")
 
 meta_denovo_2_new <- read_excel(
-  "~/Desktop/ASGARD_metaRDS_denovo_2.xlsx"
+  here("data", "raw", "ASGARD_metaRDS_denovo_2.xlsx")
 )
 
 # The xlsx has an extra first column (...1) containing the original rownames.
