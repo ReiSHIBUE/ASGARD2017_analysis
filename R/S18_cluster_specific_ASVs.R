@@ -97,5 +97,35 @@ write.csv(specific_out,
   here("output", "survey", "IndVal", "cluster_specific_ASVs_wilcoxon.csv"),
   row.names = FALSE)
 
+# ==============================================================================
+# Section 4: 各クラスターのtop10 representative ASVs (ratio降順)
+# Top 10 representative ASVs per cluster ranked by enrichment ratio
+# ==============================================================================
+
+top10_rep <- specific %>%
+  group_by(cluster) %>%
+  slice_max(order_by = ratio, n = 10, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(cluster, ASV, short_name, mean_in, mean_out, ratio, padj) %>%
+  mutate(mean_in = round(mean_in, 6),
+         mean_out = round(mean_out, 6),
+         ratio = round(ratio, 1),
+         padj = signif(padj, 3))
+
+write.csv(top10_rep,
+  here("output", "survey", "IndVal", "cluster_top10_representative_ASVs.csv"),
+  row.names = FALSE)
+
+message("\n=== Top 10 representative ASVs per cluster (by ratio) ===")
+for (cl_name in hier_levels) {
+  cl_top <- top10_rep %>% filter(cluster == cl_name)
+  message(sprintf("\n%s (top %d):", cl_name, nrow(cl_top)))
+  for (i in seq_len(nrow(cl_top))) {
+    r <- cl_top[i, ]
+    message(sprintf("  %2d. ratio=%5.1f mean=%.4f  %s", i, r$ratio, r$mean_in, r$short_name))
+  }
+}
+
 message("\nS18_cluster_specific_ASVs.R: done.")
 message("  CSV: output/survey/IndVal/cluster_specific_ASVs_wilcoxon.csv")
+message("  CSV: output/survey/IndVal/cluster_top10_representative_ASVs.csv")
