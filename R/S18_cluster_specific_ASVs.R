@@ -119,10 +119,10 @@ write.csv(top10_rep,
   here("output", "survey", "IndVal", "cluster_top10_representative_ASVs.csv"),
   row.names = FALSE)
 
-# Top 5 版
+# Top 5 版 (ratio降順)
 top5_rep <- specific %>%
   group_by(cluster) %>%
-  slice_max(order_by = score, n = 5, with_ties = FALSE) %>%
+  slice_max(order_by = ratio, n = 5, with_ties = FALSE) %>%
   ungroup() %>%
   select(cluster, ASV, short_name, mean_in, mean_out, ratio, score, padj) %>%
   mutate(mean_in = round(mean_in, 6),
