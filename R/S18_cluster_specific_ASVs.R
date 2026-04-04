@@ -119,6 +119,22 @@ write.csv(top10_rep,
   here("output", "survey", "IndVal", "cluster_top10_representative_ASVs.csv"),
   row.names = FALSE)
 
+# Top 5 版
+top5_rep <- specific %>%
+  group_by(cluster) %>%
+  slice_max(order_by = score, n = 5, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(cluster, ASV, short_name, mean_in, mean_out, ratio, score, padj) %>%
+  mutate(mean_in = round(mean_in, 6),
+         mean_out = round(mean_out, 6),
+         ratio = round(ratio, 1),
+         score = round(score, 4),
+         padj = signif(padj, 3))
+
+write.csv(top5_rep,
+  here("output", "survey", "IndVal", "cluster_top5_representative_ASVs.csv"),
+  row.names = FALSE)
+
 message("\n=== Top 10 representative ASVs per cluster (by score = ratio x mean_in) ===")
 for (cl_name in hier_levels) {
   cl_top <- top10_rep %>% filter(cluster == cl_name)
