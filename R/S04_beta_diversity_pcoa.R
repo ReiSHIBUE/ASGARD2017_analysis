@@ -143,28 +143,37 @@ dev.off()
 # Boxplot + PCoA scatter for every variable, grouped by 10 clusters
 # ==============================================================================
 
-clusnum10_bp <- factor(clusnum10, levels = as.character(1:10))
+# 階層名でクラスター列を追加 / Add hierarchical cluster names
+asgard_pcoa_df$hier_name <- factor(
+  hier_names[as.character(clusnum10[asgard_pcoa_df$Sample])],
+  levels = hier_levels
+)
+asgard_pcoa_df$group <- sub("^(.).*", "\\1", asgard_pcoa_df$hier_name)
 
 pdf(file = here::here("output", "survey", "beta_diversity", "ASGARD_boxplots_survey.pdf"))
 
 plot(asgard_pcoa_df$PCoA1_Bray,
      asgard_pcoa_df$PCoA2_Bray,
-     col = rsc10[rownames(asgard_pcoa_df)], pch = 19,
+     col = rsc10[asgard_pcoa_df$Sample], pch = 19,
      main = "PCoA Bray-Curtis — Survey Samples (10 clusters)",
      xlab = "PCoA1", ylab = "PCoA2")
 
-for (var in colnames(asgard_pcoa_df)) {
-  gg <- ggplot(asgard_pcoa_df, aes(x = cluster10, y = .data[[var]])) +
-    geom_boxplot(aes(fill = cluster10), outlier.shape = NA) +
+numeric_vars <- colnames(asgard_pcoa_df)[sapply(asgard_pcoa_df, is.numeric)]
+# 有効なデータが十分ある列のみ
+numeric_vars <- numeric_vars[sapply(numeric_vars, function(v) sum(!is.na(asgard_pcoa_df[[v]])) > 10)]
+for (var in numeric_vars) {
+  gg <- ggplot(asgard_pcoa_df, aes(x = hier_name, y = .data[[var]])) +
+    geom_boxplot(aes(fill = hier_name), outlier.shape = NA) +
     geom_jitter(width = .4, height = 0) +
     scale_fill_manual(values = cc10) +
+    facet_grid(~ group, scales = "free_x", space = "free_x") +
     labs(title = var) +
     theme(text = element_text(size = 14), legend.position = "none")
   print(gg)
 
   gp <- ggplot(asgard_pcoa_df) +
     geom_point(aes(x = PCoA1_Bray, y = PCoA2_Bray,
-                   col = cluster10, size = .data[[var]])) +
+                   col = hier_name, size = .data[[var]])) +
     scale_color_manual(values = cc10)
   print(gp)
 }
