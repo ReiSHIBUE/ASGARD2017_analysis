@@ -130,8 +130,8 @@ for (scl in hier_levels) {
     asvs_in_cc <- names(cc[cc == ccl])
 
     for (asv in asvs_in_cc) {
-      mean_in <- mean(mat[samples_in, asv])
-      mean_out <- mean(mat[samples_out, asv])
+      mean_in <- mean(mat[samples_in, asv])    # mean RA of this ASV within the sample cluster
+      mean_out <- mean(mat[samples_out, asv])  # mean RA of this ASV outside the sample cluster
 
       if (mean_in < 1e-5) next
 
