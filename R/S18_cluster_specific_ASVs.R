@@ -197,8 +197,61 @@ write.csv(specific_with_cc,
   here("output", "survey", "IndVal", "cluster_specific_ASVs_wilcoxon_with_colcluster.csv"),
   row.names = FALSE)
 
+# ==============================================================================
+# Section 6: 交差部分のtop5 ASVs (sample cluster × column cluster)
+# Top 5 ASVs per intersection, ranked by mean_in (within-cluster mean RA)
+# ==============================================================================
+
+int_results <- list()
+
+for (scl in hier_levels) {
+  samples_in <- names(cl[cl == scl])
+  samples_out <- names(cl[cl != scl])
+
+  for (ccl in 1:6) {
+    asvs_in_cc <- names(cc[cc == ccl])
+
+    for (asv in asvs_in_cc) {
+      mean_in <- mean(mat[samples_in, asv])
+      mean_out <- mean(mat[samples_out, asv])
+
+      if (mean_in < 1e-5) next
+
+      int_results[[length(int_results) + 1]] <- data.frame(
+        sample_cluster = scl,
+        col_cluster = paste0("CC", ccl),
+        ASV = asv,
+        mean_in = mean_in,
+        mean_out = mean_out,
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+}
+
+int_df <- bind_rows(int_results)
+
+int_df$short_name <- sapply(int_df$ASV, function(a) {
+  parts <- strsplit(a, "; ")[[1]]
+  paste(tail(parts, 2), collapse = "; ")
+})
+
+top_intersection <- int_df %>%
+  group_by(sample_cluster, col_cluster) %>%
+  slice_max(order_by = mean_in, n = 5, with_ties = FALSE) %>%
+  ungroup() %>%
+  arrange(sample_cluster, col_cluster, desc(mean_in)) %>%
+  select(sample_cluster, col_cluster, ASV, short_name, mean_in, mean_out) %>%
+  mutate(mean_in = round(mean_in, 6),
+         mean_out = round(mean_out, 6))
+
+write.csv(top_intersection,
+  here("output", "survey", "IndVal", "intersection_top5_ASVs.csv"),
+  row.names = FALSE)
+
 message("\nS18_cluster_specific_ASVs.R: done.")
 message("  CSV: output/survey/IndVal/cluster_specific_ASVs_wilcoxon.csv")
 message("  CSV: output/survey/IndVal/cluster_top10_representative_ASVs.csv")
 message("  CSV: output/survey/IndVal/wilcoxon_by_col_cluster_top3.csv")
 message("  CSV: output/survey/IndVal/cluster_specific_ASVs_wilcoxon_with_colcluster.csv")
+message("  CSV: output/survey/IndVal/intersection_top5_ASVs.csv")
