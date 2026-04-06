@@ -183,14 +183,13 @@ write.csv(intersection_top3,
   here("output", "survey", "IndVal", "wilcoxon_by_col_cluster_top3.csv"),
   row.names = FALSE)
 
-# 全Wilcoxon結果にcol_cluster列を追加して保存
+# 全Wilcoxon結果にcol_cluster列を追加して保存（scoreなし）
 specific_with_cc <- specific %>%
-  select(cluster, col_cluster, ASV, short_name, mean_in, mean_out, ratio, score, pval, padj) %>%
-  arrange(cluster, col_cluster, desc(score)) %>%
+  select(cluster, col_cluster, ASV, short_name, mean_in, mean_out, ratio, pval, padj) %>%
+  arrange(cluster, col_cluster, desc(ratio)) %>%
   mutate(mean_in = round(mean_in, 6),
          mean_out = round(mean_out, 6),
          ratio = round(ratio, 1),
-         score = round(score, 4),
          pval = signif(pval, 3),
          padj = signif(padj, 3))
 
