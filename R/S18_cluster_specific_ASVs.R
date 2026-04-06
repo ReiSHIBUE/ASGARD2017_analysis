@@ -53,7 +53,7 @@ for (cl_name in hier_levels) {
       ASV = asv,
       mean_in = mean_in,
       mean_out = mean_out,
-      ratio = (mean_in + 1e-6) / (mean_out + 1e-6),
+      ratio = (mean_in + 1e-6) / (mean_out + 1e-6),  # enrichment ratio: mean RA within cluster / mean RA outside cluster (1e-6 added to avoid division by zero)
       pval = wt$p.value,
       stringsAsFactors = FALSE
     )
