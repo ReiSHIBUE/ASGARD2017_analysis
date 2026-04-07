@@ -195,8 +195,13 @@ cat("\nDone: output/survey/beta_diversity/ASGARD_pca_env_survey.pdf (20 pages)\n
 
 cat("\n--- Environmental PERMANOVA / PERMDISP by 3 groups (A/B/C) ---\n")
 
-# env_scaled は既に log1p + scale 済み (174 samples x 9 vars)
-env_eucdist <- vegdist(env_scaled, method = "euclidean")
+# PERMANOVA用: 全PC軸スコアのdf (174 x 9) + cluster + sample_id
+pca_all <- as.data.frame(pca_result$x)  # PC1〜PC9
+pca_all$cluster <- env_complete$cluster
+pca_all$sample_id <- env_complete$sample_id
+
+# 全PC軸からEuclidean距離を計算
+env_eucdist <- vegdist(pca_result$x, method = "euclidean")
 
 # 3グループ割り当て
 env_group3 <- factor(
