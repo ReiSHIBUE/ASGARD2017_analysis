@@ -367,6 +367,88 @@ dev.off()
 cat("Done: output/survey/beta_diversity/ASGARD_pca_env_PC1vsPC3.pdf\n")
 
 # ==============================================================================
+# PC1 vs PC3 版プロット (4グループ A/B/C1/C2)
+# ==============================================================================
+
+# group4はまだ定義されていないので先に定義
+group4_colors_13 <- c("A" = "#E31A1C", "B" = "#33A02C", "C1" = "#1F78B4", "C2" = "#6A3D9A")
+group4_map_13 <- c("A1"="A", "A2"="A", "B1"="B", "B2a"="B", "B2b"="B",
+                   "C1a"="C1", "C1b"="C1", "C2a"="C2", "C2b1"="C2", "C2b2"="C2")
+pca_scores$group4 <- group4_map_13[as.character(pca_scores$cluster)]
+
+pdf(file = here("output", "survey", "beta_diversity", "ASGARD_pca_env_4groups_PC1vsPC3.pdf"),
+    width = 10, height = 8)
+
+# Page 1: 4 groups biplot
+print(ggplot() +
+  geom_point(data = pca_scores, aes(x = PC1, y = PC3, color = group4),
+             size = 3, alpha = 0.7) +
+  scale_color_manual(values = group4_colors_13) +
+  geom_segment(data = pca_loadings_13,
+               aes(x = 0, y = 0, xend = PC1_plot, yend = PC3_plot),
+               arrow = arrow(length = unit(0.2, "cm")),
+               color = "black", linewidth = 0.8) +
+  geom_text(data = pca_loadings_13,
+            aes(x = PC1_plot * 1.15, y = PC3_plot * 1.15, label = label),
+            size = 4, fontface = "bold") +
+  coord_cartesian(xlim = range(c(pca_scores$PC1, pca_loadings_13$PC1_plot)) * 1.3,
+                  ylim = range(c(pca_scores$PC3, pca_loadings_13$PC3_plot)) * 1.3) +
+  labs(x = paste0("PC1 (", pc1_pct, "%)"),
+       y = paste0("PC3 (", pc3_pct, "%)"),
+       color = "Group",
+       title = "PCA PC1 vs PC3 (4 groups)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16)))
+
+# Page 2: Points only
+print(ggplot(pca_scores, aes(x = PC1, y = PC3, color = group4)) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_color_manual(values = group4_colors_13) +
+  coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                  ylim = range(pca_scores$PC3) * 1.1) +
+  labs(x = paste0("PC1 (", pc1_pct, "%)"),
+       y = paste0("PC3 (", pc3_pct, "%)"),
+       color = "Group",
+       title = "PCA PC1 vs PC3 (4 groups, points only)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16)))
+
+# Page 3: Faceted
+print(ggplot(pca_scores, aes(x = PC1, y = PC3, color = group4)) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_color_manual(values = group4_colors_13) +
+  facet_wrap(~ group4) +
+  coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                  ylim = range(pca_scores$PC3) * 1.1) +
+  labs(x = paste0("PC1 (", pc1_pct, "%)"),
+       y = paste0("PC3 (", pc3_pct, "%)"),
+       color = "Group",
+       title = "PCA PC1 vs PC3 (faceted by 4 groups)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16),
+        strip.text = element_text(face = "bold", size = 13)))
+
+# Pages 4+: Per-variable, dot size
+for (v in env_vars) {
+  print(ggplot(pca_scores, aes(x = PC1, y = PC3, color = group4, size = .data[[v]])) +
+    geom_point(alpha = 0.7) +
+    scale_color_manual(values = group4_colors_13) +
+    scale_size_continuous(range = c(1, 8), name = env_labels[v]) +
+    coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                    ylim = range(pca_scores$PC3) * 1.1) +
+    labs(x = paste0("PC1 (", pc1_pct, "%)"),
+         y = paste0("PC3 (", pc3_pct, "%)"),
+         color = "Group",
+         title = paste0("PC1 vs PC3 -- dot size: ", env_labels[v], " (4 groups)")) +
+    theme_minimal() +
+    theme(plot.title = element_text(face = "bold", size = 16)))
+}
+
+dev.off()
+
+cat("Done: output/survey/beta_diversity/ASGARD_pca_env_4groups_PC1vsPC3.pdf\n")
+
+# ==============================================================================
 # 4グループ (A/B/C1/C2) 版PCAプロット
 # ==============================================================================
 
