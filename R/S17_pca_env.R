@@ -269,6 +269,89 @@ dev.off()
 cat("Done: output/survey/beta_diversity/ASGARD_pca_env_3groups.pdf\n")
 
 # ==============================================================================
+# 4グループ (A/B/C1/C2) 版PCAプロット
+# ==============================================================================
+
+group4_colors <- c("A" = "#E31A1C", "B" = "#33A02C", "C1" = "#1F78B4", "C2" = "#6A3D9A")
+group4_map_plot <- c("A1"="A", "A2"="A", "B1"="B", "B2a"="B", "B2b"="B",
+                     "C1a"="C1", "C1b"="C1", "C2a"="C2", "C2b1"="C2", "C2b2"="C2")
+pca_scores$group4 <- group4_map_plot[as.character(pca_scores$cluster)]
+
+pdf(file = here("output", "survey", "beta_diversity", "ASGARD_pca_env_4groups.pdf"),
+    width = 10, height = 8)
+
+# Page 1: PCA biplot with 4 groups
+print(ggplot() +
+  geom_point(data = pca_scores, aes(x = PC1, y = PC2, color = group4),
+             size = 3, alpha = 0.7) +
+  scale_color_manual(values = group4_colors) +
+  geom_segment(data = pca_loadings,
+               aes(x = 0, y = 0, xend = PC1_plot, yend = PC2_plot),
+               arrow = arrow(length = unit(0.2, "cm")),
+               color = "black", linewidth = 0.8) +
+  geom_text(data = pca_loadings,
+            aes(x = PC1_plot * 1.15, y = PC2_plot * 1.15, label = label),
+            size = 4, fontface = "bold") +
+  coord_cartesian(xlim = range(c(pca_scores$PC1, pca_loadings$PC1_plot)) * 1.3,
+                  ylim = range(c(pca_scores$PC2, pca_loadings$PC2_plot)) * 1.3) +
+  labs(x = paste0("PC1 (", pc1_pct, "%)"),
+       y = paste0("PC2 (", pc2_pct, "%)"),
+       color = "Group",
+       title = "PCA of Environmental Variables (4 groups)",
+       subtitle = "log1p-transformed nutrients + scaled; 9 variables") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16),
+        plot.subtitle = element_text(size = 12)))
+
+# Page 2: Points only
+print(ggplot(pca_scores, aes(x = PC1, y = PC2, color = group4)) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_color_manual(values = group4_colors) +
+  coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                  ylim = range(pca_scores$PC2) * 1.1) +
+  labs(x = paste0("PC1 (", pc1_pct, "%)"),
+       y = paste0("PC2 (", pc2_pct, "%)"),
+       color = "Group",
+       title = "PCA of Environmental Variables (4 groups, points only)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16)))
+
+# Page 3: Faceted by A/B/C1/C2
+print(ggplot(pca_scores, aes(x = PC1, y = PC2, color = group4)) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_color_manual(values = group4_colors) +
+  facet_wrap(~ group4) +
+  coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                  ylim = range(pca_scores$PC2) * 1.1) +
+  labs(x = paste0("PC1 (", pc1_pct, "%)"),
+       y = paste0("PC2 (", pc2_pct, "%)"),
+       color = "Group",
+       title = "PCA of Environmental Variables (faceted by 4 groups)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16),
+        strip.text = element_text(face = "bold", size = 13)))
+
+# Pages 4+: Per-variable, dot size = env value
+for (v in env_vars) {
+  print(ggplot(pca_scores, aes(x = PC1, y = PC2, color = group4, size = .data[[v]])) +
+    geom_point(alpha = 0.7) +
+    scale_color_manual(values = group4_colors) +
+    scale_size_continuous(range = c(1, 8), name = env_labels[v]) +
+    coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                    ylim = range(pca_scores$PC2) * 1.1) +
+    labs(x = paste0("PC1 (", pc1_pct, "%)"),
+         y = paste0("PC2 (", pc2_pct, "%)"),
+         color = "Group",
+         title = paste0("PCA -- dot size: ", env_labels[v], " (4 groups)")) +
+    theme_minimal() +
+    theme(plot.title = element_text(face = "bold", size = 16)))
+}
+
+dev.off()
+
+cat("Done: output/survey/beta_diversity/ASGARD_pca_env_4groups.pdf\n")
+
+# ==============================================================================
 # Section: 環境変数による PERMANOVA / PERMDISP (3グループ A/B/C)
 # Environmental PERMANOVA / PERMDISP by 3 groups using Euclidean distance
 # on log1p-transformed and scaled environmental variables
