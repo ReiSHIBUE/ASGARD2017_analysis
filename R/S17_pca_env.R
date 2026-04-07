@@ -186,3 +186,94 @@ for (v in env_vars) {
 dev.off()
 
 cat("\nDone: output/survey/beta_diversity/ASGARD_pca_env_survey.pdf (20 pages)\n")
+
+# ==============================================================================
+# Section: 環境変数による PERMANOVA / PERMDISP (3グループ A/B/C)
+# Environmental PERMANOVA / PERMDISP by 3 groups using Euclidean distance
+# on log1p-transformed and scaled environmental variables
+# ==============================================================================
+
+cat("\n--- Environmental PERMANOVA / PERMDISP by 3 groups (A/B/C) ---\n")
+
+# env_scaled は既に log1p + scale 済み (174 samples x 9 vars)
+env_eucdist <- vegdist(env_scaled, method = "euclidean")
+
+# 3グループ割り当て
+env_group3 <- factor(
+  sub("^(.).*", "\\1", as.character(env_complete$cluster)),
+  levels = c("A", "B", "C")
+)
+
+cat("Group sizes: A =", sum(env_group3 == "A"),
+    " B =", sum(env_group3 == "B"),
+    " C =", sum(env_group3 == "C"), "\n")
+
+# PERMANOVA
+env_permanova_3 <- adonis2(env_eucdist ~ env_group3, permutations = 999)
+cat("\nPERMANOVA (env, 3 groups):\n")
+print(env_permanova_3)
+
+# Pairwise PERMANOVA
+groups3 <- c("A", "B", "C")
+pairs3 <- combn(groups3, 2)
+env_pairwise_3 <- data.frame(
+  pair = character(), F_value = numeric(), R2 = numeric(),
+  p_value = numeric(), stringsAsFactors = FALSE
+)
+
+for (i in seq_len(ncol(pairs3))) {
+  cl_a <- pairs3[1, i]
+  cl_b <- pairs3[2, i]
+  idx_a <- which(env_group3 == cl_a)
+  idx_b <- which(env_group3 == cl_b)
+  idx_ab <- c(idx_a, idx_b)
+  dist_sub <- as.dist(as.matrix(env_eucdist)[idx_ab, idx_ab])
+  group_sub <- factor(c(rep(cl_a, length(idx_a)), rep(cl_b, length(idx_b))))
+  res_pair <- adonis2(dist_sub ~ group_sub, permutations = 999)
+  env_pairwise_3 <- rbind(env_pairwise_3, data.frame(
+    pair = paste0(cl_a, " vs ", cl_b),
+    F_value = round(res_pair$F[1], 2),
+    R2 = round(res_pair$R2[1], 4),
+    p_value = res_pair$`Pr(>F)`[1]
+  ))
+}
+env_pairwise_3$p_adj <- round(p.adjust(env_pairwise_3$p_value, method = "BH"), 4)
+env_pairwise_3$sig <- ifelse(env_pairwise_3$p_adj <= 0.001, "***",
+                      ifelse(env_pairwise_3$p_adj <= 0.01, "**",
+                      ifelse(env_pairwise_3$p_adj <= 0.05, "*", "ns")))
+
+cat("\nPairwise PERMANOVA (env, 3 groups):\n")
+print(env_pairwise_3, row.names = FALSE)
+
+# PERMDISP
+env_permdisp_3 <- betadisper(env_eucdist, group = env_group3)
+env_permdisp_3_anova <- anova(env_permdisp_3)
+cat("\nPERMDISP (env, 3 groups):\n")
+print(env_permdisp_3_anova)
+
+# Pairwise PERMDISP (TukeyHSD)
+env_permdisp_3_tukey <- TukeyHSD(env_permdisp_3)
+env_permdisp_pw3 <- as.data.frame(env_permdisp_3_tukey$group)
+env_permdisp_pw3$pair <- rownames(env_permdisp_pw3)
+env_permdisp_pw3$sig <- ifelse(env_permdisp_pw3$`p adj` <= 0.001, "***",
+                        ifelse(env_permdisp_pw3$`p adj` <= 0.01, "**",
+                        ifelse(env_permdisp_pw3$`p adj` <= 0.05, "*", "ns")))
+env_permdisp_pw3 <- env_permdisp_pw3[, c("pair", "diff", "lwr", "upr", "p adj", "sig")]
+colnames(env_permdisp_pw3) <- c("pair", "diff_dispersion", "CI_lower", "CI_upper", "p_adj", "sig")
+env_permdisp_pw3$diff_dispersion <- round(env_permdisp_pw3$diff_dispersion, 4)
+env_permdisp_pw3$CI_lower <- round(env_permdisp_pw3$CI_lower, 4)
+env_permdisp_pw3$CI_upper <- round(env_permdisp_pw3$CI_upper, 4)
+env_permdisp_pw3$p_adj <- round(env_permdisp_pw3$p_adj, 4)
+
+cat("\nPairwise PERMDISP (env, 3 groups):\n")
+print(env_permdisp_pw3, row.names = FALSE)
+
+# CSV保存
+write.csv(env_pairwise_3,
+  here("output", "survey", "beta_diversity", "env_pairwise_permanova_3groups.csv"),
+  row.names = FALSE)
+write.csv(env_permdisp_pw3,
+  here("output", "survey", "beta_diversity", "env_pairwise_permdisp_3groups.csv"),
+  row.names = FALSE)
+
+cat("\nDone: env PERMANOVA/PERMDISP results saved.\n")
