@@ -162,8 +162,103 @@ heatmap.2(
 
 dev.off()
 
-message("S02_heatmaps_16S.R: done.")
+# ==============================================================================
+# Section 5: 11クラスター版 (C1b → C1b1 + C1b2)
+# C1b(n=30) is split into C1b1(n=11) and C1b2(n=19) based on
+# re-clustering of C samples at k=6
+# ==============================================================================
+
+# Cサンプルのサブツリーでk=6カット
+hc_full <- as.hclust(h1$rowDendrogram)
+c_samples <- names(clusnum10)[clusnum10 >= 6]
+d_c <- as.dist(as.matrix(cophenetic(hc_full))[c_samples, c_samples])
+hc_c <- hclust(d_c, method = "ward.D")
+cuts6_c <- cutree(hc_c, k = 6)
+c_order <- hc_c$order
+ord6_c <- unname(rle(cuts6_c[hc_c$labels[c_order]])$values)
+remap6_c <- setNames(1:6, ord6_c)
+cuts6_c <- remap6_c[as.character(cuts6_c)]
+names(cuts6_c) <- names(cutree(hc_c, k = 6))
+
+# 11クラスター割り当て
+hier_levels_11 <- c("A1", "A2", "B1", "B2a", "B2b", "C1a", "C1b1", "C1b2", "C2a", "C2b1", "C2b2")
+
+clusnum11 <- character(length(clusnum10))
+names(clusnum11) <- names(clusnum10)
+for (s in names(clusnum10)) {
+  cn <- hier_names[as.character(clusnum10[s])]
+  if (cn == "C1b") {
+    clusnum11[s] <- ifelse(cuts6_c[s] == 2, "C1b1", "C1b2")
+  } else {
+    clusnum11[s] <- cn
+  }
+}
+clusnum11 <- factor(clusnum11, levels = hier_levels_11)
+
+cc11 <- c(
+  "A1"   = "#E31A1C",  "A2"   = "#FF7F00",
+  "B1"   = "#33A02C",  "B2a"  = "#B2DF8A",  "B2b"  = "#A6D854",
+  "C1a"  = "#1F78B4",  "C1b1" = "#6A3D9A",  "C1b2" = "#B15928",
+  "C2a"  = "#A6CEE3",  "C2b1" = "#CAB2D6",  "C2b2" = "#B3B3B3"
+)
+
+rsc11 <- cc11[as.character(clusnum11)]
+names(rsc11) <- names(clusnum11)
+
+# 11クラスター版ヒートマップ
+pdf(file = here::here("output", "survey", "heatmaps", "ASGARD_hm_survey_16S_11clusters.pdf"),
+    width = 20, height = 20)
+
+heatmap.2(asgard_frtmat,
+  distfun = function(x) vegdist(x, method = "bray"),
+  hclustfun = function(x) hclust(x, method = "ward.D"),
+  col = viridis, Rowv = h1$rowDendrogram, Colv = h1$colDendrogram,
+  margins = c(15, 15), scale = "none",
+  main = "ASGARD Survey 16S — Bray/ward.D", trace = "none",
+  cexCol = 0.2, cexRow = 0.3)
+
+heatmap.2(asgard_frtmat,
+  distfun = function(x) vegdist(x, method = "bray"),
+  hclustfun = function(x) hclust(x, method = "ward.D"),
+  col = viridis,
+  RowSideColors = rsc11[rownames(asgard_frtmat)],
+  ColSideColors = colrsc[colnames(asgard_frtmat)],
+  Rowv = h1$rowDendrogram, Colv = h1$colDendrogram,
+  margins = c(15, 15), scale = "none",
+  main = "ASGARD Survey 16S — 11 row clusters, 6 col clusters", trace = "none",
+  cexCol = 0.2, cexRow = 0.3)
+
+heatmap.2(asgard_frtmat,
+  distfun = function(x) vegdist(x, method = "bray"),
+  hclustfun = function(x) hclust(x, method = "ward.D"),
+  col = viridis,
+  RowSideColors = rsc11[rownames(asgard_frtmat)],
+  ColSideColors = colrsc[colnames(asgard_frtmat)],
+  Rowv = h1$rowDendrogram, Colv = h1$colDendrogram,
+  margins = c(15, 15), scale = "none",
+  main = "ASGARD Survey 16S — 11 clusters (station names)", trace = "none",
+  cexCol = 0.2, cexRow = 0.3,
+  labRow = meta_asgard[rownames(asgard_frtmat), "station"])
+
+heatmap.2(asgard_frtmat,
+  distfun = function(x) vegdist(x, method = "bray"),
+  hclustfun = function(x) hclust(x, method = "ward.D"),
+  col = viridis,
+  RowSideColors = rsc11[rownames(asgard_frtmat)],
+  ColSideColors = colrsc[colnames(asgard_frtmat)],
+  Rowv = h1$rowDendrogram, Colv = h1$colDendrogram,
+  margins = c(2, 2), scale = "none",
+  main = "ASGARD Survey 16S — 11 row clusters, 6 col clusters", trace = "none",
+  labRow = FALSE, labCol = FALSE)
+
+dev.off()
+
+message("  11-cluster heatmap: output/survey/heatmaps/ASGARD_hm_survey_16S_11clusters.pdf")
+message("  clusnum11, cc11, rsc11, hier_levels_11 exported")
+
+message("\nS02_heatmaps_16S.R: done.")
 message("  clusnum10 length:  ", length(clusnum10), " (", nclus10, " row clusters)")
 message("  hier_names: ", paste(hier_names, collapse = ", "))
 message("  colclusnum length: ", length(colclusnum), " (", colnclus, " col clusters)")
 message("  PDF: output/survey/heatmaps/ASGARD_hm_survey_16S.pdf")
+
