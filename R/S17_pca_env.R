@@ -2,7 +2,7 @@ library(here); library(tidyverse); library(vegan)
 source(here("R/00_setup.R")); source(here("R/S01_data_prep.R")); source(here("R/S02_heatmaps_16S.R"))
 
 df <- meta_asgard
-df$cluster <- factor(clusnum10[rownames(df)], levels = as.character(1:10))
+df$cluster <- factor(hier_names[as.character(clusnum10[rownames(df)])], levels = hier_levels)
 df$sample_id <- rownames(df)
 
 # Select environmental variables
@@ -74,7 +74,7 @@ pdf(file = here("output", "survey", "beta_diversity", "ASGARD_pca_env_survey.pdf
 p1 <- ggplot() +
   geom_point(data = pca_scores, aes(x = PC1, y = PC2, color = cluster),
              size = 3, alpha = 0.7) +
-  scale_color_manual(values = scales::hue_pal()(10)) +
+  scale_color_manual(values = cc10) +
   geom_segment(data = pca_loadings,
                aes(x = 0, y = 0, xend = PC1_plot, yend = PC2_plot),
                arrow = arrow(length = unit(0.2, "cm")),
@@ -97,7 +97,7 @@ print(p1)
 # Page 2: Without arrows (cleaner view)
 p2 <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = cluster)) +
   geom_point(size = 3, alpha = 0.7) +
-  scale_color_manual(values = scales::hue_pal()(10)) +
+  scale_color_manual(values = cc10) +
   coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
                   ylim = range(pca_scores$PC2) * 1.1) +
   labs(x = paste0("PC1 (", pc1_pct, "%)"),
@@ -127,7 +127,7 @@ for (v in env_vars) {
 for (v in env_vars) {
   p_env <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = cluster, size = .data[[v]])) +
     geom_point(alpha = 0.7) +
-    scale_color_manual(values = scales::hue_pal()(10)) +
+    scale_color_manual(values = cc10) +
     scale_size_continuous(range = c(1, 8), name = env_labels[v]) +
     coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
                     ylim = range(pca_scores$PC2) * 1.1) +
@@ -150,7 +150,7 @@ for (v in env_vars) {
   # All depths combined
   p_all <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = cluster, size = .data[[v]])) +
     geom_point(alpha = 0.7) +
-    scale_color_manual(values = scales::hue_pal()(10)) +
+    scale_color_manual(values = cc10) +
     scale_size_continuous(range = c(1, 8), name = env_labels[v]) +
     coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
                     ylim = range(pca_scores$PC2) * 1.1) +
@@ -165,7 +165,7 @@ for (v in env_vars) {
   # Faceted by depth_type
   p_facet <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = cluster, size = .data[[v]])) +
     geom_point(alpha = 0.7) +
-    scale_color_manual(values = scales::hue_pal()(10)) +
+    scale_color_manual(values = cc10) +
     scale_size_continuous(range = c(1, 8), name = env_labels[v]) +
     facet_wrap(~ depth_type) +
     coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
