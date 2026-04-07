@@ -281,8 +281,8 @@ pca_all <- as.data.frame(pca_result$x)  # PC1〜PC9
 pca_all$cluster <- env_complete$cluster
 pca_all$sample_id <- env_complete$sample_id
 
-# 全PC軸からEuclidean距離を計算
-env_eucdist <- vegdist(pca_result$x, method = "euclidean")
+# pca_allのPC1〜PC9からEuclidean距離を計算
+env_eucdist <- vegdist(pca_all[, paste0("PC", 1:9)], method = "euclidean")
 
 # 3グループ割り当て
 env_group3 <- factor(
