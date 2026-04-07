@@ -185,7 +185,88 @@ for (v in env_vars) {
 
 dev.off()
 
-cat("\nDone: output/survey/beta_diversity/ASGARD_pca_env_survey.pdf (20 pages)\n")
+cat("\nDone: output/survey/beta_diversity/ASGARD_pca_env_survey.pdf\n")
+
+# ==============================================================================
+# 3グループ (A/B/C) 版PCAプロット
+# ==============================================================================
+
+group_colors <- c("A" = "#E31A1C", "B" = "#33A02C", "C" = "#1F78B4")
+pca_scores$group <- sub("^(.).*", "\\1", as.character(pca_scores$cluster))
+
+pdf(file = here("output", "survey", "beta_diversity", "ASGARD_pca_env_3groups.pdf"),
+    width = 10, height = 8)
+
+# Page 1: PCA biplot with 3 groups
+print(ggplot() +
+  geom_point(data = pca_scores, aes(x = PC1, y = PC2, color = group),
+             size = 3, alpha = 0.7) +
+  scale_color_manual(values = group_colors) +
+  geom_segment(data = pca_loadings,
+               aes(x = 0, y = 0, xend = PC1_plot, yend = PC2_plot),
+               arrow = arrow(length = unit(0.2, "cm")),
+               color = "black", linewidth = 0.8) +
+  geom_text(data = pca_loadings,
+            aes(x = PC1_plot * 1.15, y = PC2_plot * 1.15, label = label),
+            size = 4, fontface = "bold") +
+  coord_cartesian(xlim = range(c(pca_scores$PC1, pca_loadings$PC1_plot)) * 1.3,
+                  ylim = range(c(pca_scores$PC2, pca_loadings$PC2_plot)) * 1.3) +
+  labs(x = paste0("PC1 (", pc1_pct, "%)"),
+       y = paste0("PC2 (", pc2_pct, "%)"),
+       color = "Group",
+       title = "PCA of Environmental Variables (3 groups)",
+       subtitle = "log1p-transformed nutrients + scaled; 9 variables") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16),
+        plot.subtitle = element_text(size = 12)))
+
+# Page 2: Points only
+print(ggplot(pca_scores, aes(x = PC1, y = PC2, color = group)) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_color_manual(values = group_colors) +
+  coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                  ylim = range(pca_scores$PC2) * 1.1) +
+  labs(x = paste0("PC1 (", pc1_pct, "%)"),
+       y = paste0("PC2 (", pc2_pct, "%)"),
+       color = "Group",
+       title = "PCA of Environmental Variables (3 groups, points only)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16)))
+
+# Page 3: Faceted by A/B/C
+print(ggplot(pca_scores, aes(x = PC1, y = PC2, color = group)) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_color_manual(values = group_colors) +
+  facet_wrap(~ group) +
+  coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                  ylim = range(pca_scores$PC2) * 1.1) +
+  labs(x = paste0("PC1 (", pc1_pct, "%)"),
+       y = paste0("PC2 (", pc2_pct, "%)"),
+       color = "Group",
+       title = "PCA of Environmental Variables (faceted by group)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16),
+        strip.text = element_text(face = "bold", size = 13)))
+
+# Pages 4+: Per-variable, dot size = env value
+for (v in env_vars) {
+  print(ggplot(pca_scores, aes(x = PC1, y = PC2, color = group, size = .data[[v]])) +
+    geom_point(alpha = 0.7) +
+    scale_color_manual(values = group_colors) +
+    scale_size_continuous(range = c(1, 8), name = env_labels[v]) +
+    coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                    ylim = range(pca_scores$PC2) * 1.1) +
+    labs(x = paste0("PC1 (", pc1_pct, "%)"),
+         y = paste0("PC2 (", pc2_pct, "%)"),
+         color = "Group",
+         title = paste0("PCA -- dot size: ", env_labels[v], " (3 groups)")) +
+    theme_minimal() +
+    theme(plot.title = element_text(face = "bold", size = 16)))
+}
+
+dev.off()
+
+cat("Done: output/survey/beta_diversity/ASGARD_pca_env_3groups.pdf\n")
 
 # ==============================================================================
 # Section: 環境変数による PERMANOVA / PERMDISP (3グループ A/B/C)
