@@ -268,12 +268,126 @@ env_permdisp_pw3$p_adj <- round(env_permdisp_pw3$p_adj, 4)
 cat("\nPairwise PERMDISP (env, 3 groups):\n")
 print(env_permdisp_pw3, row.names = FALSE)
 
-# CSV保存
-write.csv(env_pairwise_3,
-  here("output", "survey", "beta_diversity", "env_pairwise_permanova_3groups.csv"),
-  row.names = FALSE)
-write.csv(env_permdisp_pw3,
-  here("output", "survey", "beta_diversity", "env_pairwise_permdisp_3groups.csv"),
+# ==============================================================================
+# Section: 環境変数による PERMANOVA / PERMDISP (4グループ A/B/C1/C2)
+# ==============================================================================
+
+cat("\n--- Environmental PERMANOVA / PERMDISP by 4 groups (A/B/C1/C2) ---\n")
+
+group4_map <- c("A1"="A", "A2"="A", "B1"="B", "B2a"="B", "B2b"="B",
+                "C1a"="C1", "C1b"="C1", "C2a"="C2", "C2b1"="C2", "C2b2"="C2")
+env_group4 <- factor(
+  group4_map[as.character(env_complete$cluster)],
+  levels = c("A", "B", "C1", "C2")
+)
+
+cat("Group sizes: A =", sum(env_group4 == "A"),
+    " B =", sum(env_group4 == "B"),
+    " C1 =", sum(env_group4 == "C1"),
+    " C2 =", sum(env_group4 == "C2"), "\n")
+
+# PERMANOVA
+env_permanova_4 <- adonis2(env_eucdist ~ env_group4, permutations = 999)
+cat("\nPERMANOVA (env, 4 groups):\n")
+print(env_permanova_4)
+
+# Pairwise PERMANOVA
+groups4 <- c("A", "B", "C1", "C2")
+pairs4 <- combn(groups4, 2)
+env_pairwise_4 <- data.frame(
+  pair = character(), F_value = numeric(), R2 = numeric(),
+  p_value = numeric(), stringsAsFactors = FALSE
+)
+
+for (i in seq_len(ncol(pairs4))) {
+  cl_a <- pairs4[1, i]
+  cl_b <- pairs4[2, i]
+  idx_a <- which(env_group4 == cl_a)
+  idx_b <- which(env_group4 == cl_b)
+  idx_ab <- c(idx_a, idx_b)
+  dist_sub <- as.dist(as.matrix(env_eucdist)[idx_ab, idx_ab])
+  group_sub <- factor(c(rep(cl_a, length(idx_a)), rep(cl_b, length(idx_b))))
+  res_pair <- adonis2(dist_sub ~ group_sub, permutations = 999)
+  env_pairwise_4 <- rbind(env_pairwise_4, data.frame(
+    pair = paste0(cl_a, " vs ", cl_b),
+    F_value = round(res_pair$F[1], 2),
+    R2 = round(res_pair$R2[1], 4),
+    p_value = res_pair$`Pr(>F)`[1]
+  ))
+}
+env_pairwise_4$p_adj <- round(p.adjust(env_pairwise_4$p_value, method = "BH"), 4)
+env_pairwise_4$sig <- ifelse(env_pairwise_4$p_adj <= 0.001, "***",
+                      ifelse(env_pairwise_4$p_adj <= 0.01, "**",
+                      ifelse(env_pairwise_4$p_adj <= 0.05, "*", "ns")))
+
+cat("\nPairwise PERMANOVA (env, 4 groups):\n")
+print(env_pairwise_4, row.names = FALSE)
+
+# PERMDISP
+env_permdisp_4 <- betadisper(env_eucdist, group = env_group4)
+env_permdisp_4_anova <- anova(env_permdisp_4)
+cat("\nPERMDISP (env, 4 groups):\n")
+print(env_permdisp_4_anova)
+
+# Pairwise PERMDISP
+env_permdisp_4_tukey <- TukeyHSD(env_permdisp_4)
+env_permdisp_pw4 <- as.data.frame(env_permdisp_4_tukey$group)
+env_permdisp_pw4$pair <- rownames(env_permdisp_pw4)
+env_permdisp_pw4$sig <- ifelse(env_permdisp_pw4$`p adj` <= 0.001, "***",
+                        ifelse(env_permdisp_pw4$`p adj` <= 0.01, "**",
+                        ifelse(env_permdisp_pw4$`p adj` <= 0.05, "*", "ns")))
+env_permdisp_pw4 <- env_permdisp_pw4[, c("pair", "diff", "lwr", "upr", "p adj", "sig")]
+colnames(env_permdisp_pw4) <- c("pair", "diff_dispersion", "CI_lower", "CI_upper", "p_adj", "sig")
+env_permdisp_pw4$diff_dispersion <- round(env_permdisp_pw4$diff_dispersion, 4)
+env_permdisp_pw4$CI_lower <- round(env_permdisp_pw4$CI_lower, 4)
+env_permdisp_pw4$CI_upper <- round(env_permdisp_pw4$CI_upper, 4)
+env_permdisp_pw4$p_adj <- round(env_permdisp_pw4$p_adj, 4)
+
+cat("\nPairwise PERMDISP (env, 4 groups):\n")
+print(env_permdisp_pw4, row.names = FALSE)
+
+# ==============================================================================
+# CSV保存: 3グループ + 4グループの結果を1つのCSVにまとめる
+# ==============================================================================
+
+# 3グループ
+summary_3 <- rbind(
+  data.frame(groups = "3 (A/B/C)", test = "PERMANOVA (overall)", pair = "A/B/C",
+             R2 = round(env_permanova_3$R2[1], 4), F_value = round(env_permanova_3$F[1], 2),
+             p_value = env_permanova_3$`Pr(>F)`[1], sig = ifelse(env_permanova_3$`Pr(>F)`[1] <= 0.001, "***", ifelse(env_permanova_3$`Pr(>F)`[1] <= 0.01, "**", ifelse(env_permanova_3$`Pr(>F)`[1] <= 0.05, "*", "ns")))),
+  data.frame(groups = "3 (A/B/C)", test = "PERMDISP (overall)", pair = "A/B/C",
+             R2 = NA, F_value = round(env_permdisp_3_anova$`F value`[1], 2),
+             p_value = round(env_permdisp_3_anova$`Pr(>F)`[1], 4), sig = ifelse(env_permdisp_3_anova$`Pr(>F)`[1] <= 0.001, "***", ifelse(env_permdisp_3_anova$`Pr(>F)`[1] <= 0.01, "**", ifelse(env_permdisp_3_anova$`Pr(>F)`[1] <= 0.05, "*", "ns")))),
+  data.frame(groups = "3 (A/B/C)", test = "Pairwise PERMANOVA", pair = env_pairwise_3$pair,
+             R2 = env_pairwise_3$R2, F_value = env_pairwise_3$F_value,
+             p_value = env_pairwise_3$p_adj, sig = env_pairwise_3$sig),
+  data.frame(groups = "3 (A/B/C)", test = "Pairwise PERMDISP", pair = c("A vs B", "A vs C", "B vs C"),
+             R2 = NA, F_value = NA,
+             p_value = env_permdisp_pw3$p_adj, sig = env_permdisp_pw3$sig)
+)
+
+# 4グループ
+summary_4 <- rbind(
+  data.frame(groups = "4 (A/B/C1/C2)", test = "PERMANOVA (overall)", pair = "A/B/C1/C2",
+             R2 = round(env_permanova_4$R2[1], 4), F_value = round(env_permanova_4$F[1], 2),
+             p_value = env_permanova_4$`Pr(>F)`[1], sig = ifelse(env_permanova_4$`Pr(>F)`[1] <= 0.001, "***", ifelse(env_permanova_4$`Pr(>F)`[1] <= 0.01, "**", ifelse(env_permanova_4$`Pr(>F)`[1] <= 0.05, "*", "ns")))),
+  data.frame(groups = "4 (A/B/C1/C2)", test = "PERMDISP (overall)", pair = "A/B/C1/C2",
+             R2 = NA, F_value = round(env_permdisp_4_anova$`F value`[1], 2),
+             p_value = round(env_permdisp_4_anova$`Pr(>F)`[1], 4), sig = ifelse(env_permdisp_4_anova$`Pr(>F)`[1] <= 0.001, "***", ifelse(env_permdisp_4_anova$`Pr(>F)`[1] <= 0.01, "**", ifelse(env_permdisp_4_anova$`Pr(>F)`[1] <= 0.05, "*", "ns")))),
+  data.frame(groups = "4 (A/B/C1/C2)", test = "Pairwise PERMANOVA", pair = env_pairwise_4$pair,
+             R2 = env_pairwise_4$R2, F_value = env_pairwise_4$F_value,
+             p_value = env_pairwise_4$p_adj, sig = env_pairwise_4$sig),
+  data.frame(groups = "4 (A/B/C1/C2)", test = "Pairwise PERMDISP",
+             pair = c("A vs B", "A vs C1", "A vs C2", "B vs C1", "B vs C2", "C1 vs C2"),
+             R2 = NA, F_value = NA,
+             p_value = env_permdisp_pw4$p_adj, sig = env_permdisp_pw4$sig)
+)
+
+env_summary <- rbind(summary_3, summary_4)
+
+write.csv(env_summary,
+  here("output", "survey", "beta_diversity", "env_permanova_permdisp_summary.csv"),
   row.names = FALSE)
 
 cat("\nDone: env PERMANOVA/PERMDISP results saved.\n")
+cat("  CSV: output/survey/beta_diversity/env_permanova_permdisp_summary.csv\n")
