@@ -1,0 +1,4 @@
+"pair","permanova_F_value","permanova_R2","permanova_p_value","permanova_p_adj","permanova_sig","permdisp_diff_dispersion","permdisp_CI_lower","permdisp_CI_upper","permdisp_p_adj","permdisp_sig"
+"A vs B",5.43,0.0643,0.002,0.006,"**",-0.6255,-1.1827,-0.0683,0.0235,"*"
+"A vs C",3.75,0.0316,0.011,0.0165,"*",-0.2423,-0.7665,0.282,0.52,"ns"
+"B vs C",2.77,0.0184,0.037,0.037,"*",0.3832,-0.0019,0.7684,0.0515,"ns"
