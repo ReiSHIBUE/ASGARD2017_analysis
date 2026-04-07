@@ -740,3 +740,134 @@ write.csv(env_summary,
 
 cat("\nDone: env PERMANOVA/PERMDISP results saved.\n")
 cat("  CSV: output/survey/beta_diversity/env_permanova_permdisp_summary.csv\n")
+
+# ==============================================================================
+# Section: C階層的分割 PERMANOVA/PERMDISP (k=2,4,5,6 on each PC axis)
+# Hierarchical subdivision of C (n=97) with per-PC-axis tests
+# ==============================================================================
+
+cat("\n--- C hierarchical PERMANOVA/PERMDISP ---\n")
+
+hc_full <- as.hclust(h1$rowDendrogram)
+c_samples <- names(clusnum10)[clusnum10 >= 6]
+d_c <- as.dist(as.matrix(cophenetic(hc_full))[c_samples, c_samples])
+hc_c <- hclust(d_c, method = "ward.D")
+
+common_c <- intersect(c_samples, pca_all$sample_id)
+pca_c <- pca_all[match(common_c, pca_all$sample_id), ]
+
+all_results_c <- list()
+
+for (k in c(2, 4, 5, 6)) {
+  cuts <- cutree(hc_c, k = k)
+  c_order <- hc_c$order
+  ord <- unname(rle(cuts[hc_c$labels[c_order]])$values)
+  remap <- setNames(1:k, ord)
+  cuts <- remap[as.character(cuts)]
+  names(cuts) <- names(cutree(hc_c, k = k))
+
+  c_names <- paste0("C", 1:k)
+  group_c <- factor(c_names[cuts[common_c]], levels = c_names)
+
+  for (pc in paste0("PC", 1:9)) {
+    pc_dist <- vegdist(as.matrix(pca_c[, pc, drop = FALSE]), method = "euclidean")
+
+    res_perm <- adonis2(pc_dist ~ group_c, permutations = 999)
+    all_results_c[[length(all_results_c) + 1]] <- data.frame(
+      k = k, PC = pc, test = "PERMANOVA (overall)", pair = paste(c_names, collapse = "/"),
+      R2 = round(res_perm$R2[1], 4), F_value = round(res_perm$F[1], 2),
+      p_value = res_perm$`Pr(>F)`[1])
+
+    disp <- betadisper(pc_dist, group = group_c)
+    disp_anova <- anova(disp)
+    all_results_c[[length(all_results_c) + 1]] <- data.frame(
+      k = k, PC = pc, test = "PERMDISP (overall)", pair = paste(c_names, collapse = "/"),
+      R2 = NA, F_value = round(disp_anova$`F value`[1], 2),
+      p_value = round(disp_anova$`Pr(>F)`[1], 4))
+
+    pairs_k <- combn(c_names, 2)
+    pw_pvals <- c(); pw_rows <- list()
+    for (i in seq_len(ncol(pairs_k))) {
+      cl_a <- pairs_k[1, i]; cl_b <- pairs_k[2, i]
+      idx_a <- which(group_c == cl_a); idx_b <- which(group_c == cl_b)
+      idx_ab <- c(idx_a, idx_b)
+      dist_sub <- as.dist(as.matrix(pc_dist)[idx_ab, idx_ab])
+      group_sub <- factor(c(rep(cl_a, length(idx_a)), rep(cl_b, length(idx_b))))
+      res_pair <- adonis2(dist_sub ~ group_sub, permutations = 999)
+      pw_pvals <- c(pw_pvals, res_pair$`Pr(>F)`[1])
+      pw_rows[[i]] <- data.frame(
+        k = k, PC = pc, test = "Pairwise PERMANOVA",
+        pair = paste0(cl_a, " vs ", cl_b),
+        R2 = round(res_pair$R2[1], 4), F_value = round(res_pair$F[1], 2),
+        p_value = res_pair$`Pr(>F)`[1])
+    }
+    pw_padj <- p.adjust(pw_pvals, method = "BH")
+    for (i in seq_along(pw_rows)) {
+      pw_rows[[i]]$p_value <- round(pw_padj[i], 4)
+      all_results_c[[length(all_results_c) + 1]] <- pw_rows[[i]]
+    }
+
+    tukey <- TukeyHSD(disp)
+    pw_disp <- as.data.frame(tukey$group)
+    pair_labels <- apply(combn(c_names, 2), 2, function(x) paste(x, collapse = " vs "))
+    for (j in seq_len(nrow(pw_disp))) {
+      all_results_c[[length(all_results_c) + 1]] <- data.frame(
+        k = k, PC = pc, test = "Pairwise PERMDISP", pair = pair_labels[j],
+        R2 = NA, F_value = NA, p_value = round(pw_disp$`p adj`[j], 4))
+    }
+  }
+}
+
+result_c <- bind_rows(all_results_c)
+result_c$sig <- ifelse(result_c$p_value <= 0.001, "***",
+                ifelse(result_c$p_value <= 0.01, "**",
+                ifelse(result_c$p_value <= 0.05, "*", "ns")))
+
+write.csv(result_c,
+  here("output", "survey", "beta_diversity", "env_permanova_permdisp_C_hierarchical.csv"),
+  row.names = FALSE)
+
+# デンドログラムノードごとのpairwise結果
+node_pairs <- list(
+  list(k = 2, pair = "C1 vs C2", node = "C1 vs C2"),
+  list(k = 4, pair = "C1 vs C2", node = "C1a vs C1b"),
+  list(k = 4, pair = "C3 vs C4", node = "C2a vs C2b"),
+  list(k = 5, pair = "C4 vs C5", node = "C2b1 vs C2b2"),
+  list(k = 6, pair = "C2 vs C3", node = "C1b1 vs C1b2")
+)
+
+node_results <- list()
+for (np in node_pairs) {
+  for (pc in paste0("PC", 1:9)) {
+    perm <- result_c[result_c$k == np$k & result_c$PC == pc & result_c$test == "Pairwise PERMANOVA" & result_c$pair == np$pair, ]
+    disp <- result_c[result_c$k == np$k & result_c$PC == pc & result_c$test == "Pairwise PERMDISP" & result_c$pair == np$pair, ]
+    if (nrow(perm) == 0 | nrow(disp) == 0) next
+    node_results[[length(node_results) + 1]] <- data.frame(
+      node = np$node, k = np$k, PC = pc,
+      permanova_R2 = perm$R2, permanova_p = perm$p_value, permanova_sig = perm$sig,
+      permdisp_p = disp$p_value, permdisp_sig = disp$sig, stringsAsFactors = FALSE)
+  }
+}
+
+node_df <- bind_rows(node_results)
+
+# 各ノードの最重要PC (PERMANOVA sig & PERMDISP ns, max R²)
+top_pcs <- node_df %>%
+  filter(permanova_p <= 0.05, permdisp_sig == "ns") %>%
+  group_by(node) %>%
+  slice_max(order_by = permanova_R2, n = 1) %>%
+  ungroup()
+
+node_df$top_PC <- ""
+for (i in seq_len(nrow(node_df))) {
+  tp <- top_pcs[top_pcs$node == node_df$node[i] & top_pcs$PC == node_df$PC[i], ]
+  if (nrow(tp) > 0) node_df$top_PC[i] <- "***TOP***"
+}
+
+write.csv(node_df,
+  here("output", "survey", "beta_diversity", "env_C_dendrogram_node_pairwise.csv"),
+  row.names = FALSE)
+
+cat("Done: C hierarchical PERMANOVA/PERMDISP saved.\n")
+cat("  CSV: output/survey/beta_diversity/env_permanova_permdisp_C_hierarchical.csv\n")
+cat("  CSV: output/survey/beta_diversity/env_C_dendrogram_node_pairwise.csv\n")
