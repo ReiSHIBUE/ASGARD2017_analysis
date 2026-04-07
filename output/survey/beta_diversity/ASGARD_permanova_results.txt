@@ -91,3 +91,41 @@ sal : r = 0.3869 , p = 0.001
 temp : r = 0.294 , p = 0.001 
 do : r = 0.1254 , p = 0.001 
 no3 : r = 0.1598 , p = 0.001 
+
+
+========== 3 GROUPS (A/B/C) ==========
+
+=== PERMANOVA by 3 groups (adonis2, 999 permutations) ===
+Permutation test for adonis under reduced model
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = asgard_braymat ~ group3, permutations = 999)
+          Df SumOfSqs      R2      F Pr(>F)    
+Model      2   8.9641 0.34203 46.264  0.001 ***
+Residual 178  17.2447 0.65797                  
+Total    180  26.2088 1.00000                  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+=== Pairwise PERMANOVA (3 pairs, BH-adjusted p-values) ===
+   pair F_value     R2 p_value p_adj sig
+ A vs B   39.14 0.3231   0.001 0.001 ***
+ A vs C   48.40 0.2891   0.001 0.001 ***
+ B vs C   47.92 0.2362   0.001 0.001 ***
+
+=== PERMDISP (betadisper ANOVA, 3 groups) ===
+Analysis of Variance Table
+
+Response: Distances
+           Df  Sum Sq  Mean Sq F value   Pr(>F)    
+Groups      2 0.25063 0.125314  26.555 8.08e-11 ***
+Residuals 178 0.83998 0.004719                     
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+=== Pairwise PERMDISP (TukeyHSD, 3 groups) ===
+ pair diff_dispersion CI_lower CI_upper  p_adj sig
+  B-A         -0.1080  -0.1472  -0.0688 0.0000 ***
+  C-A         -0.0436  -0.0806  -0.0066 0.0163   *
+  C-B          0.0644   0.0377   0.0911 0.0000 ***
