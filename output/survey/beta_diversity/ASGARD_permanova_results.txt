@@ -129,3 +129,47 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
   B-A         -0.1080  -0.1472  -0.0688 0.0000 ***
   C-A         -0.0436  -0.0806  -0.0066 0.0163   *
   C-B          0.0644   0.0377   0.0911 0.0000 ***
+
+
+========== 4 GROUPS (A/B/C1/C2) ==========
+
+=== PERMANOVA by 4 groups (adonis2, 999 permutations) ===
+Permutation test for adonis under reduced model
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = asgard_braymat ~ group4, permutations = 999)
+          Df SumOfSqs      R2      F Pr(>F)    
+Model      3   10.796 0.41191 41.325  0.001 ***
+Residual 177   15.413 0.58809                  
+Total    180   26.209 1.00000                  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+=== Pairwise PERMANOVA (6 pairs, BH-adjusted p-values) ===
+     pair F_value     R2 p_value p_adj sig
+   A vs B   39.14 0.3231   0.001 0.001 ***
+  A vs C1   48.61 0.4241   0.001 0.001 ***
+  A vs C2   44.33 0.3715   0.001 0.001 ***
+  B vs C1   48.59 0.3226   0.001 0.001 ***
+  B vs C2   47.49 0.2997   0.001 0.001 ***
+ C1 vs C2   21.10 0.1817   0.001 0.001 ***
+
+=== PERMDISP (betadisper ANOVA, 4 groups) ===
+Analysis of Variance Table
+
+Response: Distances
+           Df  Sum Sq  Mean Sq F value    Pr(>F)    
+Groups      3 0.20144 0.067147  15.471 5.559e-09 ***
+Residuals 177 0.76821 0.004340                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+=== Pairwise PERMDISP (TukeyHSD, 4 groups) ===
+  pair diff_dispersion CI_lower CI_upper  p_adj sig
+   B-A         -0.1080  -0.1493  -0.0667 0.0000 ***
+  C1-A         -0.0773  -0.1207  -0.0339 0.0000 ***
+  C2-A         -0.0709  -0.1129  -0.0289 0.0001 ***
+  C1-B          0.0307  -0.0032   0.0646 0.0913  ns
+  C2-B          0.0371   0.0049   0.0693 0.0168   *
+ C2-C1          0.0064  -0.0284   0.0413 0.9642  ns

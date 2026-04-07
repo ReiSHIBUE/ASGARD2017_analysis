@@ -241,6 +241,84 @@ message("\nPairwise PERMDISP (3 groups):")
 print(permdisp_pairwise_3, row.names = FALSE)
 
 # ==============================================================================
+# Section 5c: 4グループ (A/B/C1/C2) での PERMANOVA, PERMDISP, Pairwise
+# ==============================================================================
+
+message("\n--- PERMANOVA / PERMDISP by 4 groups (A/B/C1/C2) ---")
+
+# k=4: A(n=24), B(n=60), C1(n=44), C2(n=53)
+group4_map <- c("A1"="A", "A2"="A", "B1"="B", "B2a"="B", "B2b"="B",
+                "C1a"="C1", "C1b"="C1", "C2a"="C2", "C2b1"="C2", "C2b2"="C2")
+group4 <- factor(
+  group4_map[hier_names[as.character(clusnum10[rownames(as.matrix(asgard_braymat))])]],
+  levels = c("A", "B", "C1", "C2")
+)
+
+# PERMANOVA by 4 groups
+asgard_permanova_4 <- adonis2(asgard_braymat ~ group4, permutations = 999)
+message("\nPERMANOVA (4 groups):")
+print(asgard_permanova_4)
+
+# Pairwise PERMANOVA (6 pairs)
+groups4 <- c("A", "B", "C1", "C2")
+pairs4 <- combn(groups4, 2)
+pairwise_results_4 <- data.frame(
+  pair = character(), F_value = numeric(), R2 = numeric(),
+  p_value = numeric(), stringsAsFactors = FALSE
+)
+
+cl_map4 <- group4_map[hier_names[as.character(clusnum10)]]
+names(cl_map4) <- names(clusnum10)
+
+for (i in seq_len(ncol(pairs4))) {
+  cl_a <- pairs4[1, i]
+  cl_b <- pairs4[2, i]
+  samps_a <- names(cl_map4)[cl_map4 == cl_a]
+  samps_b <- names(cl_map4)[cl_map4 == cl_b]
+  samps_ab <- c(samps_a, samps_b)
+  mat_sub <- as.matrix(asgard_braymat)[samps_ab, samps_ab]
+  dist_sub <- as.dist(mat_sub)
+  group_sub <- factor(c(rep(cl_a, length(samps_a)), rep(cl_b, length(samps_b))))
+  res_pair <- adonis2(dist_sub ~ group_sub, permutations = 999)
+  pairwise_results_4 <- rbind(pairwise_results_4, data.frame(
+    pair = paste0(cl_a, " vs ", cl_b),
+    F_value = round(res_pair$F[1], 2),
+    R2 = round(res_pair$R2[1], 4),
+    p_value = res_pair$`Pr(>F)`[1]
+  ))
+}
+pairwise_results_4$p_adj <- round(p.adjust(pairwise_results_4$p_value, method = "BH"), 4)
+pairwise_results_4$sig <- ifelse(pairwise_results_4$p_adj <= 0.001, "***",
+                          ifelse(pairwise_results_4$p_adj <= 0.01, "**",
+                          ifelse(pairwise_results_4$p_adj <= 0.05, "*", "ns")))
+
+message("\nPairwise PERMANOVA (4 groups):")
+print(pairwise_results_4, row.names = FALSE)
+
+# PERMDISP by 4 groups
+asgard_permdisp_4 <- betadisper(asgard_braymat, group = group4)
+asgard_permdisp_4_anova <- anova(asgard_permdisp_4)
+message("\nPERMDISP (4 groups):")
+print(asgard_permdisp_4_anova)
+
+# Pairwise PERMDISP (TukeyHSD)
+asgard_permdisp_4_tukey <- TukeyHSD(asgard_permdisp_4)
+permdisp_pairwise_4 <- as.data.frame(asgard_permdisp_4_tukey$group)
+permdisp_pairwise_4$pair <- rownames(permdisp_pairwise_4)
+permdisp_pairwise_4$sig <- ifelse(permdisp_pairwise_4$`p adj` <= 0.001, "***",
+                            ifelse(permdisp_pairwise_4$`p adj` <= 0.01, "**",
+                            ifelse(permdisp_pairwise_4$`p adj` <= 0.05, "*", "ns")))
+permdisp_pairwise_4 <- permdisp_pairwise_4[, c("pair", "diff", "lwr", "upr", "p adj", "sig")]
+colnames(permdisp_pairwise_4) <- c("pair", "diff_dispersion", "CI_lower", "CI_upper", "p_adj", "sig")
+permdisp_pairwise_4$diff_dispersion <- round(permdisp_pairwise_4$diff_dispersion, 4)
+permdisp_pairwise_4$CI_lower <- round(permdisp_pairwise_4$CI_lower, 4)
+permdisp_pairwise_4$CI_upper <- round(permdisp_pairwise_4$CI_upper, 4)
+permdisp_pairwise_4$p_adj <- round(permdisp_pairwise_4$p_adj, 4)
+
+message("\nPairwise PERMDISP (4 groups):")
+print(permdisp_pairwise_4, row.names = FALSE)
+
+# ==============================================================================
 # Section 6: Save results / 結果をファイルに書き出す
 # ==============================================================================
 
@@ -282,6 +360,20 @@ print(asgard_permdisp_3_anova)
 cat("\n=== Pairwise PERMDISP (TukeyHSD, 3 groups) ===\n")
 print(permdisp_pairwise_3, row.names = FALSE)
 
+cat("\n\n========== 4 GROUPS (A/B/C1/C2) ==========\n\n")
+
+cat("=== PERMANOVA by 4 groups (adonis2, 999 permutations) ===\n")
+print(asgard_permanova_4)
+
+cat("\n=== Pairwise PERMANOVA (6 pairs, BH-adjusted p-values) ===\n")
+print(pairwise_results_4, row.names = FALSE)
+
+cat("\n=== PERMDISP (betadisper ANOVA, 4 groups) ===\n")
+print(asgard_permdisp_4_anova)
+
+cat("\n=== Pairwise PERMDISP (TukeyHSD, 4 groups) ===\n")
+print(permdisp_pairwise_4, row.names = FALSE)
+
 sink()
 
 write.csv(pairwise_results,
@@ -300,9 +392,19 @@ write.csv(permdisp_pairwise_3,
   here::here("output", "survey", "beta_diversity", "pairwise_permdisp_3groups.csv"),
   row.names = FALSE)
 
+write.csv(pairwise_results_4,
+  here::here("output", "survey", "beta_diversity", "pairwise_permanova_4groups.csv"),
+  row.names = FALSE)
+
+write.csv(permdisp_pairwise_4,
+  here::here("output", "survey", "beta_diversity", "pairwise_permdisp_4groups.csv"),
+  row.names = FALSE)
+
 message("\nS10_permanova.R: done.")
 message("  TXT: output/survey/beta_diversity/ASGARD_permanova_results.txt")
 message("  CSV: output/survey/beta_diversity/pairwise_permanova_10clusters.csv")
 message("  CSV: output/survey/beta_diversity/pairwise_permdisp_10clusters.csv")
 message("  CSV: output/survey/beta_diversity/pairwise_permanova_3groups.csv")
 message("  CSV: output/survey/beta_diversity/pairwise_permdisp_3groups.csv")
+message("  CSV: output/survey/beta_diversity/pairwise_permanova_4groups.csv")
+message("  CSV: output/survey/beta_diversity/pairwise_permdisp_4groups.csv")
