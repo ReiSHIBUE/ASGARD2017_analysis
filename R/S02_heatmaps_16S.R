@@ -251,6 +251,19 @@ heatmap.2(asgard_frtmat,
   main = "ASGARD Survey 16S — 11 row clusters, 6 col clusters", trace = "none",
   labRow = FALSE, labCol = FALSE)
 
+# ASV名（列名）表示版 / With ASV names as column labels
+heatmap.2(asgard_frtmat,
+  distfun = function(x) vegdist(x, method = "bray"),
+  hclustfun = function(x) hclust(x, method = "ward.D"),
+  col = viridis,
+  RowSideColors = rsc11[rownames(asgard_frtmat)],
+  ColSideColors = colrsc[colnames(asgard_frtmat)],
+  Rowv = h1$rowDendrogram, Colv = h1$colDendrogram,
+  margins = c(25, 5), scale = "none",
+  main = "ASGARD Survey 16S — 11 clusters (ASV names)", trace = "none",
+  cexCol = 0.15, cexRow = 0.15,
+  labRow = FALSE)
+
 dev.off()
 
 message("  11-cluster heatmap: output/survey/heatmaps/ASGARD_hm_survey_16S_11clusters.pdf")
