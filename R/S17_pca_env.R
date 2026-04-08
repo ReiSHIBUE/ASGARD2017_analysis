@@ -871,3 +871,75 @@ write.csv(node_df,
 cat("Done: C hierarchical PERMANOVA/PERMDISP saved.\n")
 cat("  CSV: output/survey/beta_diversity/env_permanova_permdisp_C_hierarchical.csv\n")
 cat("  CSV: output/survey/beta_diversity/env_C_dendrogram_node_pairwise.csv\n")
+
+# ==============================================================================
+# Section: PCスコア地図 (PC1-PC9, depth_typeでfacet)
+# Map of PC scores by depth type
+# size = |PC score|, shape = sign (+/-), color = 10 clusters
+# ==============================================================================
+
+library(ggmap)
+ggmap::register_stadiamaps(Sys.getenv("STADIA_MAPS_KEY"))
+
+pca_map <- pca_all
+pca_map$hier_name <- factor(
+  hier_names[as.character(clusnum10[pca_map$sample_id])],
+  levels = hier_levels
+)
+pca_map$lat <- meta_asgard[pca_map$sample_id, "lat"]
+pca_map$lon <- meta_asgard[pca_map$sample_id, "lon"]
+pca_map$depth_type <- factor(
+  meta_asgard[pca_map$sample_id, "depth_type"],
+  levels = c("surf", "mid", "bottom")
+)
+
+pca_map <- pca_map %>% filter(!is.na(lat), !is.na(lon))
+
+set.seed(42)
+j <- 0.02
+pca_map$lon_j <- pca_map$lon + runif(nrow(pca_map), -j, j)
+pca_map$lat_j <- pca_map$lat + runif(nrow(pca_map), -j, j)
+
+bbox_pc <- make_bbox(lon = pca_map$lon, lat = pca_map$lat, f = 0.1)
+mapz_pc <- get_stadiamap(bbox_pc, maptype = "stamen_terrain", zoom = 4)
+
+loadings_rot <- pca_result$rotation
+ve_pct <- round(summary(pca_result)$importance["Proportion of Variance", ] * 100, 1)
+
+pdf(here("output", "survey", "maps", "map_PC_scores.pdf"), width = 16, height = 10)
+
+for (pc in paste0("PC", 1:9)) {
+  pc_num <- as.integer(sub("PC", "", pc))
+
+  pca_map$pc_val <- pca_map[[pc]]
+  pca_map$pc_abs <- abs(pca_map$pc_val)
+  pca_map$pc_sign <- ifelse(pca_map$pc_val >= 0, "positive", "negative")
+
+  ld <- loadings_rot[, pc_num]
+  top3 <- names(sort(abs(ld), decreasing = TRUE))[1:3]
+  top3_str <- paste(sapply(top3, function(v) {
+    sprintf("%s (%+.2f)", v, ld[v])
+  }), collapse = ", ")
+
+  print(ggmap(mapz_pc) +
+    geom_point(data = pca_map,
+               aes(x = lon_j, y = lat_j, color = hier_name,
+                   size = pc_abs, shape = pc_sign),
+               alpha = 0.8) +
+    scale_color_manual(values = cc10, name = "Cluster") +
+    scale_size_continuous(range = c(0.5, 7), name = paste0("|", pc, "|")) +
+    scale_shape_manual(values = c("positive" = 16, "negative" = 17),
+                       name = "Sign") +
+    facet_grid(~ depth_type) +
+    labs(title = paste0(pc, " scores (", ve_pct[pc_num], "% variance)"),
+         subtitle = paste0("Top loadings: ", top3_str)) +
+    theme(plot.title = element_text(face = "bold", size = 16),
+          plot.subtitle = element_text(size = 11),
+          strip.text = element_text(face = "bold", size = 13),
+          panel.background = element_rect(fill = "grey85"),
+          legend.position = "right"))
+}
+
+dev.off()
+
+cat("Done: output/survey/maps/map_PC_scores.pdf\n")
