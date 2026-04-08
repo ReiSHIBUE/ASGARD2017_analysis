@@ -96,8 +96,8 @@ cc10 <- c(
 rsc10  <- cc10[hier_names[as.character(clusnum10)]]
 names(rsc10) <- names(clusnum10)
 
-colclus_colors <- c("1"="#E41A1C", "2"="#377EB8", "3"="#4DAF4A",
-                     "4"="#FF7F00", "5"="#984EA3", "6"="#A65628")
+colclus_colors <- c("1"="#FB9A99", "2"="#08519C", "3"="#20B2AA",
+                     "4"="#DAA520", "5"="#DD3497", "6"="#252525")
 colrsc <- colclus_colors[as.character(colclusnum)]
 names(colrsc) <- names(colclusnum)  # ASV名で名前付け
 
