@@ -502,6 +502,68 @@ write.csv(permdisp_pairwise_11,
   here::here("output", "survey", "beta_diversity", "pairwise_permdisp_11clusters.csv"),
   row.names = FALSE)
 
+# ==============================================================================
+# 11クラスター サマリーCSV（4種類の検定を1ファイルにまとめる）
+# Summary CSV for 11-cluster results: PERMANOVA + PERMDISP + pairwise both
+# columns: test, pair, R2, F_value, p_value, sig, diff_dispersion, CI_lower, CI_upper
+# ==============================================================================
+
+all_groups_label <- paste(hier_levels_11, collapse = "/")
+
+summary_11_overall <- rbind(
+  data.frame(
+    test = "PERMANOVA (overall)", pair = all_groups_label,
+    R2 = round(asgard_permanova_11$R2[1], 4),
+    F_value = round(asgard_permanova_11$F[1], 2),
+    p_value = asgard_permanova_11$`Pr(>F)`[1],
+    sig = ifelse(asgard_permanova_11$`Pr(>F)`[1] <= 0.001, "***",
+          ifelse(asgard_permanova_11$`Pr(>F)`[1] <= 0.01,  "**",
+          ifelse(asgard_permanova_11$`Pr(>F)`[1] <= 0.05,  "*", "ns"))),
+    diff_dispersion = NA, CI_lower = NA, CI_upper = NA,
+    stringsAsFactors = FALSE
+  ),
+  data.frame(
+    test = "PERMDISP (overall)", pair = all_groups_label,
+    R2 = NA,
+    F_value = round(asgard_permdisp_11_anova$`F value`[1], 2),
+    p_value = round(asgard_permdisp_11_anova$`Pr(>F)`[1], 4),
+    sig = ifelse(asgard_permdisp_11_anova$`Pr(>F)`[1] <= 0.001, "***",
+          ifelse(asgard_permdisp_11_anova$`Pr(>F)`[1] <= 0.01,  "**",
+          ifelse(asgard_permdisp_11_anova$`Pr(>F)`[1] <= 0.05,  "*", "ns"))),
+    diff_dispersion = NA, CI_lower = NA, CI_upper = NA,
+    stringsAsFactors = FALSE
+  )
+)
+
+summary_11_pairwise_perm <- data.frame(
+  test = "Pairwise PERMANOVA",
+  pair = pairwise_results_11$pair,
+  R2 = pairwise_results_11$R2,
+  F_value = pairwise_results_11$F_value,
+  p_value = pairwise_results_11$p_adj,
+  sig = pairwise_results_11$sig,
+  diff_dispersion = NA, CI_lower = NA, CI_upper = NA,
+  stringsAsFactors = FALSE
+)
+
+summary_11_pairwise_disp <- data.frame(
+  test = "Pairwise PERMDISP",
+  pair = permdisp_pairwise_11$pair,
+  R2 = NA, F_value = NA,
+  p_value = permdisp_pairwise_11$p_adj,
+  sig = permdisp_pairwise_11$sig,
+  diff_dispersion = permdisp_pairwise_11$diff_dispersion,
+  CI_lower = permdisp_pairwise_11$CI_lower,
+  CI_upper = permdisp_pairwise_11$CI_upper,
+  stringsAsFactors = FALSE
+)
+
+summary_11 <- rbind(summary_11_overall, summary_11_pairwise_perm, summary_11_pairwise_disp)
+
+write.csv(summary_11,
+  here::here("output", "survey", "beta_diversity", "permanova_permdisp_summary_11clusters.csv"),
+  row.names = FALSE)
+
 message("\nS10_permanova.R: done.")
 message("  TXT: output/survey/beta_diversity/ASGARD_permanova_results.txt")
 message("  CSV: output/survey/beta_diversity/pairwise_permanova_10clusters.csv")
@@ -512,3 +574,4 @@ message("  CSV: output/survey/beta_diversity/pairwise_permanova_4groups.csv")
 message("  CSV: output/survey/beta_diversity/pairwise_permdisp_4groups.csv")
 message("  CSV: output/survey/beta_diversity/pairwise_permanova_11clusters.csv")
 message("  CSV: output/survey/beta_diversity/pairwise_permdisp_11clusters.csv")
+message("  CSV: output/survey/beta_diversity/permanova_permdisp_summary_11clusters.csv")

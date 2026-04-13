@@ -1,0 +1,113 @@
+"test","pair","R2","F_value","p_value","sig","diff_dispersion","CI_lower","CI_upper"
+"PERMANOVA (overall)","A1/A2/B1/B2a/B2b/C1a/C1b1/C1b2/C2a/C2b1/C2b2",0.5867,24.13,0.001,"***",NA,NA,NA
+"PERMDISP (overall)","A1/A2/B1/B2a/B2b/C1a/C1b1/C1b2/C2a/C2b1/C2b2",NA,7.65,0,"***",NA,NA,NA
+"Pairwise PERMANOVA","A1 vs A2",0.2359,6.79,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A1 vs B1",0.4385,18.74,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A1 vs B2a",0.4574,20.23,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A1 vs B2b",0.4235,24.24,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A1 vs C1a",0.5902,30.24,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A1 vs C1b1",0.4853,16.97,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A1 vs C1b2",0.5189,28.04,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A1 vs C2a",0.6081,29.48,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A1 vs C2b1",0.5409,22.39,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A1 vs C2b2",0.4691,31.8,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A2 vs B1",0.4906,28.89,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A2 vs B2a",0.3913,19.28,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A2 vs B2b",0.4917,37.73,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A2 vs C1a",0.5525,33.33,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A2 vs C1b1",0.5035,24.34,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A2 vs C1b2",0.5567,40.18,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A2 vs C2a",0.4773,22.83,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A2 vs C2b1",0.4838,23.43,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","A2 vs C2b2",0.5082,43.39,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B1 vs B2a",0.2601,11.25,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B1 vs B2b",0.224,11.83,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B1 vs C1a",0.4045,19.7,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B1 vs C1b1",0.3553,14.33,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B1 vs C1b2",0.4034,22.99,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B1 vs C2a",0.5831,37.77,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B1 vs C2b1",0.5187,29.1,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B1 vs C2b2",0.3969,28.95,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B2a vs B2b",0.2126,11.07,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B2a vs C1a",0.4627,24.98,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B2a vs C1b1",0.4212,18.92,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B2a vs C1b2",0.5085,35.17,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B2a vs C2a",0.4836,25.28,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B2a vs C2b1",0.4272,20.14,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B2a vs C2b2",0.3636,25.14,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B2b vs C1a",0.4964,37.46,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B2b vs C1b1",0.4044,23.76,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B2b vs C1b2",0.5378,50.04,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B2b vs C2a",0.567,47.13,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B2b vs C2b1",0.4805,33.3,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","B2b vs C2b2",0.3749,31.79,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C1a vs C1b1",0.257,7.96,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C1a vs C1b2",0.3034,13.5,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C1a vs C2a",0.4696,21.25,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C1a vs C2b1",0.3745,14.37,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C1a vs C2b2",0.2281,12.11,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C1b1 vs C1b2",0.1629,5.45,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C1b1 vs C2a",0.3993,13.96,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C1b1 vs C2b1",0.3682,12.24,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C1b1 vs C2b2",0.1847,8.61,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C1b2 vs C2a",0.4513,23.86,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C1b2 vs C2b1",0.4582,24.52,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C1b2 vs C2b2",0.3323,22.89,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C2a vs C2b1",0.4212,16.01,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C2a vs C2b2",0.2664,14.16,0.001,"***",NA,NA,NA
+"Pairwise PERMANOVA","C2b1 vs C2b2",0.2147,10.66,0.001,"***",NA,NA,NA
+"Pairwise PERMDISP","A2-A1",NA,NA,0.1638,"ns",0.0678,-0.011,0.1466
+"Pairwise PERMDISP","B1-A1",NA,NA,0.2357,"ns",-0.0624,-0.1394,0.0146
+"Pairwise PERMDISP","B2a-A1",NA,NA,0.7274,"ns",-0.0445,-0.1215,0.0326
+"Pairwise PERMDISP","B2b-A1",NA,NA,0.1271,"ns",-0.0646,-0.1369,0.0077
+"Pairwise PERMDISP","C1a-A1",NA,NA,0.0369,"*",-0.0824,-0.1622,-0.0025
+"Pairwise PERMDISP","C1b1-A1",NA,NA,1,"ns",-0.008,-0.092,0.076
+"Pairwise PERMDISP","C1b2-A1",NA,NA,0.9996,"ns",-0.0176,-0.0932,0.058
+"Pairwise PERMDISP","C2a-A1",NA,NA,0.9225,"ns",-0.0375,-0.1199,0.0449
+"Pairwise PERMDISP","C2b1-A1",NA,NA,0.9621,"ns",-0.0336,-0.116,0.0488
+"Pairwise PERMDISP","C2b2-A1",NA,NA,0.9306,"ns",-0.0319,-0.1032,0.0394
+"Pairwise PERMDISP","B1-A2",NA,NA,0,"***",-0.1302,-0.1964,-0.064
+"Pairwise PERMDISP","B2a-A2",NA,NA,0,"***",-0.1123,-0.1785,-0.0461
+"Pairwise PERMDISP","B2b-A2",NA,NA,0,"***",-0.1324,-0.193,-0.0718
+"Pairwise PERMDISP","C1a-A2",NA,NA,0,"***",-0.1502,-0.2196,-0.0807
+"Pairwise PERMDISP","C1b1-A2",NA,NA,0.0404,"*",-0.0758,-0.15,-0.0017
+"Pairwise PERMDISP","C1b2-A2",NA,NA,0.0013,"**",-0.0854,-0.15,-0.0209
+"Pairwise PERMDISP","C2a-A2",NA,NA,2e-04,"***",-0.1054,-0.1777,-0.033
+"Pairwise PERMDISP","C2b1-A2",NA,NA,5e-04,"***",-0.1014,-0.1738,-0.029
+"Pairwise PERMDISP","C2b2-A2",NA,NA,0,"***",-0.0997,-0.1592,-0.0403
+"Pairwise PERMDISP","B2a-B1",NA,NA,0.9979,"ns",0.0179,-0.0462,0.082
+"Pairwise PERMDISP","B2b-B1",NA,NA,1,"ns",-0.0022,-0.0605,0.0561
+"Pairwise PERMDISP","C1a-B1",NA,NA,0.9966,"ns",-0.02,-0.0874,0.0475
+"Pairwise PERMDISP","C1b1-B1",NA,NA,0.3397,"ns",0.0544,-0.0179,0.1267
+"Pairwise PERMDISP","C1b2-B1",NA,NA,0.4099,"ns",0.0448,-0.0176,0.1072
+"Pairwise PERMDISP","C2a-B1",NA,NA,0.9866,"ns",0.0249,-0.0456,0.0953
+"Pairwise PERMDISP","C2b1-B1",NA,NA,0.9617,"ns",0.0288,-0.0417,0.0992
+"Pairwise PERMDISP","C2b2-B1",NA,NA,0.8113,"ns",0.0305,-0.0266,0.0876
+"Pairwise PERMDISP","B2b-B2a",NA,NA,0.9887,"ns",-0.0201,-0.0784,0.0382
+"Pairwise PERMDISP","C1a-B2a",NA,NA,0.7585,"ns",-0.0379,-0.1053,0.0296
+"Pairwise PERMDISP","C1b1-B2a",NA,NA,0.8607,"ns",0.0364,-0.0359,0.1088
+"Pairwise PERMDISP","C1b2-B2a",NA,NA,0.9457,"ns",0.0269,-0.0355,0.0893
+"Pairwise PERMDISP","C2a-B2a",NA,NA,1,"ns",0.0069,-0.0635,0.0774
+"Pairwise PERMDISP","C2b1-B2a",NA,NA,1,"ns",0.0109,-0.0596,0.0813
+"Pairwise PERMDISP","C2b2-B2a",NA,NA,0.9997,"ns",0.0125,-0.0445,0.0696
+"Pairwise PERMDISP","C1a-B2b",NA,NA,0.9974,"ns",-0.0178,-0.0797,0.0442
+"Pairwise PERMDISP","C1b1-B2b",NA,NA,0.1891,"ns",0.0566,-0.0107,0.1238
+"Pairwise PERMDISP","C1b2-B2b",NA,NA,0.2009,"ns",0.047,-0.0094,0.1034
+"Pairwise PERMDISP","C2a-B2b",NA,NA,0.9577,"ns",0.027,-0.0382,0.0923
+"Pairwise PERMDISP","C2b1-B2b",NA,NA,0.9006,"ns",0.031,-0.0343,0.0962
+"Pairwise PERMDISP","C2b2-B2b",NA,NA,0.5708,"ns",0.0327,-0.0178,0.0831
+"Pairwise PERMDISP","C1b1-C1a",NA,NA,0.0563,"ns",0.0743,-0.001,0.1496
+"Pairwise PERMDISP","C1b2-C1a",NA,NA,0.0581,"ns",0.0648,-0.0011,0.1306
+"Pairwise PERMDISP","C2a-C1a",NA,NA,0.6567,"ns",0.0448,-0.0287,0.1183
+"Pairwise PERMDISP","C2b1-C1a",NA,NA,0.5338,"ns",0.0487,-0.0248,0.1223
+"Pairwise PERMDISP","C2b2-C1a",NA,NA,0.2059,"ns",0.0504,-0.0104,0.1113
+"Pairwise PERMDISP","C1b2-C1b1",NA,NA,1,"ns",-0.0096,-0.0804,0.0612
+"Pairwise PERMDISP","C2a-C1b1",NA,NA,0.9776,"ns",-0.0295,-0.1075,0.0485
+"Pairwise PERMDISP","C2b1-C1b1",NA,NA,0.9923,"ns",-0.0256,-0.1036,0.0524
+"Pairwise PERMDISP","C2b2-C1b1",NA,NA,0.9841,"ns",-0.0239,-0.0901,0.0423
+"Pairwise PERMDISP","C2a-C1b2",NA,NA,0.9972,"ns",-0.0199,-0.0889,0.049
+"Pairwise PERMDISP","C2b1-C1b2",NA,NA,0.9996,"ns",-0.016,-0.0849,0.0529
+"Pairwise PERMDISP","C2b2-C1b2",NA,NA,0.9989,"ns",-0.0143,-0.0695,0.0408
+"Pairwise PERMDISP","C2b1-C2a",NA,NA,1,"ns",0.0039,-0.0724,0.0802
+"Pairwise PERMDISP","C2b2-C2a",NA,NA,1,"ns",0.0056,-0.0585,0.0698
+"Pairwise PERMDISP","C2b2-C2b1",NA,NA,1,"ns",0.0017,-0.0625,0.0658
