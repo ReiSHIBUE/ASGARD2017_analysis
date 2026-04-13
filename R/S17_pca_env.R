@@ -696,6 +696,81 @@ cat("\nPairwise PERMDISP (env, 4 groups):\n")
 print(env_permdisp_pw4, row.names = FALSE)
 
 # ==============================================================================
+# Section: 環境変数による PERMANOVA / PERMDISP (11クラスター)
+# Environmental PERMANOVA / PERMDISP by 11 clusters (C1b split into C1b1/C1b2)
+# ==============================================================================
+
+cat("\n--- Environmental PERMANOVA / PERMDISP by 11 clusters ---\n")
+
+# clusnum11のうちenv_completeにあるサンプルのみ
+env_clus11 <- factor(
+  as.character(clusnum11[env_complete$sample_id]),
+  levels = hier_levels_11
+)
+
+cat("Group sizes:\n")
+print(table(env_clus11))
+
+# PERMANOVA
+env_permanova_11 <- adonis2(env_eucdist ~ env_clus11, permutations = 999)
+cat("\nPERMANOVA (env, 11 clusters):\n")
+print(env_permanova_11)
+
+# Pairwise PERMANOVA (55 pairs)
+pairs11 <- combn(hier_levels_11, 2)
+env_pairwise_11 <- data.frame(
+  pair = character(), F_value = numeric(), R2 = numeric(),
+  p_value = numeric(), stringsAsFactors = FALSE
+)
+
+for (i in seq_len(ncol(pairs11))) {
+  cl_a <- pairs11[1, i]
+  cl_b <- pairs11[2, i]
+  idx_a <- which(env_clus11 == cl_a)
+  idx_b <- which(env_clus11 == cl_b)
+  idx_ab <- c(idx_a, idx_b)
+  dist_sub <- as.dist(as.matrix(env_eucdist)[idx_ab, idx_ab])
+  group_sub <- factor(c(rep(cl_a, length(idx_a)), rep(cl_b, length(idx_b))))
+  res_pair <- adonis2(dist_sub ~ group_sub, permutations = 999)
+  env_pairwise_11 <- rbind(env_pairwise_11, data.frame(
+    pair    = paste0(cl_a, " vs ", cl_b),
+    F_value = round(res_pair$F[1], 2),
+    R2      = round(res_pair$R2[1], 4),
+    p_value = res_pair$`Pr(>F)`[1]
+  ))
+}
+env_pairwise_11$p_adj <- round(p.adjust(env_pairwise_11$p_value, method = "BH"), 4)
+env_pairwise_11$sig <- ifelse(env_pairwise_11$p_adj <= 0.001, "***",
+                       ifelse(env_pairwise_11$p_adj <= 0.01,  "**",
+                       ifelse(env_pairwise_11$p_adj <= 0.05,  "*", "ns")))
+
+cat("\nPairwise PERMANOVA (env, 11 clusters):\n")
+print(env_pairwise_11, row.names = FALSE)
+
+# PERMDISP
+env_permdisp_11       <- betadisper(env_eucdist, group = env_clus11)
+env_permdisp_11_anova <- anova(env_permdisp_11)
+cat("\nPERMDISP (env, 11 clusters):\n")
+print(env_permdisp_11_anova)
+
+# Pairwise PERMDISP (TukeyHSD)
+env_permdisp_11_tukey <- TukeyHSD(env_permdisp_11)
+env_permdisp_pw11 <- as.data.frame(env_permdisp_11_tukey$group)
+env_permdisp_pw11$pair <- rownames(env_permdisp_pw11)
+env_permdisp_pw11$sig <- ifelse(env_permdisp_pw11$`p adj` <= 0.001, "***",
+                          ifelse(env_permdisp_pw11$`p adj` <= 0.01,  "**",
+                          ifelse(env_permdisp_pw11$`p adj` <= 0.05,  "*", "ns")))
+env_permdisp_pw11 <- env_permdisp_pw11[, c("pair", "diff", "lwr", "upr", "p adj", "sig")]
+colnames(env_permdisp_pw11) <- c("pair", "diff_dispersion", "CI_lower", "CI_upper", "p_adj", "sig")
+env_permdisp_pw11$diff_dispersion <- round(env_permdisp_pw11$diff_dispersion, 4)
+env_permdisp_pw11$CI_lower        <- round(env_permdisp_pw11$CI_lower, 4)
+env_permdisp_pw11$CI_upper        <- round(env_permdisp_pw11$CI_upper, 4)
+env_permdisp_pw11$p_adj           <- round(env_permdisp_pw11$p_adj, 4)
+
+cat("\nPairwise PERMDISP (env, 11 clusters):\n")
+print(env_permdisp_pw11, row.names = FALSE)
+
+# ==============================================================================
 # CSV保存: 3グループ + 4グループの結果を1つのCSVにまとめる
 # ==============================================================================
 
@@ -732,7 +807,36 @@ summary_4 <- rbind(
              p_value = env_permdisp_pw4$p_adj, sig = env_permdisp_pw4$sig)
 )
 
-env_summary <- rbind(summary_3, summary_4)
+# 11クラスター
+pairs11_labels <- apply(combn(hier_levels_11, 2), 2, function(x) paste(x, collapse = " vs "))
+summary_11 <- rbind(
+  data.frame(groups = "11 clusters", test = "PERMANOVA (overall)",
+             pair = paste(hier_levels_11, collapse = "/"),
+             R2 = round(env_permanova_11$R2[1], 4),
+             F_value = round(env_permanova_11$F[1], 2),
+             p_value = env_permanova_11$`Pr(>F)`[1],
+             sig = ifelse(env_permanova_11$`Pr(>F)`[1] <= 0.001, "***",
+                   ifelse(env_permanova_11$`Pr(>F)`[1] <= 0.01, "**",
+                   ifelse(env_permanova_11$`Pr(>F)`[1] <= 0.05, "*", "ns")))),
+  data.frame(groups = "11 clusters", test = "PERMDISP (overall)",
+             pair = paste(hier_levels_11, collapse = "/"),
+             R2 = NA,
+             F_value = round(env_permdisp_11_anova$`F value`[1], 2),
+             p_value = round(env_permdisp_11_anova$`Pr(>F)`[1], 4),
+             sig = ifelse(env_permdisp_11_anova$`Pr(>F)`[1] <= 0.001, "***",
+                   ifelse(env_permdisp_11_anova$`Pr(>F)`[1] <= 0.01, "**",
+                   ifelse(env_permdisp_11_anova$`Pr(>F)`[1] <= 0.05, "*", "ns")))),
+  data.frame(groups = "11 clusters", test = "Pairwise PERMANOVA",
+             pair = env_pairwise_11$pair,
+             R2 = env_pairwise_11$R2, F_value = env_pairwise_11$F_value,
+             p_value = env_pairwise_11$p_adj, sig = env_pairwise_11$sig),
+  data.frame(groups = "11 clusters", test = "Pairwise PERMDISP",
+             pair = env_permdisp_pw11$pair,
+             R2 = NA, F_value = NA,
+             p_value = env_permdisp_pw11$p_adj, sig = env_permdisp_pw11$sig)
+)
+
+env_summary <- rbind(summary_3, summary_4, summary_11)
 
 write.csv(env_summary,
   here("output", "survey", "beta_diversity", "env_permanova_permdisp_summary.csv"),

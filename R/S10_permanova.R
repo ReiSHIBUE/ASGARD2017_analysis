@@ -319,6 +319,86 @@ message("\nPairwise PERMDISP (4 groups):")
 print(permdisp_pairwise_4, row.names = FALSE)
 
 # ==============================================================================
+# Section 5d: 11クラスター (A1/A2/B1/B2a/B2b/C1a/C1b1/C1b2/C2a/C2b1/C2b2) での
+# PERMANOVA, PERMDISP, Pairwise (C1b → C1b1+C1b2 に分割)
+# ==============================================================================
+
+message("\n--- PERMANOVA / PERMDISP by 11 clusters ---")
+
+cluster_hier11 <- factor(
+  as.character(clusnum11[rownames(as.matrix(asgard_braymat))]),
+  levels = hier_levels_11
+)
+
+# PERMANOVA by 11 clusters
+asgard_permanova_11 <- adonis2(asgard_braymat ~ cluster_hier11, permutations = 999)
+message("\nPERMANOVA (11 clusters):")
+print(asgard_permanova_11)
+
+# Pairwise PERMANOVA (55 pairs)
+message("\n--- Pairwise PERMANOVA (11 clusters, 55 pairs) ---")
+
+pairs11 <- combn(hier_levels_11, 2)
+pairwise_results_11 <- data.frame(
+  pair = character(), F_value = numeric(), R2 = numeric(),
+  p_value = numeric(), stringsAsFactors = FALSE
+)
+
+cl_map11 <- as.character(clusnum11)
+names(cl_map11) <- names(clusnum11)
+
+for (i in seq_len(ncol(pairs11))) {
+  cl_a <- pairs11[1, i]
+  cl_b <- pairs11[2, i]
+  samps_a <- names(cl_map11)[cl_map11 == cl_a]
+  samps_b <- names(cl_map11)[cl_map11 == cl_b]
+  samps_ab <- c(samps_a, samps_b)
+  mat_sub <- as.matrix(asgard_braymat)[samps_ab, samps_ab]
+  dist_sub <- as.dist(mat_sub)
+  group_sub <- factor(c(rep(cl_a, length(samps_a)), rep(cl_b, length(samps_b))))
+  res_pair <- adonis2(dist_sub ~ group_sub, permutations = 999)
+  pairwise_results_11 <- rbind(pairwise_results_11, data.frame(
+    pair    = paste0(cl_a, " vs ", cl_b),
+    F_value = round(res_pair$F[1], 2),
+    R2      = round(res_pair$R2[1], 4),
+    p_value = res_pair$`Pr(>F)`[1]
+  ))
+}
+
+pairwise_results_11$p_adj <- round(p.adjust(pairwise_results_11$p_value, method = "BH"), 4)
+pairwise_results_11$sig <- ifelse(pairwise_results_11$p_adj <= 0.001, "***",
+                            ifelse(pairwise_results_11$p_adj <= 0.01,  "**",
+                            ifelse(pairwise_results_11$p_adj <= 0.05,  "*", "ns")))
+
+message("\nPairwise PERMANOVA (11 clusters):")
+print(pairwise_results_11, row.names = FALSE)
+
+# PERMDISP by 11 clusters
+asgard_permdisp_11       <- betadisper(asgard_braymat, group = cluster_hier11)
+asgard_permdisp_11_anova <- anova(asgard_permdisp_11)
+message("\nPERMDISP (11 clusters):")
+print(asgard_permdisp_11_anova)
+
+# Pairwise PERMDISP (TukeyHSD)
+asgard_permdisp_11_tukey <- TukeyHSD(asgard_permdisp_11)
+permdisp_pairwise_11 <- as.data.frame(asgard_permdisp_11_tukey$group)
+permdisp_pairwise_11$pair <- rownames(permdisp_pairwise_11)
+permdisp_pairwise_11$sig <- ifelse(permdisp_pairwise_11$`p adj` <= 0.001, "***",
+                              ifelse(permdisp_pairwise_11$`p adj` <= 0.01,  "**",
+                              ifelse(permdisp_pairwise_11$`p adj` <= 0.05,  "*", "ns")))
+permdisp_pairwise_11 <- permdisp_pairwise_11[, c("pair", "diff", "lwr", "upr", "p adj", "sig")]
+colnames(permdisp_pairwise_11) <- c("pair", "diff_dispersion", "CI_lower", "CI_upper", "p_adj", "sig")
+permdisp_pairwise_11$diff_dispersion <- round(permdisp_pairwise_11$diff_dispersion, 4)
+permdisp_pairwise_11$CI_lower        <- round(permdisp_pairwise_11$CI_lower, 4)
+permdisp_pairwise_11$CI_upper        <- round(permdisp_pairwise_11$CI_upper, 4)
+permdisp_pairwise_11$p_adj           <- round(permdisp_pairwise_11$p_adj, 4)
+
+n_sig11 <- sum(permdisp_pairwise_11$sig != "ns")
+message("Significant pairwise PERMDISP (11 clusters): ", n_sig11, " / ", nrow(permdisp_pairwise_11))
+message("\nPairwise PERMDISP (11 clusters, significant only):")
+print(permdisp_pairwise_11[permdisp_pairwise_11$sig != "ns", ], row.names = FALSE)
+
+# ==============================================================================
 # Section 6: Save results / 結果をファイルに書き出す
 # ==============================================================================
 
@@ -374,6 +454,20 @@ print(asgard_permdisp_4_anova)
 cat("\n=== Pairwise PERMDISP (TukeyHSD, 4 groups) ===\n")
 print(permdisp_pairwise_4, row.names = FALSE)
 
+cat("\n\n========== 11 CLUSTERS (A1/A2/B1/B2a/B2b/C1a/C1b1/C1b2/C2a/C2b1/C2b2) ==========\n\n")
+
+cat("=== PERMANOVA by 11 clusters (adonis2, 999 permutations) ===\n")
+print(asgard_permanova_11)
+
+cat("\n=== Pairwise PERMANOVA (55 pairs, BH-adjusted p-values) ===\n")
+print(pairwise_results_11, row.names = FALSE)
+
+cat("\n=== PERMDISP (betadisper ANOVA, 11 clusters) ===\n")
+print(asgard_permdisp_11_anova)
+
+cat("\n=== Pairwise PERMDISP (TukeyHSD, 11 clusters) ===\n")
+print(permdisp_pairwise_11, row.names = FALSE)
+
 sink()
 
 write.csv(pairwise_results,
@@ -400,6 +494,14 @@ write.csv(permdisp_pairwise_4,
   here::here("output", "survey", "beta_diversity", "pairwise_permdisp_4groups.csv"),
   row.names = FALSE)
 
+write.csv(pairwise_results_11,
+  here::here("output", "survey", "beta_diversity", "pairwise_permanova_11clusters.csv"),
+  row.names = FALSE)
+
+write.csv(permdisp_pairwise_11,
+  here::here("output", "survey", "beta_diversity", "pairwise_permdisp_11clusters.csv"),
+  row.names = FALSE)
+
 message("\nS10_permanova.R: done.")
 message("  TXT: output/survey/beta_diversity/ASGARD_permanova_results.txt")
 message("  CSV: output/survey/beta_diversity/pairwise_permanova_10clusters.csv")
@@ -408,3 +510,5 @@ message("  CSV: output/survey/beta_diversity/pairwise_permanova_3groups.csv")
 message("  CSV: output/survey/beta_diversity/pairwise_permdisp_3groups.csv")
 message("  CSV: output/survey/beta_diversity/pairwise_permanova_4groups.csv")
 message("  CSV: output/survey/beta_diversity/pairwise_permdisp_4groups.csv")
+message("  CSV: output/survey/beta_diversity/pairwise_permanova_11clusters.csv")
+message("  CSV: output/survey/beta_diversity/pairwise_permdisp_11clusters.csv")
