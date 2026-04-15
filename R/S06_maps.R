@@ -128,5 +128,38 @@ print(
 
 dev.off()
 
+# ==============================================================================
+# Section 4: 地理サマリーCSV / Geographic summary CSV per cluster
+# ==============================================================================
+
+dt <- as.data.frame.matrix(table(a_map$cluster11, a_map$depth_type))
+dt$cluster11 <- rownames(dt)
+
+geo_summary <- a_map %>%
+  group_by(cluster11) %>%
+  summarise(
+    n          = n(),
+    n_stations = n_distinct(station),
+    stations   = paste(sort(unique(station)), collapse = ", "),
+    lat_min    = round(min(lat, na.rm = TRUE), 2),
+    lat_max    = round(max(lat, na.rm = TRUE), 2),
+    lon_min    = round(min(lon, na.rm = TRUE), 2),
+    lon_max    = round(max(lon, na.rm = TRUE), 2),
+    depth_m_min = round(min(depth_m, na.rm = TRUE), 1),
+    depth_m_max = round(max(depth_m, na.rm = TRUE), 1),
+    .groups = "drop"
+  ) %>%
+  left_join(dt, by = "cluster11") %>%
+  mutate(
+    surf_pct   = round(surf / n * 100, 1),
+    mid_pct    = round(mid / n * 100, 1),
+    bottom_pct = round(bottom / n * 100, 1)
+  )
+
+write.csv(geo_summary,
+  here::here("output", "survey", "maps", "cluster11_geographic_summary.csv"),
+  row.names = FALSE)
+
 message("S06_maps.R: done.")
 message("  PDF: ASGARD_survey_map_11clusters.pdf, ASGARD_survey_map_11clusters_detail.pdf")
+message("  CSV: output/survey/maps/cluster11_geographic_summary.csv")
