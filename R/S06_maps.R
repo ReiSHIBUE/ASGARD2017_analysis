@@ -51,21 +51,25 @@ pdf(here::here("output", "survey", "maps", "ASGARD_survey_map_11clusters.pdf"),
     width = 16, height = 12)
 
 # 全体マップ / Full map
-ggmap(mapz_survey) +
-  geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 3, alpha = 0.7) +
-  scale_color_manual(values = cc11, labels = clbl) +
-  labs(title = "ASGARD 2017 Survey - 11 clusters", color = NULL) +
-  theme(plot.title = element_text(face = "bold", size = 16),
-        legend.text = element_text(size = 10))
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 3, alpha = 0.7) +
+    scale_color_manual(values = cc11, labels = clbl) +
+    labs(title = "ASGARD 2017 Survey - 11 clusters", color = NULL) +
+    theme(plot.title = element_text(face = "bold", size = 16),
+          legend.text = element_text(size = 10))
+)
 
 # クラスターでfacet / Faceted by cluster
-ggmap(mapz_survey) +
-  geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 2.5, alpha = 0.8) +
-  scale_color_manual(values = cc11, guide = "none") +
-  facet_wrap(~ cluster11, ncol = 4) +
-  labs(title = "ASGARD 2017 Survey - 11 clusters (faceted)") +
-  theme(plot.title = element_text(face = "bold", size = 16),
-        strip.text = element_text(face = "bold", size = 12))
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 2.5, alpha = 0.8) +
+    scale_color_manual(values = cc11, guide = "none") +
+    facet_wrap(~ cluster11, ncol = 4) +
+    labs(title = "ASGARD 2017 Survey - 11 clusters (faceted)") +
+    theme(plot.title = element_text(face = "bold", size = 16),
+          strip.text = element_text(face = "bold", size = 12))
+)
 
 dev.off()
 
@@ -77,42 +81,50 @@ pdf(here::here("output", "survey", "maps", "ASGARD_survey_map_11clusters_detail.
     width = 20, height = 20)
 
 # station名ラベル付き / With station labels
-ggmap(mapz_survey) +
-  geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 3, alpha = 0.7) +
-  scale_color_manual(values = cc11, labels = clbl) +
-  geom_text_repel(data = a_map, aes(x = lon, y = lat, label = station),
-                  size = 2, max.overlaps = 20, alpha = 0.7) +
-  labs(title = "ASGARD 2017 Survey - 11 clusters", color = NULL) +
-  theme(plot.title = element_text(face = "bold", size = 16))
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 3, alpha = 0.7) +
+    scale_color_manual(values = cc11, labels = clbl) +
+    geom_text_repel(data = a_map, aes(x = lon, y = lat, label = station),
+                    size = 2, max.overlaps = 20, alpha = 0.7) +
+    labs(title = "ASGARD 2017 Survey - 11 clusters", color = NULL) +
+    theme(plot.title = element_text(face = "bold", size = 16))
+)
 
 # depth_typeでfacet / Faceted by depth type
-ggmap(mapz_survey) +
-  geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 3, alpha = 0.7) +
-  scale_color_manual(values = cc11, labels = clbl) +
-  geom_text_repel(data = a_map, aes(x = lon, y = lat, label = station),
-                  size = 1.8, max.overlaps = 15, alpha = 0.6) +
-  facet_wrap(~ depth_type) +
-  labs(title = "ASGARD 2017 Survey - 11 clusters by depth type", color = NULL) +
-  theme(plot.title = element_text(face = "bold", size = 16),
-        strip.text = element_text(face = "bold", size = 13))
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 3, alpha = 0.7) +
+    scale_color_manual(values = cc11, labels = clbl) +
+    geom_text_repel(data = a_map, aes(x = lon, y = lat, label = station),
+                    size = 1.8, max.overlaps = 15, alpha = 0.6) +
+    facet_wrap(~ depth_type) +
+    labs(title = "ASGARD 2017 Survey - 11 clusters by depth type", color = NULL) +
+    theme(plot.title = element_text(face = "bold", size = 16),
+          strip.text = element_text(face = "bold", size = 13))
+)
 
 # クラスターでfacet / Faceted by cluster
-ggmap(mapz_survey) +
-  geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 2.5, alpha = 0.8) +
-  scale_color_manual(values = cc11, guide = "none") +
-  facet_wrap(~ cluster11, ncol = 4) +
-  labs(title = "ASGARD 2017 Survey - 11 clusters (faceted)") +
-  theme(plot.title = element_text(face = "bold", size = 16),
-        strip.text = element_text(face = "bold", size = 12))
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 2.5, alpha = 0.8) +
+    scale_color_manual(values = cc11, guide = "none") +
+    facet_wrap(~ cluster11, ncol = 4) +
+    labs(title = "ASGARD 2017 Survey - 11 clusters (faceted)") +
+    theme(plot.title = element_text(face = "bold", size = 16),
+          strip.text = element_text(face = "bold", size = 12))
+)
 
 # depth_type x cluster グリッド / Grid
-ggmap(mapz_survey) +
-  geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 2, alpha = 0.8) +
-  scale_color_manual(values = cc11, guide = "none") +
-  facet_grid(depth_type ~ cluster11) +
-  labs(title = "ASGARD 2017 Survey - depth type x cluster") +
-  theme(plot.title = element_text(face = "bold", size = 16),
-        strip.text = element_text(face = "bold", size = 10))
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 2, alpha = 0.8) +
+    scale_color_manual(values = cc11, guide = "none") +
+    facet_grid(depth_type ~ cluster11) +
+    labs(title = "ASGARD 2017 Survey - depth type x cluster") +
+    theme(plot.title = element_text(face = "bold", size = 16),
+          strip.text = element_text(face = "bold", size = 10))
+)
 
 dev.off()
 
