@@ -160,6 +160,72 @@ write.csv(geo_summary,
   here::here("output", "survey", "maps", "cluster11_geographic_summary.csv"),
   row.names = FALSE)
 
-message("S06_maps.R: done.")
+# ==============================================================================
+# Section 5: Depth type 検定 / Statistical test for depth type × cluster
+# ==============================================================================
+
+message("\n--- Depth type analysis (11 clusters) ---")
+
+# Contingency table: cluster × depth_type
+ct <- table(a_map$cluster11, a_map$depth_type)
+message("\nContingency table (cluster x depth_type):")
+print(ct)
+
+# 全体検定: Fisher exact test (expected counts small for some cells)
+fisher_all <- fisher.test(ct, simulate.p.value = TRUE, B = 9999)
+message("\nFisher exact test (11 clusters x 3 depth types):")
+message("  p = ", round(fisher_all$p.value, 4))
+
+# Chi-squared test (参考)
+chisq_all <- chisq.test(ct, simulate.p.value = TRUE, B = 9999)
+message("Chi-squared test (simulated p):")
+message("  chi-sq = ", round(chisq_all$statistic, 3), ", p = ", round(chisq_all$p.value, 4))
+
+# 各クラスターの depth type 分布が全体分布と異なるかを検定
+# (各クラスター vs 残り全部のFisher exact test)
+message("\n--- Per-cluster Fisher exact test (cluster vs rest) ---")
+
+depth_fisher <- data.frame(
+  cluster = character(), p_value = numeric(), stringsAsFactors = FALSE
+)
+
+overall_dist <- colSums(ct)
+
+for (cl in hier_levels_11) {
+  cl_counts  <- ct[cl, ]
+  rest_counts <- overall_dist - cl_counts
+  mat2x3 <- rbind(cl_counts, rest_counts)
+  ft <- fisher.test(mat2x3)
+  depth_fisher <- rbind(depth_fisher, data.frame(
+    cluster = cl, p_value = ft$p.value
+  ))
+}
+
+depth_fisher$p_adj <- round(p.adjust(depth_fisher$p_value, method = "BH"), 4)
+depth_fisher$p_value <- round(depth_fisher$p_value, 4)
+depth_fisher$sig <- ifelse(depth_fisher$p_adj <= 0.001, "***",
+                    ifelse(depth_fisher$p_adj <= 0.01,  "**",
+                    ifelse(depth_fisher$p_adj <= 0.05,  "*", "ns")))
+
+message("\nPer-cluster Fisher test (BH-adjusted):")
+print(depth_fisher, row.names = FALSE)
+
+# Depth type の割合テーブル
+depth_pct <- as.data.frame.matrix(round(prop.table(ct, margin = 1) * 100, 1))
+depth_pct$cluster11 <- rownames(depth_pct)
+depth_pct <- depth_pct[, c("cluster11", "surf", "mid", "bottom")]
+colnames(depth_pct) <- c("cluster11", "surf_pct", "mid_pct", "bottom_pct")
+
+depth_result <- merge(depth_pct, depth_fisher, by.x = "cluster11", by.y = "cluster")
+depth_result <- depth_result[match(hier_levels_11, depth_result$cluster11), ]
+
+write.csv(depth_result,
+  here::here("output", "survey", "maps", "cluster11_depth_type_test.csv"),
+  row.names = FALSE)
+
+message("\nDepth type results saved.")
+
+message("\nS06_maps.R: done.")
 message("  PDF: ASGARD_survey_map_11clusters.pdf, ASGARD_survey_map_11clusters_detail.pdf")
 message("  CSV: output/survey/maps/cluster11_geographic_summary.csv")
+message("  CSV: output/survey/maps/cluster11_depth_type_test.csv")
