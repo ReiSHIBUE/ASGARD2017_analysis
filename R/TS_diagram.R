@@ -1,15 +1,15 @@
 ### TS_diagram.R
-### ASGARD 2017 — T-S Diagram with Water Mass Definitions (10 clusters)
-### T-Sダイアグラム（水塊定義付き、10クラスター）
+### ASGARD 2017 — T-S Diagram with Water Mass Definitions (11 clusters)
+### T-Sダイアグラム（水塊定義付き、11クラスター）
 ###
 ### REQUIRES (from 00_setup.R, S01, S02):
-###   meta_denovo_2  - metadata table (1163 samples × 45 cols)
-###   meta_asgard    - survey metadata 181 samples (from S01)
-###   clusnum10      - 10-cluster assignments (from S02)
-###   cc10           - 10-colour palette (from S02)
+###   meta_asgard      - survey metadata 181 samples (from S01)
+###   clusnum11        - 11-cluster assignments (factor, from S02)
+###   hier_levels_11   - ordered cluster names (from S02)
+###   cc11             - 11-colour palette (from S02)
 ###
 ### OUTPUT:
-###   output/survey/TS_diagram_10clusters.pdf
+###   output/survey/TS_diagram_11clusters.pdf
 
 library(tidyverse)
 library(ggnewscale)
@@ -56,53 +56,83 @@ freeze_df <- data.frame(S = seq(17, 36, length.out = 100))
 freeze_df$T <- -0.054 * freeze_df$S
 
 # ==============================================================================
-# Section 3: T-Sプロット（10クラスター） / T-S diagram with 10 clusters
+# Section 3: T-Sプロット（11クラスター） / T-S diagram with 11 clusters
 # ==============================================================================
 
-lvls <- as.character(1:10)
-
 ts_df <- meta_asgard %>% filter(!is.na(temp), !is.na(salinity))
-ts_df$cluster <- factor(clusnum10[rownames(ts_df)], levels = lvls)
+ts_df$cluster11 <- factor(as.character(clusnum11[rownames(ts_df)]),
+                          levels = hier_levels_11)
 
-n_ts <- table(ts_df$cluster)
-clbl_ts <- paste0("Cluster ", names(n_ts), " (n=", n_ts, ")")
+n_ts <- table(ts_df$cluster11)
+clbl_ts <- paste0(names(n_ts), " (n=", n_ts, ")")
 names(clbl_ts) <- names(n_ts)
 
 dir.create(here("output", "survey"), showWarnings = FALSE, recursive = TRUE)
-pdf(file = here::here("output", "survey", "TS_diagram_10clusters.pdf"), width = 14, height = 10)
+pdf(file = here::here("output", "survey", "TS_diagram_11clusters.pdf"), width = 14, height = 10)
 
-ggplot() +
-  geom_contour(data = grid, aes(x = S, y = T, z = sigma),
-               breaks = seq(12, 28, by = 0.5), color = "gray70", linewidth = 0.3) +
-  geom_line(data = freeze_df, aes(x = S, y = T),
-            linetype = "dashed", color = "black", alpha = 0.5) +
-  geom_rect(data = wm_boxes,
-            aes(xmin = s_min, xmax = s_max, ymin = t_min, ymax = t_max,
-                fill = name, color = name),
-            alpha = 0.06, linewidth = 0.8, linetype = "dashed", show.legend = FALSE) +
-  scale_fill_manual(values = setNames(wm_boxes$color, wm_boxes$name)) +
-  scale_color_manual(values = setNames(wm_boxes$color, wm_boxes$name)) +
-  geom_text(data = wm_labels,
-            aes(x = label_x, y = label_y, label = name, color = name),
-            fontface = "bold", size = 3.5, alpha = 0.5, show.legend = FALSE) +
-  new_scale_color() +
-  geom_point(data = ts_df, aes(x = salinity, y = temp, color = cluster),
-             size = 3, alpha = 0.7) +
-  scale_color_manual(values = cc10, labels = clbl_ts) +
-  coord_cartesian(xlim = c(24, 35.5), ylim = c(-2.5, 13)) +
-  labs(x = "Salinity", y = "Potential Temperature (\u00B0C)",
-       title = "T-S Diagram \u2014 ASGARD 2017 Survey (10 clusters)",
-       subtitle = "Water mass boxes: Danielson et al. (2020)",
-       color = "Cluster") +
-  theme_bw(base_size = 14) +
-  theme(
-    plot.title    = element_text(face = "bold", size = 18),
-    plot.subtitle = element_text(size = 13),
-    legend.position      = c(0.01, 0.99),
-    legend.justification = c(0, 1),
-    legend.background    = element_rect(fill = alpha("white", 0.9))
-  )
+# Page 1: All 11 clusters
+print(
+  ggplot() +
+    geom_contour(data = grid, aes(x = S, y = T, z = sigma),
+                 breaks = seq(12, 28, by = 0.5), color = "gray70", linewidth = 0.3) +
+    geom_line(data = freeze_df, aes(x = S, y = T),
+              linetype = "dashed", color = "black", alpha = 0.5) +
+    geom_rect(data = wm_boxes,
+              aes(xmin = s_min, xmax = s_max, ymin = t_min, ymax = t_max,
+                  fill = name, color = name),
+              alpha = 0.06, linewidth = 0.8, linetype = "dashed", show.legend = FALSE) +
+    scale_fill_manual(values = setNames(wm_boxes$color, wm_boxes$name)) +
+    scale_color_manual(values = setNames(wm_boxes$color, wm_boxes$name)) +
+    geom_text(data = wm_labels,
+              aes(x = label_x, y = label_y, label = name, color = name),
+              fontface = "bold", size = 3.5, alpha = 0.5, show.legend = FALSE) +
+    new_scale_color() +
+    geom_point(data = ts_df, aes(x = salinity, y = temp, color = cluster11),
+               size = 3, alpha = 0.7) +
+    scale_color_manual(values = cc11, labels = clbl_ts) +
+    coord_cartesian(xlim = c(24, 35.5), ylim = c(-2.5, 13)) +
+    labs(x = "Salinity", y = "Potential Temperature (\u00B0C)",
+         title = "T-S Diagram \u2014 ASGARD 2017 Survey (11 clusters)",
+         subtitle = "Water mass boxes: Danielson et al. (2020)",
+         color = "Cluster") +
+    theme_bw(base_size = 14) +
+    theme(
+      plot.title    = element_text(face = "bold", size = 18),
+      plot.subtitle = element_text(size = 13),
+      legend.position      = c(0.01, 0.99),
+      legend.justification = c(0, 1),
+      legend.background    = element_rect(fill = alpha("white", 0.9))
+    )
+)
+
+# Page 2: Faceted by cluster
+print(
+  ggplot() +
+    geom_contour(data = grid, aes(x = S, y = T, z = sigma),
+                 breaks = seq(12, 28, by = 0.5), color = "gray70", linewidth = 0.2) +
+    geom_line(data = freeze_df, aes(x = S, y = T),
+              linetype = "dashed", color = "black", alpha = 0.4) +
+    geom_rect(data = wm_boxes,
+              aes(xmin = s_min, xmax = s_max, ymin = t_min, ymax = t_max,
+                  fill = name),
+              alpha = 0.08, linewidth = 0.3, linetype = "dashed", show.legend = FALSE) +
+    scale_fill_manual(values = setNames(wm_boxes$color, wm_boxes$name)) +
+    geom_point(data = ts_df, aes(x = salinity, y = temp, color = cluster11),
+               size = 2, alpha = 0.8) +
+    scale_color_manual(values = cc11, guide = "none") +
+    facet_wrap(~ cluster11, ncol = 4) +
+    coord_cartesian(xlim = c(24, 35.5), ylim = c(-2.5, 13)) +
+    labs(x = "Salinity", y = "Potential Temperature (\u00B0C)",
+         title = "T-S Diagram by Cluster \u2014 ASGARD 2017 Survey",
+         subtitle = "Water mass boxes: Danielson et al. (2020)") +
+    theme_bw(base_size = 12) +
+    theme(
+      plot.title    = element_text(face = "bold", size = 16),
+      plot.subtitle = element_text(size = 11),
+      strip.text    = element_text(face = "bold", size = 12)
+    )
+)
 
 dev.off()
 
-message("TS_diagram.R: done. PDF: output/survey/TS_diagram_10clusters.pdf")
+message("TS_diagram.R: done. PDF: output/survey/TS_diagram_11clusters.pdf")
