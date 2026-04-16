@@ -9,7 +9,7 @@
 ###   cc11             - 11-colour palette (from S02)
 ###
 ### OUTPUT:
-###   output/survey/TS_diagram_11clusters.pdf
+###   output/TS plot/TS_diagram_11clusters.pdf
 
 library(tidyverse)
 library(ggnewscale)
@@ -67,8 +67,8 @@ n_ts <- table(ts_df$cluster11)
 clbl_ts <- paste0(names(n_ts), " (n=", n_ts, ")")
 names(clbl_ts) <- names(n_ts)
 
-dir.create(here("output", "survey"), showWarnings = FALSE, recursive = TRUE)
-pdf(file = here::here("output", "survey", "TS_diagram_11clusters.pdf"), width = 14, height = 10)
+dir.create(here("output", "TS plot"), showWarnings = FALSE, recursive = TRUE)
+pdf(file = here::here("output", "TS plot", "TS_diagram_11clusters.pdf"), width = 14, height = 10)
 
 # Page 1: All 11 clusters
 print(
@@ -135,4 +135,4 @@ print(
 
 dev.off()
 
-message("TS_diagram.R: done. PDF: output/survey/TS_diagram_11clusters.pdf")
+message("TS_diagram.R: done. PDF: output/TS plot/TS_diagram_11clusters.pdf")
