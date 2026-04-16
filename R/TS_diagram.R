@@ -114,9 +114,14 @@ print(
               linetype = "dashed", color = "black", alpha = 0.4) +
     geom_rect(data = wm_boxes,
               aes(xmin = s_min, xmax = s_max, ymin = t_min, ymax = t_max,
-                  fill = name),
+                  fill = name, color = name),
               alpha = 0.08, linewidth = 0.3, linetype = "dashed", show.legend = FALSE) +
     scale_fill_manual(values = setNames(wm_boxes$color, wm_boxes$name)) +
+    scale_color_manual(values = setNames(wm_boxes$color, wm_boxes$name)) +
+    geom_text(data = wm_labels,
+              aes(x = label_x, y = label_y, label = name, color = name),
+              fontface = "bold", size = 2.5, alpha = 0.6, show.legend = FALSE) +
+    new_scale_color() +
     geom_point(data = ts_df, aes(x = salinity, y = temp, color = cluster11),
                size = 2, alpha = 0.8) +
     scale_color_manual(values = cc11, guide = "none") +
