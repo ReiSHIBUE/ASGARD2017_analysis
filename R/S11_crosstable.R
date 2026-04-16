@@ -1,20 +1,22 @@
-### cluster_watermass_association.R
-### ASGARD 2017 Survey — Cluster x Water Mass Association Analysis
-### クラスターと水塊の関連解析
+### S11_crosstable.R
+### ASGARD 2017 Survey — Cluster x Water Mass Association (11 clusters)
+### クラスターと水塊の関連解析（11クラスター）
 ###
 ### REQUIRES (from S01, S02):
-###   meta_asgard   - metadata 181 samples
-###   clusnum10     - 10-cluster assignments (from S02)
+###   meta_asgard      - metadata 181 samples
+###   clusnum11        - 11-cluster assignments (factor, from S02)
+###   hier_levels_11   - ordered cluster names (from S02)
 ###
 ### OUTPUT:
-###   output/survey/cluster_watermass_crosstab.csv
-###   output/survey/cluster_watermass_proportions.csv
+###   output/survey/crosstable/cluster_watermass_crosstab_11clusters.csv
+###   output/survey/crosstable/cluster_watermass_proportions_11clusters.csv
+###   output/survey/crosstable/watermass_sample_counts.csv
 
 library(tidyverse)
 library(here)
 
 # ==============================================================================
-# Section 1: Water mass classification / Classification des masses d'eau
+# Section 1: Water mass classification / 水塊分類
 # Danielson et al. (2020), Table 2 — mutually exclusive
 # ==============================================================================
 
@@ -41,16 +43,16 @@ classify_watermass <- function(temp, sal) {
 # ==============================================================================
 
 df <- meta_asgard
-df$cluster <- factor(clusnum10[rownames(df)], levels = as.character(1:10))
+df$cluster11 <- factor(as.character(clusnum11[rownames(df)]), levels = hier_levels_11)
 df$water_mass <- classify_watermass(df$temp, df$salinity)
 
 # ==============================================================================
 # Section 3: Cross-tabulation / クロス集計
 # ==============================================================================
 
-ct <- table(df$cluster, df$water_mass)
+ct <- table(df$cluster11, df$water_mass)
 
-cat("=== Cross-tabulation: Cluster x Water Mass ===\n\n")
+cat("=== Cross-tabulation: Cluster x Water Mass (11 clusters) ===\n\n")
 print(ct)
 
 # Proportions (% of each cluster)
@@ -61,10 +63,10 @@ print(ct_pct)
 
 # Dominant water mass per cluster
 cat("\n=== Dominant water mass per cluster ===\n\n")
-for (cl in as.character(1:10)) {
+for (cl in hier_levels_11) {
   row <- ct_pct[cl, ]
   row <- sort(row[row > 0], decreasing = TRUE)
-  cat(sprintf("Cluster %2s: %s\n", cl,
+  cat(sprintf("%-5s: %s\n", cl,
     paste(paste0(names(row), " (", row, "%)"), collapse = ", ")))
 }
 
@@ -86,24 +88,26 @@ print(fisher)
 # Section 5: Save results / 結果を保存
 # ==============================================================================
 
-dir.create(here("output", "survey"), showWarnings = FALSE, recursive = TRUE)
+dir.create(here("output", "survey", "crosstable"), showWarnings = FALSE, recursive = TRUE)
 
 # Cross-tabulation (counts)
 ct_df <- as.data.frame.matrix(ct)
 ct_df$cluster <- rownames(ct_df)
 ct_df <- ct_df %>% select(cluster, everything())
-dir.create(here("output", "survey", "crosstable"), showWarnings = FALSE, recursive = TRUE)
-write.csv(ct_df, here("output", "survey", "crosstable", "cluster_watermass_crosstab.csv"), row.names = FALSE)
+write.csv(ct_df,
+  here("output", "survey", "crosstable", "cluster_watermass_crosstab_11clusters.csv"),
+  row.names = FALSE)
 
 # Proportions
 ct_pct_df <- as.data.frame.matrix(ct_pct)
 ct_pct_df$cluster <- rownames(ct_pct_df)
 ct_pct_df <- ct_pct_df %>% select(cluster, everything())
-write.csv(ct_pct_df, here("output", "survey", "crosstable", "cluster_watermass_proportions.csv"), row.names = FALSE)
+write.csv(ct_pct_df,
+  here("output", "survey", "crosstable", "cluster_watermass_proportions_11clusters.csv"),
+  row.names = FALSE)
 
 # ==============================================================================
 # Section 6: Water mass sample counts (total, regardless of cluster)
-# 全サンプルにおける水塊別カウント（クラスター無関係）
 # ==============================================================================
 
 wm_total <- table(df$water_mass)
@@ -116,10 +120,13 @@ wm_total_df <- data.frame(
 cat("\n=== Water mass sample counts (all 181 samples) ===\n\n")
 print(wm_total_df)
 
-write.csv(wm_total_df, here("output", "survey", "crosstable", "watermass_sample_counts.csv"), row.names = FALSE)
+write.csv(wm_total_df,
+  here("output", "survey", "crosstable", "watermass_sample_counts.csv"),
+  row.names = FALSE)
 
 message("\nS11_crosstable.R: done.")
 message("  Chi-squared p-value: ", chi$p.value)
 message("  Fisher p-value: ", fisher$p.value)
-message("  CSV: cluster_watermass_crosstab.csv, cluster_watermass_proportions.csv, watermass_sample_counts.csv")
-
+message("  CSV: cluster_watermass_crosstab_11clusters.csv")
+message("  CSV: cluster_watermass_proportions_11clusters.csv")
+message("  CSV: watermass_sample_counts.csv")
