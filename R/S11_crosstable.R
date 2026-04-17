@@ -120,6 +120,21 @@ wm_total_df <- data.frame(
 cat("\n=== Water mass sample counts (all 181 samples) ===\n\n")
 print(wm_total_df)
 
+# Statistical test results
+test_results <- data.frame(
+  test = c("Chi-squared (Monte Carlo, B=9999)", "Fisher exact (Monte Carlo, B=9999)"),
+  statistic = c(round(chi$statistic, 2), NA),
+  p_value = c(chi$p.value, fisher$p.value),
+  sig = c(
+    ifelse(chi$p.value <= 0.001, "***", ifelse(chi$p.value <= 0.01, "**", ifelse(chi$p.value <= 0.05, "*", "ns"))),
+    ifelse(fisher$p.value <= 0.001, "***", ifelse(fisher$p.value <= 0.01, "**", ifelse(fisher$p.value <= 0.05, "*", "ns")))
+  )
+)
+
+write.csv(test_results,
+  here("output", "survey", "crosstable", "cluster_watermass_test_results.csv"),
+  row.names = FALSE)
+
 write.csv(wm_total_df,
   here("output", "survey", "crosstable", "watermass_sample_counts.csv"),
   row.names = FALSE)
@@ -129,4 +144,5 @@ message("  Chi-squared p-value: ", chi$p.value)
 message("  Fisher p-value: ", fisher$p.value)
 message("  CSV: cluster_watermass_crosstab_11clusters.csv")
 message("  CSV: cluster_watermass_proportions_11clusters.csv")
+message("  CSV: cluster_watermass_test_results.csv")
 message("  CSV: watermass_sample_counts.csv")

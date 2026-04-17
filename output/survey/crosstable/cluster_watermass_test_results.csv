@@ -1,0 +1,3 @@
+"test","statistic","p_value","sig"
+"Chi-squared (Monte Carlo, B=9999)",170.83,1e-04,"***"
+"Fisher exact (Monte Carlo, B=9999)",NA,1e-04,"***"
