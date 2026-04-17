@@ -175,12 +175,11 @@ print(
                     size = 5, fontface = "bold",
                     max.overlaps = 20, show.legend = FALSE) +
     scale_color_manual(values = cc11, guide = "none") +
-    scale_size_continuous(name = "n samples", range = c(3, 10)) +
+    scale_size_continuous(name = "# of samples", range = c(3, 10)) +
     scale_x_continuous(limits = c(-5, 105), breaks = seq(0, 100, 25)) +
     scale_y_continuous(limits = c(-5, 75),  breaks = seq(0, 100, 25)) +
     labs(x = "Cool water mass proportion (%)\n(cSW + AnW + MWW + WW)",
-         y = "Coastal water mass proportion (%)\n(wCW + IMW & cCW)",
-         title = "Cluster positioning in water mass space") +
+         y = "Coastal water mass proportion (%)\n(wCW + IMW & cCW)") +
     annotate("text", x = 0,  y = -3, label = "Warm Shelf",    hjust = 0,
              fontface = "italic", size = 4, color = "gray40") +
     annotate("text", x = 95, y = -3, label = "Cool Shelf",    hjust = 1,
