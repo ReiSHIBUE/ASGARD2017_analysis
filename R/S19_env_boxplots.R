@@ -38,6 +38,11 @@ env_plot_vars <- list(
   list(var = "lat",                  label = "Latitude")
 )
 
+df$division <- factor(
+  sub("^(.).*", "\\1", as.character(df$cluster11)),
+  levels = c("A", "B", "C")
+)
+
 dir.create(here::here("output", "survey", "beta_diversity"), showWarnings = FALSE, recursive = TRUE)
 
 pdf(file = here::here("output", "survey", "beta_diversity", "ASGARD_boxplots_11clusters.pdf"),
@@ -49,10 +54,12 @@ for (ev in env_plot_vars) {
       geom_boxplot(aes(fill = cluster11), outlier.shape = NA) +
       geom_jitter(width = 0.3, size = 1.2, alpha = 0.6) +
       scale_fill_manual(values = cc11, guide = "none") +
+      facet_grid(~ division, scales = "free_x", space = "free_x") +
       labs(title = ev$label, x = "Cluster", y = ev$label) +
       theme_bw() +
       theme(text = element_text(size = 14),
-            plot.title = element_text(face = "bold", size = 16))
+            plot.title = element_text(face = "bold", size = 16),
+            strip.text = element_text(face = "bold", size = 14))
   )
 }
 
@@ -93,8 +100,9 @@ pca_scores$division <- factor(
   levels = c("A", "B", "C")
 )
 
-# Add raw environmental variables
-pca_scores <- left_join(pca_scores, df[, c("sample_id", env_vars)], by = "sample_id")
+# Add raw environmental variables (all 12)
+all_env_cols <- c(env_vars, "N+N (umol/L)", "chl (ug/l)", "lat")
+pca_scores <- left_join(pca_scores, df[, c("sample_id", all_env_cols)], by = "sample_id")
 
 message("  PCA complete cases: ", nrow(pca_scores))
 
@@ -135,7 +143,7 @@ print(
 )
 
 # Pages 3+: Environmental variables with dot size = Bloom/Autotrophy Index
-for (ev in env_plot_vars[1:9]) {  # 9 PCA variables only
+for (ev in env_plot_vars) {
   p_bloom <- ggplot(pca_scores, aes(x = cluster11, y = .data[[ev$var]])) +
     geom_boxplot(aes(fill = cluster11), outlier.shape = NA, alpha = 0.5) +
     geom_jitter(aes(color = cluster11, size = bloom_index), width = 0.3, alpha = 0.7) +
