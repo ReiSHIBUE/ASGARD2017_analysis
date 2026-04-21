@@ -93,6 +93,34 @@ for (i in seq_along(combined_vars)) {
 
 print(gridExtra::grid.arrange(grobs = plot_list, ncol = 2))
 
+# Combined page: 8 selected variables (dbRDA 5 + Chl, NH4, Depth)
+selected_vars <- list(
+  list(var = "temp",                 label = "Temperature (\u00B0C)"),
+  list(var = "salinity",             label = "Salinity (PSU)"),
+  list(var = "DO",                   label = "DO (\u00B5mol/kg)"),
+  list(var = "NO3(uM)",             label = "NO3 (\u00B5M)"),
+  list(var = "FlECO-AFL(mg/m^3)",   label = "FlECO-AFL (mg/m\u00B3)"),
+  list(var = "chl (ug/l)",          label = "Chl a (\u00B5g/l)"),
+  list(var = "NH4(uM)",             label = "NH4 (\u00B5M)"),
+  list(var = "depth_m",             label = "Sampling depth (m)")
+)
+
+sel_plot_list <- list()
+for (i in seq_along(selected_vars)) {
+  ev <- selected_vars[[i]]
+  sel_plot_list[[i]] <- ggplot(df, aes(x = cluster11, y = .data[[ev$var]])) +
+    geom_boxplot(aes(fill = cluster11), outlier.shape = NA) +
+    geom_jitter(width = 0.3, size = 0.6, alpha = 0.5) +
+    scale_fill_manual(values = cc11, guide = "none") +
+    facet_grid(~ division, scales = "free_x", space = "free_x") +
+    labs(x = NULL, y = ev$label) +
+    theme_bw(base_size = 9) +
+    theme(strip.text = element_text(face = "bold", size = 8),
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 7))
+}
+
+print(gridExtra::grid.arrange(grobs = sel_plot_list, ncol = 2))
+
 dev.off()
 
 message("  PDF: output/survey/beta_diversity/ASGARD_boxplots_11clusters.pdf")
