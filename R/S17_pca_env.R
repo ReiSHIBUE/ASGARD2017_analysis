@@ -2,7 +2,7 @@ library(here); library(tidyverse); library(vegan)
 source(here("R/00_setup.R")); source(here("R/S01_data_prep.R")); source(here("R/S02_heatmaps_16S.R"))
 
 df <- meta_asgard
-df$cluster <- factor(hier_names[as.character(clusnum10[rownames(df)])], levels = hier_levels)
+df$cluster <- factor(as.character(clusnum11[rownames(df)]), levels = hier_levels_11)
 df$sample_id <- rownames(df)
 
 # Select environmental variables
@@ -74,7 +74,7 @@ pdf(file = here("output", "survey", "beta_diversity", "ASGARD_pca_env_survey.pdf
 p1 <- ggplot() +
   geom_point(data = pca_scores, aes(x = PC1, y = PC2, color = cluster),
              size = 3, alpha = 0.7) +
-  scale_color_manual(values = cc10) +
+  scale_color_manual(values = cc11) +
   geom_segment(data = pca_loadings,
                aes(x = 0, y = 0, xend = PC1_plot, yend = PC2_plot),
                arrow = arrow(length = unit(0.2, "cm")),
@@ -87,7 +87,7 @@ p1 <- ggplot() +
   labs(x = paste0("PC1 (", pc1_pct, "%)"),
        y = paste0("PC2 (", pc2_pct, "%)"),
        color = "Cluster",
-       title = "PCA of Environmental Variables (10 clusters)",
+       title = "PCA of Environmental Variables (11 clusters)",
        subtitle = "log1p-transformed nutrients + scaled; 9 variables") +
   theme_minimal() +
   theme(plot.title = element_text(face = "bold", size = 16),
@@ -97,7 +97,7 @@ print(p1)
 # Page 2: Without arrows (cleaner view)
 p2 <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = cluster)) +
   geom_point(size = 3, alpha = 0.7) +
-  scale_color_manual(values = cc10) +
+  scale_color_manual(values = cc11) +
   coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
                   ylim = range(pca_scores$PC2) * 1.1) +
   labs(x = paste0("PC1 (", pc1_pct, "%)"),
@@ -127,7 +127,7 @@ for (v in env_vars) {
 for (v in env_vars) {
   p_env <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = cluster, size = .data[[v]])) +
     geom_point(alpha = 0.7) +
-    scale_color_manual(values = cc10) +
+    scale_color_manual(values = cc11) +
     scale_size_continuous(range = c(1, 8), name = env_labels[v]) +
     coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
                     ylim = range(pca_scores$PC2) * 1.1) +
@@ -150,7 +150,7 @@ for (v in env_vars) {
   # All depths combined
   p_all <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = cluster, size = .data[[v]])) +
     geom_point(alpha = 0.7) +
-    scale_color_manual(values = cc10) +
+    scale_color_manual(values = cc11) +
     scale_size_continuous(range = c(1, 8), name = env_labels[v]) +
     coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
                     ylim = range(pca_scores$PC2) * 1.1) +
@@ -165,7 +165,7 @@ for (v in env_vars) {
   # Faceted by depth_type
   p_facet <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = cluster, size = .data[[v]])) +
     geom_point(alpha = 0.7) +
-    scale_color_manual(values = cc10) +
+    scale_color_manual(values = cc11) +
     scale_size_continuous(range = c(1, 8), name = env_labels[v]) +
     facet_wrap(~ depth_type) +
     coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
@@ -289,11 +289,11 @@ pca_scores$PC3 <- pca_result$x[, 3]
 pdf(file = here("output", "survey", "beta_diversity", "ASGARD_pca_env_PC1vsPC3.pdf"),
     width = 10, height = 8)
 
-# Page 1: 10 clusters biplot
+# Page 1: 11 clusters biplot
 print(ggplot() +
   geom_point(data = pca_scores, aes(x = PC1, y = PC3, color = cluster),
              size = 3, alpha = 0.7) +
-  scale_color_manual(values = cc10) +
+  scale_color_manual(values = cc11) +
   geom_segment(data = pca_loadings_13,
                aes(x = 0, y = 0, xend = PC1_plot, yend = PC3_plot),
                arrow = arrow(length = unit(0.2, "cm")),
@@ -306,7 +306,7 @@ print(ggplot() +
   labs(x = paste0("PC1 (", pc1_pct, "%)"),
        y = paste0("PC3 (", pc3_pct, "%)"),
        color = "Cluster",
-       title = "PCA PC1 vs PC3 (10 clusters)") +
+       title = "PCA PC1 vs PC3 (11 clusters)") +
   theme_minimal() +
   theme(plot.title = element_text(face = "bold", size = 16)))
 
@@ -373,7 +373,7 @@ cat("Done: output/survey/beta_diversity/ASGARD_pca_env_PC1vsPC3.pdf\n")
 # group4はまだ定義されていないので先に定義
 group4_colors_13 <- c("A" = "#E31A1C", "B" = "#33A02C", "C1" = "#1F78B4", "C2" = "#6A3D9A")
 group4_map_13 <- c("A1"="A", "A2"="A", "B1"="B", "B2a"="B", "B2b"="B",
-                   "C1a"="C1", "C1b"="C1", "C2a"="C2", "C2b1"="C2", "C2b2"="C2")
+                   "C1a"="C1", "C1b1"="C1", "C1b2"="C1", "C2a"="C2", "C2b1"="C2", "C2b2"="C2")
 pca_scores$group4 <- group4_map_13[as.character(pca_scores$cluster)]
 
 pdf(file = here("output", "survey", "beta_diversity", "ASGARD_pca_env_4groups_PC1vsPC3.pdf"),
@@ -454,7 +454,7 @@ cat("Done: output/survey/beta_diversity/ASGARD_pca_env_4groups_PC1vsPC3.pdf\n")
 
 group4_colors <- c("A" = "#E31A1C", "B" = "#33A02C", "C1" = "#1F78B4", "C2" = "#6A3D9A")
 group4_map_plot <- c("A1"="A", "A2"="A", "B1"="B", "B2a"="B", "B2b"="B",
-                     "C1a"="C1", "C1b"="C1", "C2a"="C2", "C2b1"="C2", "C2b2"="C2")
+                     "C1a"="C1", "C1b1"="C1", "C1b2"="C1", "C2a"="C2", "C2b1"="C2", "C2b2"="C2")
 pca_scores$group4 <- group4_map_plot[as.character(pca_scores$cluster)]
 
 pdf(file = here("output", "survey", "beta_diversity", "ASGARD_pca_env_4groups.pdf"),
@@ -624,7 +624,7 @@ print(env_permdisp_pw3, row.names = FALSE)
 cat("\n--- Environmental PERMANOVA / PERMDISP by 4 groups (A/B/C1/C2) ---\n")
 
 group4_map <- c("A1"="A", "A2"="A", "B1"="B", "B2a"="B", "B2b"="B",
-                "C1a"="C1", "C1b"="C1", "C2a"="C2", "C2b1"="C2", "C2b2"="C2")
+                "C1a"="C1", "C1b1"="C1", "C1b2"="C1", "C2a"="C2", "C2b1"="C2", "C2b2"="C2")
 env_group4 <- factor(
   group4_map[as.character(env_complete$cluster)],
   levels = c("A", "B", "C1", "C2")
@@ -853,7 +853,7 @@ cat("  CSV: output/survey/beta_diversity/env_permanova_permdisp_summary.csv\n")
 cat("\n--- C hierarchical PERMANOVA/PERMDISP ---\n")
 
 hc_full <- as.hclust(h1$rowDendrogram)
-c_samples <- names(clusnum10)[clusnum10 >= 6]
+c_samples <- names(clusnum11)[clusnum11 %in% c("C1a", "C1b1", "C1b2", "C2a", "C2b1", "C2b2")]
 d_c <- as.dist(as.matrix(cophenetic(hc_full))[c_samples, c_samples])
 hc_c <- hclust(d_c, method = "ward.D")
 
@@ -979,7 +979,7 @@ cat("  CSV: output/survey/beta_diversity/env_C_dendrogram_node_pairwise.csv\n")
 # ==============================================================================
 # Section: PCスコア地図 (PC1-PC9, depth_typeでfacet)
 # Map of PC scores by depth type
-# size = |PC score|, shape = sign (+/-), color = 10 clusters
+# size = |PC score|, shape = sign (+/-), color = 11 clusters
 # ==============================================================================
 
 library(ggmap)
@@ -987,8 +987,8 @@ ggmap::register_stadiamaps(Sys.getenv("STADIA_MAPS_KEY"))
 
 pca_map <- pca_all
 pca_map$hier_name <- factor(
-  hier_names[as.character(clusnum10[pca_map$sample_id])],
-  levels = hier_levels
+  as.character(clusnum11[pca_map$sample_id]),
+  levels = hier_levels_11
 )
 pca_map$lat <- meta_asgard[pca_map$sample_id, "lat"]
 pca_map$lon <- meta_asgard[pca_map$sample_id, "lon"]
@@ -1030,7 +1030,7 @@ for (pc in paste0("PC", 1:9)) {
                aes(x = lon_j, y = lat_j, color = hier_name,
                    size = pc_abs, shape = pc_sign),
                alpha = 0.8) +
-    scale_color_manual(values = cc10, name = "Cluster") +
+    scale_color_manual(values = cc11, name = "Cluster") +
     scale_size_continuous(range = c(0.5, 7), name = paste0("|", pc, "|")) +
     scale_shape_manual(values = c("positive" = 16, "negative" = 17),
                        name = "Sign") +
