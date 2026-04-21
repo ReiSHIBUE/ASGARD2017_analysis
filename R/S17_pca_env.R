@@ -959,16 +959,16 @@ node_df <- bind_rows(node_results)
 node_df <- node_df %>%
   group_by(node) %>%
   mutate(
-    permanova_p_adj = round(p.adjust(permanova_p, method = "BH"), 4),
-    permanova_adj_sig = ifelse(permanova_p_adj <= 0.001, "***",
-                        ifelse(permanova_p_adj <= 0.01,  "**",
-                        ifelse(permanova_p_adj <= 0.05,  "*", "ns")))
+    permanova_p = round(p.adjust(permanova_p, method = "BH"), 4),
+    permanova_sig = ifelse(permanova_p <= 0.001, "***",
+                    ifelse(permanova_p <= 0.01,  "**",
+                    ifelse(permanova_p <= 0.05,  "*", "ns")))
   ) %>%
   ungroup()
 
 # 各ノードの最重要PC (BH補正後PERMANOVA sig & PERMDISP ns, max R²)
 top_pcs <- node_df %>%
-  filter(permanova_p_adj <= 0.05, permdisp_sig == "ns") %>%
+  filter(permanova_p <= 0.05, permdisp_sig == "ns") %>%
   group_by(node) %>%
   slice_max(order_by = permanova_R2, n = 1) %>%
   ungroup()
