@@ -1047,3 +1047,111 @@ for (pc in paste0("PC", 1:9)) {
 dev.off()
 
 cat("Done: output/survey/maps/map_PC_scores.pdf\n")
+
+# ==============================================================================
+# Section: 11クラスター版 PCA biplot + 8変数まとめページ
+# PCA biplot (11 clusters) + combined 8-variable page
+# ==============================================================================
+
+# Add Chl and NH4 to pca_scores for combined plot
+pca_scores$`chl (ug/l)` <- meta_asgard[pca_scores$sample_id, "chl (ug/l)"]
+pca_scores$`NH4(uM)`    <- meta_asgard[pca_scores$sample_id, "NH4(uM)"]
+
+pdf(file = here("output", "survey", "beta_diversity", "ASGARD_pca_env_11clusters.pdf"),
+    width = 10, height = 8)
+
+# Page 1: PCA biplot with arrows
+print(
+  ggplot() +
+    geom_point(data = pca_scores, aes(x = PC1, y = PC2, color = cluster),
+               size = 3, alpha = 0.7) +
+    scale_color_manual(values = cc11) +
+    geom_segment(data = pca_loadings,
+                 aes(x = 0, y = 0, xend = PC1_plot, yend = PC2_plot),
+                 arrow = arrow(length = unit(0.2, "cm")),
+                 color = "black", linewidth = 0.8) +
+    geom_text(data = pca_loadings,
+              aes(x = PC1_plot * 1.15, y = PC2_plot * 1.15, label = label),
+              size = 4, fontface = "bold") +
+    coord_cartesian(xlim = range(c(pca_scores$PC1, pca_loadings$PC1_plot)) * 1.3,
+                    ylim = range(c(pca_scores$PC2, pca_loadings$PC2_plot)) * 1.3) +
+    labs(x = paste0("PC1 (", pc1_pct, "%)"),
+         y = paste0("PC2 (", pc2_pct, "%)"),
+         color = "Cluster",
+         title = "PCA of Environmental Variables (11 clusters)",
+         subtitle = "log1p-transformed nutrients + scaled; 9 variables") +
+    theme_minimal() +
+    theme(plot.title = element_text(face = "bold", size = 16),
+          plot.subtitle = element_text(size = 12))
+)
+
+# Page 2: Without arrows
+print(
+  ggplot(pca_scores, aes(x = PC1, y = PC2, color = cluster)) +
+    geom_point(size = 3, alpha = 0.7) +
+    scale_color_manual(values = cc11) +
+    coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                    ylim = range(pca_scores$PC2) * 1.1) +
+    labs(x = paste0("PC1 (", pc1_pct, "%)"),
+         y = paste0("PC2 (", pc2_pct, "%)"),
+         color = "Cluster",
+         title = "PCA of Environmental Variables (points only)") +
+    theme_minimal() +
+    theme(plot.title = element_text(face = "bold", size = 16))
+)
+
+# Page 3: 8 variables combined in one page
+pca_8vars <- list(
+  list(var = "temp",                 label = "Temperature (\u00B0C)"),
+  list(var = "salinity",             label = "Salinity (PSU)"),
+  list(var = "DO",                   label = "DO (\u00B5mol/kg)"),
+  list(var = "NO3(uM)",             label = "NO3 (\u00B5M)"),
+  list(var = "FlECO-AFL(mg/m^3)",   label = "FlECO-AFL (mg/m\u00B3)"),
+  list(var = "chl (ug/l)",          label = "Chl a (\u00B5g/l)"),
+  list(var = "NH4(uM)",             label = "NH4 (\u00B5M)"),
+  list(var = "depth_m",             label = "Sampling depth (m)")
+)
+
+pca_8_plots <- list()
+for (i in seq_along(pca_8vars)) {
+  ev <- pca_8vars[[i]]
+  pca_8_plots[[i]] <- ggplot(pca_scores, aes(x = PC1, y = PC2,
+                                              color = cluster, size = .data[[ev$var]])) +
+    geom_point(alpha = 0.6) +
+    scale_color_manual(values = cc11, guide = "none") +
+    scale_size_continuous(range = c(0.5, 5), name = ev$label) +
+    coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                    ylim = range(pca_scores$PC2) * 1.1) +
+    labs(x = paste0("PC1 (", pc1_pct, "%)"),
+         y = paste0("PC2 (", pc2_pct, "%)"),
+         title = ev$label) +
+    theme_minimal(base_size = 8) +
+    theme(plot.title = element_text(face = "bold", size = 9),
+          legend.key.size = unit(0.3, "cm"),
+          legend.text = element_text(size = 6),
+          legend.title = element_text(size = 7))
+}
+
+print(gridExtra::grid.arrange(grobs = pca_8_plots, ncol = 2))
+
+# Pages 4-11: Individual 8 variables (full size)
+for (ev in pca_8vars) {
+  print(
+    ggplot(pca_scores, aes(x = PC1, y = PC2, color = cluster, size = .data[[ev$var]])) +
+      geom_point(alpha = 0.7) +
+      scale_color_manual(values = cc11) +
+      scale_size_continuous(range = c(1, 8), name = ev$label) +
+      coord_cartesian(xlim = range(pca_scores$PC1) * 1.1,
+                      ylim = range(pca_scores$PC2) * 1.1) +
+      labs(x = paste0("PC1 (", pc1_pct, "%)"),
+           y = paste0("PC2 (", pc2_pct, "%)"),
+           color = "Cluster",
+           title = paste0("PCA - dot size: ", ev$label)) +
+      theme_minimal() +
+      theme(plot.title = element_text(face = "bold", size = 16))
+  )
+}
+
+dev.off()
+
+cat("Done: output/survey/beta_diversity/ASGARD_pca_env_11clusters.pdf\n")
