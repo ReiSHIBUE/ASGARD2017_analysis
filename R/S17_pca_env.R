@@ -1060,29 +1060,31 @@ pca_scores$`NH4(uM)`    <- meta_asgard[pca_scores$sample_id, "NH4(uM)"]
 pdf(file = here("output", "survey", "beta_diversity", "ASGARD_pca_env_11clusters.pdf"),
     width = 10, height = 8)
 
-# Page 1: PCA biplot with arrows
+# 8変数のみ表示（PO4, Sil除外、Chl追加だが矢印はPCA変数のみ）
+biplot_vars <- c("Temp", "Salinity", "DO", "NO3", "NH4", "FlECO", "Depth")
+pca_loadings_8 <- pca_loadings[pca_loadings$label %in% biplot_vars, ]
+
+# Page 1: PCA biplot with arrows (8 variables)
 print(
   ggplot() +
     geom_point(data = pca_scores, aes(x = PC1, y = PC2, color = cluster),
                size = 3, alpha = 0.7) +
     scale_color_manual(values = cc11) +
-    geom_segment(data = pca_loadings,
+    geom_segment(data = pca_loadings_8,
                  aes(x = 0, y = 0, xend = PC1_plot, yend = PC2_plot),
                  arrow = arrow(length = unit(0.2, "cm")),
                  color = "black", linewidth = 0.8) +
-    geom_text(data = pca_loadings,
+    geom_text(data = pca_loadings_8,
               aes(x = PC1_plot * 1.15, y = PC2_plot * 1.15, label = label),
               size = 4, fontface = "bold") +
-    coord_cartesian(xlim = range(c(pca_scores$PC1, pca_loadings$PC1_plot)) * 1.3,
-                    ylim = range(c(pca_scores$PC2, pca_loadings$PC2_plot)) * 1.3) +
+    coord_cartesian(xlim = range(c(pca_scores$PC1, pca_loadings_8$PC1_plot)) * 1.3,
+                    ylim = range(c(pca_scores$PC2, pca_loadings_8$PC2_plot)) * 1.3) +
     labs(x = paste0("PC1 (", pc1_pct, "%)"),
          y = paste0("PC2 (", pc2_pct, "%)"),
          color = "Cluster",
-         title = "PCA of Environmental Variables (11 clusters)",
-         subtitle = "log1p-transformed nutrients + scaled; 9 variables") +
+         title = "PCA of Environmental Variables (11 clusters)") +
     theme_minimal() +
-    theme(plot.title = element_text(face = "bold", size = 16),
-          plot.subtitle = element_text(size = 12))
+    theme(plot.title = element_text(face = "bold", size = 16))
 )
 
 # Page 2: Without arrows
