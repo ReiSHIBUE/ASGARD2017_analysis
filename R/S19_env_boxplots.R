@@ -149,7 +149,7 @@ pca_scores$sample_id <- env_complete$sample_id
 # Rescale PC1 → Bloom Index (0=pre-bloom, 1=post-bloom)
 # Rescale PC2 → Autotrophy Index (0=low, 1=high)
 rescale01 <- function(x) (x - min(x)) / (max(x) - min(x))
-pca_scores$bloom_index      <- rescale01(pca_scores$PC1)
+pca_scores$bloom_index      <- 1 - rescale01(pca_scores$PC1)
 pca_scores$autotrophy_index <- rescale01(pca_scores$PC2)
 
 # Division for faceting
