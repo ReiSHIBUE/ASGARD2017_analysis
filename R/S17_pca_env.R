@@ -988,6 +988,43 @@ cat("  CSV: output/survey/beta_diversity/env_permanova_permdisp_C_hierarchical.c
 cat("  CSV: output/survey/beta_diversity/env_C_dendrogram_node_pairwise.csv\n")
 
 # ==============================================================================
+# Section: ノード×PC軸 ヒートマップ / Node x PC axis heatmap
+# ==============================================================================
+
+node_order <- c("C1 vs C2", "C1a vs C1b", "C2a vs C2b", "C2b1 vs C2b2", "C1b1 vs C1b2")
+
+plot_df_node <- node_df %>%
+  mutate(
+    node = factor(node, levels = rev(node_order)),
+    PC = factor(PC, levels = paste0("PC", 1:9)),
+    sig_color = ifelse(permanova_sig == "ns", "ns", "sig"),
+    label = ifelse(permanova_sig == "ns", "",
+            paste0("R\u00B2=", sprintf("%.2f", permanova_R2), "\n", permanova_sig)),
+    is_top = ifelse(top_PC == "***TOP***", TRUE, FALSE)
+  )
+
+pdf(here("output", "survey", "beta_diversity", "env_C_node_pairwise_heatmap.pdf"),
+    width = 12, height = 5)
+
+print(
+  ggplot(plot_df_node, aes(x = PC, y = node)) +
+    geom_tile(aes(fill = sig_color), color = "white", linewidth = 1) +
+    scale_fill_manual(values = c("sig" = "#4292C6", "ns" = "grey90"), guide = "none") +
+    geom_text(aes(label = label), size = 3, lineheight = 0.8) +
+    geom_tile(data = plot_df_node %>% filter(is_top),
+              aes(x = PC, y = node), fill = NA, color = "red", linewidth = 1.5) +
+    labs(x = "PC axis", y = "Dendrogram node",
+         subtitle = "Blue = significant (BH-adjusted p < 0.05), Red border = top PC") +
+    theme_minimal(base_size = 13) +
+    theme(plot.title = element_text(face = "bold"),
+          panel.grid = element_blank())
+)
+
+dev.off()
+
+cat("  PDF: output/survey/beta_diversity/env_C_node_pairwise_heatmap.pdf\n")
+
+# ==============================================================================
 # Section: PCスコア地図 (PC1-PC9, depth_typeでfacet)
 # Map of PC scores by depth type
 # size = |PC score|, shape = sign (+/-), color = 11 clusters
