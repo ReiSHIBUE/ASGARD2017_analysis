@@ -1022,7 +1022,7 @@ print(
       guide = "none"
     ) +
     labs(x = "PC axis", y = "Dendrogram node",
-         subtitle = "BH-adjusted PERMANOVA (PERMDISP ns for top PC)") +
+         subtitle = "BH-adjusted PERMANOVA per PC axis") +
     theme_minimal(base_size = 13) +
     theme(plot.title = element_text(face = "bold"),
           panel.grid = element_blank(),
