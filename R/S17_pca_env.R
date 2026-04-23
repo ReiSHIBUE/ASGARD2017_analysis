@@ -997,10 +997,12 @@ plot_df_node <- node_df %>%
   mutate(
     node = factor(node, levels = rev(node_order)),
     PC = factor(PC, levels = paste0("PC", 1:9)),
-    sig_color = ifelse(permanova_sig == "ns", "ns", "sig"),
-    label = ifelse(permanova_sig == "ns", "",
-            paste0("R\u00B2=", sprintf("%.2f", permanova_R2), "\n", permanova_sig)),
-    is_top = ifelse(top_PC == "***TOP***", TRUE, FALSE)
+    is_top = (top_PC == "***TOP***"),
+    fill_cat = ifelse(is_top, "top", ifelse(permanova_sig == "ns", "ns", "sig")),
+    label = ifelse(is_top,
+              paste0("R\u00B2=", sprintf("%.2f", permanova_R2), "\n", permanova_sig),
+            ifelse(permanova_sig == "ns", "ns",
+              paste0("R\u00B2=", sprintf("%.2f", permanova_R2), "\n", permanova_sig)))
   )
 
 pdf(here("output", "survey", "beta_diversity", "env_C_node_pairwise_heatmap.pdf"),
@@ -1008,16 +1010,23 @@ pdf(here("output", "survey", "beta_diversity", "env_C_node_pairwise_heatmap.pdf"
 
 print(
   ggplot(plot_df_node, aes(x = PC, y = node)) +
-    geom_tile(aes(fill = sig_color), color = "white", linewidth = 1) +
-    scale_fill_manual(values = c("sig" = "#4292C6", "ns" = "grey90"), guide = "none") +
-    geom_text(aes(label = label), size = 3, lineheight = 0.8) +
-    geom_tile(data = plot_df_node %>% filter(is_top),
-              aes(x = PC, y = node), fill = NA, color = "red", linewidth = 1.5) +
+    geom_tile(aes(fill = fill_cat), color = "white", linewidth = 1) +
+    scale_fill_manual(
+      values = c("top" = "#08519C", "sig" = "#9ECAE1", "ns" = "grey90"),
+      labels = c("top" = "Top PC", "sig" = "Significant", "ns" = "ns"),
+      name = NULL
+    ) +
+    geom_text(aes(label = label, color = fill_cat), size = 3, lineheight = 0.8) +
+    scale_color_manual(
+      values = c("top" = "white", "sig" = "black", "ns" = "grey50"),
+      guide = "none"
+    ) +
     labs(x = "PC axis", y = "Dendrogram node",
-         subtitle = "Blue = significant (BH-adjusted p < 0.05), Red border = top PC") +
+         subtitle = "BH-adjusted PERMANOVA (PERMDISP ns for top PC)") +
     theme_minimal(base_size = 13) +
     theme(plot.title = element_text(face = "bold"),
-          panel.grid = element_blank())
+          panel.grid = element_blank(),
+          legend.position = "bottom")
 )
 
 dev.off()
