@@ -168,8 +168,24 @@ cluster_wm <- df %>%
 pdf(here("output", "survey", "crosstable", "cluster_watermass_position.pdf"),
     width = 10, height = 8)
 
+# Quadrant background rectangles
+quad_df <- data.frame(
+  xmin = c(-5, 50, -5, 50),
+  xmax = c(50, 105, 50, 105),
+  ymin = c(-5, -5, 37.5, 37.5),
+  ymax = c(37.5, 37.5, 75, 75),
+  quad = c("Warm Shelf", "Cool Shelf", "Warm Coastal", "Cool Coastal")
+)
+
+quad_colors <- c("Warm Shelf" = "#FFCDD2", "Cool Shelf" = "#BBDEFB",
+                 "Warm Coastal" = "#FFF9C4", "Cool Coastal" = "#C8E6C9")
+
 print(
   ggplot(cluster_wm, aes(x = cool_index, y = coastal_index)) +
+    geom_rect(data = quad_df,
+              aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = quad),
+              inherit.aes = FALSE, alpha = 0.4) +
+    scale_fill_manual(values = quad_colors, guide = "none") +
     geom_point(aes(color = cluster11, size = n), alpha = 0.8) +
     geom_text_repel(aes(label = cluster11, color = cluster11),
                     size = 5, fontface = "bold",
@@ -180,17 +196,16 @@ print(
     scale_y_continuous(limits = c(-5, 75),  breaks = seq(0, 100, 25)) +
     labs(x = "Cool water mass proportion (%)\n(cSW + AnW + MWW + WW)",
          y = "Coastal water mass proportion (%)\n(wCW + IMW & cCW)") +
-    annotate("text", x = 0,  y = -3, label = "Warm Shelf",    hjust = 0,
-             fontface = "italic", size = 4, color = "gray40") +
-    annotate("text", x = 95, y = -3, label = "Cool Shelf",    hjust = 1,
-             fontface = "italic", size = 4, color = "gray40") +
-    annotate("text", x = 0,  y = 72, label = "Warm Coastal",  hjust = 0,
-             fontface = "italic", size = 4, color = "gray40") +
-    annotate("text", x = 95, y = 72, label = "Cool Coastal",  hjust = 1,
-             fontface = "italic", size = 4, color = "gray40") +
+    annotate("text", x = 2,   y = 1,  label = "Warm Shelf",   hjust = 0,
+             fontface = "italic", size = 4, color = "gray30") +
+    annotate("text", x = 98,  y = 1,  label = "Cool Shelf",   hjust = 1,
+             fontface = "italic", size = 4, color = "gray30") +
+    annotate("text", x = 2,   y = 72, label = "Warm Coastal", hjust = 0,
+             fontface = "italic", size = 4, color = "gray30") +
+    annotate("text", x = 98,  y = 72, label = "Cool Coastal", hjust = 1,
+             fontface = "italic", size = 4, color = "gray30") +
     theme_bw(base_size = 14) +
     theme(
-      plot.title = element_text(face = "bold", size = 16),
       panel.grid.minor = element_blank()
     )
 )
