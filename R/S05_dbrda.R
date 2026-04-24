@@ -154,7 +154,7 @@ print(ggplot() +
   labs(x = paste0("CAP1 (", cap1_pct, "%)"),
        y = paste0("CAP2 (", cap2_pct, "%)"),
        title = "dbRDA CAP axes (11 clusters)") +
-  theme_bw() +
+  theme_grey() +
   theme(plot.title = element_text(face = "bold", size = 16)))
 
 # Page 2: CAP axes faceted by Division
@@ -169,7 +169,7 @@ print(ggplot() +
   labs(x = paste0("CAP1 (", cap1_pct, "%)"),
        y = paste0("CAP2 (", cap2_pct, "%)"),
        title = "dbRDA CAP axes (by Division A/B/C)") +
-  theme_bw() +
+  theme_grey() +
   theme(plot.title = element_text(face = "bold", size = 16),
         strip.text = element_text(face = "bold", size = 14)))
 
@@ -187,7 +187,7 @@ print(ggplot() +
   labs(x = paste0("MDS1 (", mds1_pct, "%)"),
        y = paste0("MDS2 (", mds2_pct, "%)"),
        title = "dbRDA MDS axes (11 clusters)") +
-  theme_bw() +
+  theme_grey() +
   theme(plot.title = element_text(face = "bold", size = 16)))
 
 # Page 4: MDS axes faceted by Division
@@ -202,7 +202,7 @@ print(ggplot() +
   labs(x = paste0("MDS1 (", mds1_pct, "%)"),
        y = paste0("MDS2 (", mds2_pct, "%)"),
        title = "dbRDA MDS axes (by Division A/B/C)") +
-  theme_bw() +
+  theme_grey() +
   theme(plot.title = element_text(face = "bold", size = 16),
         strip.text = element_text(face = "bold", size = 14)))
 
