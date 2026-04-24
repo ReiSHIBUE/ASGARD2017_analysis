@@ -1,5 +1,5 @@
 ### S05_dbrda.R
-### ASGARD 2017 Survey Site Analysis — db-RDA & Environmental Scatter Plots
+### ASGARD 2017 Survey Site Analysis — dbRDA & Environmental Scatter Plots
 ### 距離ベースRDAスクリプト（サーベイサイト）
 ###
 ### REQUIRES (from S01, S02, S04):
@@ -13,7 +13,7 @@
 ###   asgard_dbrda_model - capscale model object
 ###   asgard_anova_dbrda - ANOVA test of overall model
 ###   asgard_anova_env   - ANOVA test per environmental variable (by margin)
-###   asgard_anova_axes  - ANOVA test per db-RDA axis
+###   asgard_anova_axes  - ANOVA test per dbRDA axis
 ###   asgard_pcoa_cc     - complete-case PCoA + env df (used in capscale)
 ###   asgard_dbrda_merged - merged scores + metadata df
 ###
@@ -65,7 +65,7 @@ asgard_bray_cc <- vegdist(
 colnames(asgard_pcoa_cc)[colnames(asgard_pcoa_cc) == "chl (ug/l)"] <- "chl_ug_l"
 
 # ==============================================================================
-# Section 4: db-RDA モデル構築 / Fit db-RDA model
+# Section 4: dbRDA モデル構築 / Fit dbRDA model
 # ==============================================================================
 
 asgard_dbrda_model <- capscale(
@@ -87,7 +87,7 @@ print(asgard_anova_axes)
 RsquareAdj(asgard_dbrda_model)
 
 # ==============================================================================
-# Section 5: db-RDA スコア抽出とマージ / Extract scores and merge with metadata
+# Section 5: dbRDA スコア抽出とマージ / Extract scores and merge with metadata
 # ==============================================================================
 
 asgard_dbrda_scores <- as.data.frame(scores(asgard_dbrda_model, display = "sites"))
@@ -108,7 +108,7 @@ asgard_dbrda_merged <- left_join(
 asgard_dbrda_merged$clusnum10 <- factor(asgard_dbrda_merged$clusnum10, levels = as.character(1:10))
 
 # ==============================================================================
-# Section 6: db-RDA プロットと環境変数散布図 / Plot db-RDA and environmental scatter
+# Section 6: dbRDA プロットと環境変数散布図 / Plot dbRDA and environmental scatter
 # ==============================================================================
 
 pdf(file = here::here("output", "survey", "dbrda", "ASGARD_dbrda_survey.pdf"),
@@ -141,7 +141,7 @@ print(ggplot() +
   labs(x = paste0("MDS1 (", mds1_pct, "%)"),
        y = paste0("MDS2 (", mds2_pct, "%)"),
        color = "cluster",
-       title = "db-RDA — MDS axes (unconstrained)") +
+       title = "dbRDA — MDS axes (unconstrained)") +
   theme_minimal())
 
 # Page 2: CAP axes (constrained) — tight axes
@@ -163,7 +163,7 @@ print(ggplot() +
   labs(x = paste0("CAP1 (", cap1_pct, "%)"),
        y = paste0("CAP2 (", cap2_pct, "%)"),
        color = "cluster",
-       title = "db-RDA — CAP axes (constrained)") +
+       title = "dbRDA — CAP axes (constrained)") +
   theme_minimal())
 
 # 環境変数散布図 / Environmental scatter plots coloured by 10 clusters
