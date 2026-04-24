@@ -269,6 +269,70 @@ dev.off()
 message("  11-cluster heatmap: output/survey/heatmaps/ASGARD_hm_survey_16S_11clusters.pdf")
 message("  clusnum11, cc11, rsc11, hier_levels_11 exported")
 
+# ==============================================================================
+# Section 6: Division C ヒートマップ (97 samples x 242 ASVs)
+# Division C heatmap with 6 sub-clusters
+# ==============================================================================
+
+c_clusters <- c("C1a", "C1b1", "C1b2", "C2a", "C2b1", "C2b2")
+c_samples <- names(clusnum11)[clusnum11 %in% c_clusters]
+
+c_mat <- asgard_frtprop[c_samples, ]
+c_mat <- c_mat[, colSums(c_mat) > 0]
+
+c_rsc <- cc11[as.character(clusnum11[c_samples])]
+names(c_rsc) <- c_samples
+
+pdf(file = here::here("output", "survey", "heatmaps", "ASGARD_hm_divisionC.pdf"),
+    width = 20, height = 15)
+
+heatmap.2(
+  as.matrix(c_mat),
+  distfun   = function(x) vegdist(x, method = "bray"),
+  hclustfun = function(x) hclust(x, method = "ward.D"),
+  col       = viridis,
+  RowSideColors = c_rsc[rownames(c_mat)],
+  margins   = c(15, 15),
+  scale     = "none",
+  main      = "Division C - 16S heatmap (6 sub-clusters)",
+  trace     = "none",
+  cexCol    = 0.2,
+  cexRow    = 0.3
+)
+
+heatmap.2(
+  as.matrix(c_mat),
+  distfun   = function(x) vegdist(x, method = "bray"),
+  hclustfun = function(x) hclust(x, method = "ward.D"),
+  col       = viridis,
+  RowSideColors = c_rsc[rownames(c_mat)],
+  margins   = c(15, 15),
+  scale     = "none",
+  main      = "Division C - 16S heatmap (station names)",
+  trace     = "none",
+  cexCol    = 0.2,
+  cexRow    = 0.3,
+  labRow    = meta_asgard[rownames(c_mat), "station"]
+)
+
+heatmap.2(
+  as.matrix(c_mat),
+  distfun   = function(x) vegdist(x, method = "bray"),
+  hclustfun = function(x) hclust(x, method = "ward.D"),
+  col       = viridis,
+  RowSideColors = c_rsc[rownames(c_mat)],
+  margins   = c(2, 2),
+  scale     = "none",
+  main      = "Division C - 16S heatmap",
+  trace     = "none",
+  labRow    = FALSE,
+  labCol    = FALSE
+)
+
+dev.off()
+
+message("  Division C heatmap: output/survey/heatmaps/ASGARD_hm_divisionC.pdf")
+
 message("\nS02_heatmaps_16S.R: done.")
 message("  clusnum10 length:  ", length(clusnum10), " (", nclus10, " row clusters)")
 message("  hier_names: ", paste(hier_names, collapse = ", "))
