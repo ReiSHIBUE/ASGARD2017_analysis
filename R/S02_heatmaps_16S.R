@@ -294,7 +294,7 @@ heatmap.2(
   RowSideColors = c_rsc[rownames(c_mat)],
   margins   = c(15, 15),
   scale     = "none",
-  main      = "Division C - 16S heatmap (6 sub-clusters)",
+  main      = "",
   trace     = "none",
   cexCol    = 0.2,
   cexRow    = 0.3
@@ -308,7 +308,7 @@ heatmap.2(
   RowSideColors = c_rsc[rownames(c_mat)],
   margins   = c(15, 15),
   scale     = "none",
-  main      = "Division C - 16S heatmap (station names)",
+  main      = "",
   trace     = "none",
   cexCol    = 0.2,
   cexRow    = 0.3,
@@ -323,7 +323,7 @@ heatmap.2(
   RowSideColors = c_rsc[rownames(c_mat)],
   margins   = c(2, 2),
   scale     = "none",
-  main      = "Division C - 16S heatmap",
+  main      = "",
   trace     = "none",
   labRow    = FALSE,
   labCol    = FALSE
