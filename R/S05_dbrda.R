@@ -1,13 +1,14 @@
 ### S05_dbrda.R
-### ASGARD 2017 Survey Site Analysis — dbRDA & Environmental Scatter Plots
-### 距離ベースRDAスクリプト（サーベイサイト）
+### ASGARD 2017 Survey Site Analysis — dbRDA & Environmental Scatter Plots (11 clusters)
+### 距離ベースRDAスクリプト（サーベイサイト、11クラスター）
 ###
 ### REQUIRES (from S01, S02, S04):
 ###   asgard_frtprop     - fourth-root proportion matrix 181×258
 ###   asgard_pcoa_df     - PCoA + metadata df (181×52+)
 ###   meta_asgard        - metadata 181×45
-###   clusnum            - cluster assignments (length 181)
-###   rsc                - 5-colour palette vector
+###   clusnum11          - 11-cluster assignments (factor, from S02)
+###   hier_levels_11     - ordered cluster names (from S02)
+###   cc11               - 11-colour palette (from S02)
 ###
 ### PRODUCES:
 ###   asgard_dbrda_model - capscale model object
@@ -18,7 +19,7 @@
 ###   asgard_dbrda_merged - merged scores + metadata df
 ###
 ### OUTPUT:
-###   output/survey/dbrda/ASGARD_dbrda_survey.pdf
+###   output/survey/dbrda/ASGARD_dbrda_survey_11clusters.pdf
 
 library(vegan)
 library(tidyverse)
@@ -97,21 +98,31 @@ asgard_dbrda_scores$Sample <- rownames(asgard_dbrda_scores)
 
 asgard_dbrda_vectors <- as.data.frame(scores(asgard_dbrda_model, display = "bp"))
 asgard_dbrda_vectors$Variable <- rownames(asgard_dbrda_vectors)
+# Shorter labels for plot
+asgard_dbrda_vectors$label <- c("Temp", "Salinity", "DO", "NO3", "FlECO")
 
 asgard_dbrda_df <- merge(asgard_dbrda_scores, asgard_pcoa_cc, by = "Sample", sort = FALSE)
 
 asgard_dbrda_merged <- left_join(
   asgard_dbrda_df,
-  rownames_to_column(as.data.frame(clusnum10)),
-  by = c("Sample" = "rowname")
+  data.frame(Sample = names(clusnum11),
+             cluster11 = factor(as.character(clusnum11), levels = hier_levels_11)),
+  by = "Sample"
 )
-asgard_dbrda_merged$clusnum10 <- factor(asgard_dbrda_merged$clusnum10, levels = as.character(1:10))
+
+# Add division for faceting
+asgard_dbrda_merged$division <- factor(
+  sub("^(.).*", "\\1", as.character(asgard_dbrda_merged$cluster11)),
+  levels = c("A", "B", "C")
+)
 
 # ==============================================================================
-# Section 6: dbRDA プロットと環境変数散布図 / Plot dbRDA and environmental scatter
+# Section 6: dbRDA プロット / Plot dbRDA (11 clusters)
 # ==============================================================================
 
-pdf(file = here::here("output", "survey", "dbrda", "ASGARD_dbrda_survey.pdf"),
+dir.create(here::here("output", "survey", "dbrda"), showWarnings = FALSE, recursive = TRUE)
+
+pdf(file = here::here("output", "survey", "dbrda", "ASGARD_dbrda_survey_11clusters.pdf"),
     width = 10, height = 8)
 
 # Calculate % variance explained per axis from summary
@@ -122,71 +133,80 @@ cap2_pct <- round(prop_expl["CAP2"] * 100, 1)
 mds1_pct <- round(prop_expl["MDS1"] * 100, 1)
 mds2_pct <- round(prop_expl["MDS2"] * 100, 1)
 
-# Page 1: MDS axes (unconstrained) — tight axes
-mds1_range <- range(asgard_dbrda_merged$MDS1) * 1.1
-mds2_range <- range(asgard_dbrda_merged$MDS2) * 1.1
-
-print(ggplot() +
-  geom_point(data = asgard_dbrda_merged,
-             aes(x = MDS1, y = MDS2, color = clusnum10, size = `NO3(uM)`)) +
-  scale_color_manual(values = cc10) +
-  geom_segment(data = asgard_dbrda_vectors,
-               aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
-               arrow = arrow(length = unit(0.2, "cm")),
-               color = "black", linewidth = 1) +
-  geom_text(data = asgard_dbrda_vectors,
-            aes(x = CAP1, y = CAP2, label = Variable),
-            vjust = -0.5, hjust = 0.5, size = 5) +
-  coord_cartesian(xlim = mds1_range, ylim = mds2_range) +
-  labs(x = paste0("MDS1 (", mds1_pct, "%)"),
-       y = paste0("MDS2 (", mds2_pct, "%)"),
-       color = "cluster",
-       title = "dbRDA — MDS axes (unconstrained)") +
-  theme_minimal())
-
-# Page 2: CAP axes (constrained) — tight axes
+# Page 1: CAP axes (constrained) — all clusters
 cap1_range <- range(asgard_dbrda_merged$CAP1) * 1.1
 cap2_range <- range(asgard_dbrda_merged$CAP2) * 1.1
 
 print(ggplot() +
   geom_point(data = asgard_dbrda_merged,
-             aes(x = CAP1, y = CAP2, color = clusnum10, size = `NO3(uM)`)) +
-  scale_color_manual(values = cc10) +
+             aes(x = CAP1, y = CAP2, color = cluster11, size = `NO3(uM)`),
+             alpha = 0.7) +
+  scale_color_manual(values = cc11, name = "Cluster") +
+  scale_size_continuous(range = c(1, 6), name = "NO3 (uM)") +
   geom_segment(data = asgard_dbrda_vectors,
                aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
                arrow = arrow(length = unit(0.2, "cm")),
                color = "black", linewidth = 1) +
   geom_text(data = asgard_dbrda_vectors,
-            aes(x = CAP1, y = CAP2, label = Variable),
-            vjust = -0.5, hjust = 0.5, size = 5) +
+            aes(x = CAP1 * 1.15, y = CAP2 * 1.15, label = label),
+            size = 5, fontface = "bold") +
   coord_cartesian(xlim = cap1_range, ylim = cap2_range) +
   labs(x = paste0("CAP1 (", cap1_pct, "%)"),
        y = paste0("CAP2 (", cap2_pct, "%)"),
-       color = "cluster",
-       title = "dbRDA — CAP axes (constrained)") +
-  theme_minimal())
+       title = "dbRDA CAP axes (11 clusters)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16)))
 
-# 環境変数散布図 / Environmental scatter plots coloured by 10 clusters
-clusnum10_cc <- factor(
-  clusnum10[names(clusnum10) %in% asgard_pcoa_cc$Sample],
-  levels = as.character(1:10)
-)
-col_cc <- cc10[as.character(clusnum10_cc)]
+# Page 2: CAP axes faceted by Division
+print(ggplot() +
+  geom_point(data = asgard_dbrda_merged,
+             aes(x = CAP1, y = CAP2, color = cluster11, size = `NO3(uM)`),
+             alpha = 0.7) +
+  scale_color_manual(values = cc11, name = "Cluster") +
+  scale_size_continuous(range = c(1, 6), name = "NO3 (uM)") +
+  facet_grid(~ division) +
+  coord_cartesian(xlim = cap1_range, ylim = cap2_range) +
+  labs(x = paste0("CAP1 (", cap1_pct, "%)"),
+       y = paste0("CAP2 (", cap2_pct, "%)"),
+       title = "dbRDA CAP axes (by Division A/B/C)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16),
+        strip.text = element_text(face = "bold", size = 14)))
 
-plot(x    = asgard_pcoa_cc$salinity,
-     y    = asgard_pcoa_cc$temp,
-     col  = col_cc,
-     pch  = 19, cex = 1.5,
-     xlab = "Salinity", ylab = "Temperature (°C)",
-     main = "Salinity vs. Temperature — Survey (10 clusters)")
+# Page 3: MDS axes (unconstrained)
+mds1_range <- range(asgard_dbrda_merged$MDS1) * 1.1
+mds2_range <- range(asgard_dbrda_merged$MDS2) * 1.1
 
-plot(x    = asgard_pcoa_cc$salinity,
-     y    = asgard_pcoa_cc$`NO3(uM)`,
-     col  = col_cc,
-     pch  = 19, cex = 1.5,
-     xlab = "Salinity", ylab = "NO3 (µM)",
-     main = "Salinity vs. NO3 — Survey (10 clusters)")
+print(ggplot() +
+  geom_point(data = asgard_dbrda_merged,
+             aes(x = MDS1, y = MDS2, color = cluster11, size = `NO3(uM)`),
+             alpha = 0.7) +
+  scale_color_manual(values = cc11, name = "Cluster") +
+  scale_size_continuous(range = c(1, 6), name = "NO3 (uM)") +
+  coord_cartesian(xlim = mds1_range, ylim = mds2_range) +
+  labs(x = paste0("MDS1 (", mds1_pct, "%)"),
+       y = paste0("MDS2 (", mds2_pct, "%)"),
+       title = "dbRDA MDS axes (11 clusters)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16)))
+
+# Page 4: MDS axes faceted by Division
+print(ggplot() +
+  geom_point(data = asgard_dbrda_merged,
+             aes(x = MDS1, y = MDS2, color = cluster11, size = `NO3(uM)`),
+             alpha = 0.7) +
+  scale_color_manual(values = cc11, name = "Cluster") +
+  scale_size_continuous(range = c(1, 6), name = "NO3 (uM)") +
+  facet_grid(~ division) +
+  coord_cartesian(xlim = mds1_range, ylim = mds2_range) +
+  labs(x = paste0("MDS1 (", mds1_pct, "%)"),
+       y = paste0("MDS2 (", mds2_pct, "%)"),
+       title = "dbRDA MDS axes (by Division A/B/C)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16),
+        strip.text = element_text(face = "bold", size = 14)))
 
 dev.off()
 
 message("S05_dbrda.R: done. asgard_dbrda_merged (", nrow(asgard_dbrda_merged), " samples) and ANOVA results ready.")
+message("  PDF: output/survey/dbrda/ASGARD_dbrda_survey_11clusters.pdf")
