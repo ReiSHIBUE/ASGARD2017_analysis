@@ -225,7 +225,47 @@ write.csv(depth_result,
 
 message("\nDepth type results saved.")
 
+# ==============================================================================
+# Section 6: 全ステーションマップ（トランセクト色分け）
+# All stations map colored by transect prefix
+# ==============================================================================
+
+stations_all <- meta_asgard %>%
+  filter(!is.na(lat), !is.na(lon)) %>%
+  distinct(station, .keep_all = TRUE) %>%
+  select(station, lat, lon)
+
+stations_all$prefix <- factor(
+  sub("[0-9.]+$", "", stations_all$station),
+  levels = c("SLY", "CBE", "CB", "CBW", "CPL", "DBO", "CNL", "IL", "KL", "CL")
+)
+
+prefix_colors <- c(
+  "SLY" = "#D32F2F", "CBE" = "#F57C00", "CB" = "#000000",
+  "CBW" = "#1565C0", "CPL" = "#2E7D32", "DBO" = "#C2185B",
+  "CNL" = "#7B1FA2", "IL" = "#00838F", "KL" = "#FFEB3B",
+  "CL" = "#4E342E"
+)
+
+pdf(here::here("output", "survey", "maps", "ASGARD_survey_all_stations.pdf"),
+    width = 14, height = 10)
+
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = stations_all, aes(x = lon, y = lat, color = prefix),
+               size = 3.5, alpha = 0.8) +
+    geom_text_repel(data = stations_all, aes(x = lon, y = lat, label = station, color = prefix),
+                    size = 3, max.overlaps = 40, alpha = 0.8, show.legend = FALSE) +
+    scale_color_manual(values = prefix_colors, name = "Transect") +
+    labs(x = "Longitude", y = "Latitude") +
+    theme(legend.text = element_text(size = 11),
+          legend.title = element_text(face = "bold", size = 12))
+)
+
+dev.off()
+
 message("\nS06_maps.R: done.")
 message("  PDF: ASGARD_survey_map_11clusters.pdf, ASGARD_survey_map_11clusters_detail.pdf")
+message("  PDF: ASGARD_survey_all_stations.pdf")
 message("  CSV: output/survey/maps/cluster11_geographic_summary.csv")
 message("  CSV: output/survey/maps/cluster11_depth_type_test.csv")
