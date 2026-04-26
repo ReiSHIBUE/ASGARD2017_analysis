@@ -852,6 +852,8 @@ cat("  CSV: output/survey/beta_diversity/env_permanova_permdisp_summary.csv\n")
 
 cat("\n--- C hierarchical PERMANOVA/PERMDISP ---\n")
 
+set.seed(42)  # Fix permutation results for reproducibility
+
 hc_full <- as.hclust(h1$rowDendrogram)
 c_samples <- names(clusnum11)[clusnum11 %in% c("C1a", "C1b1", "C1b2", "C2a", "C2b1", "C2b2")]
 d_c <- as.dist(as.matrix(cophenetic(hc_full))[c_samples, c_samples])
@@ -991,7 +993,7 @@ cat("  CSV: output/survey/beta_diversity/env_C_dendrogram_node_pairwise.csv\n")
 # Section: ノード×PC軸 ヒートマップ / Node x PC axis heatmap
 # ==============================================================================
 
-node_order <- c("C1 vs C2", "C1a vs C1b", "C2a vs C2b", "C2b1 vs C2b2", "C1b1 vs C1b2")
+node_order <- c("C1 vs C2", "C1a vs C1b", "C1b1 vs C1b2", "C2a vs C2b", "C2b1 vs C2b2")
 
 # PC axis labels with main loadings
 pc_labels <- c(
