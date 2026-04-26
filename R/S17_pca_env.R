@@ -993,6 +993,19 @@ cat("  CSV: output/survey/beta_diversity/env_C_dendrogram_node_pairwise.csv\n")
 
 node_order <- c("C1 vs C2", "C1a vs C1b", "C2a vs C2b", "C2b1 vs C2b2", "C1b1 vs C1b2")
 
+# PC axis labels with main loadings
+pc_labels <- c(
+  "PC1" = "PC1 (48.1%)\nNutrients(+), Sal(+), Depth(+)",
+  "PC2" = "PC2 (20.7%)\nDO(+) vs Temp(-)",
+  "PC3" = "PC3 (12.2%)\nFlECO(-)",
+  "PC4" = "PC4 (7.2%)\nDepth(-) vs Sal(+)",
+  "PC5" = "PC5 (5.5%)\nSil(+) vs Sal(-), Temp(-)",
+  "PC6" = "PC6 (3.2%)\nNH4(+) vs Sal(-), Depth(-)",
+  "PC7" = "PC7 (2.0%)\nDO(-), Temp(-), NH4(-)",
+  "PC8" = "PC8 (0.7%)\nPO4(+) vs Sil(-)",
+  "PC9" = "PC9 (0.5%)\nNO3(+) vs PO4(-), Sil(-)"
+)
+
 plot_df_node <- node_df %>%
   mutate(
     node = factor(node, levels = rev(node_order)),
@@ -1000,13 +1013,13 @@ plot_df_node <- node_df %>%
     is_top = (top_PC == "***TOP***"),
     fill_cat = ifelse(is_top, "top", ifelse(permanova_sig == "ns", "ns", "sig")),
     label = ifelse(is_top,
-              paste0("R\u00B2=", sprintf("%.2f", permanova_R2), "\n", permanova_sig),
+              paste0("R2=", sprintf("%.2f", permanova_R2), "\n", permanova_sig),
             ifelse(permanova_sig == "ns", "ns",
-              paste0("R\u00B2=", sprintf("%.2f", permanova_R2), "\n", permanova_sig)))
+              paste0("R2=", sprintf("%.2f", permanova_R2), "\n", permanova_sig)))
   )
 
 pdf(here("output", "survey", "beta_diversity", "env_C_node_pairwise_heatmap.pdf"),
-    width = 12, height = 5)
+    width = 16, height = 6)
 
 print(
   ggplot(plot_df_node, aes(x = PC, y = node)) +
@@ -1014,19 +1027,20 @@ print(
     scale_fill_manual(
       values = c("top" = "#08519C", "sig" = "#9ECAE1", "ns" = "grey90"),
       labels = c("top" = "Top PC", "sig" = "Significant", "ns" = "ns"),
-      name = NULL
+      name = NULL,
+      drop = FALSE
     ) +
-    geom_text(aes(label = label, color = fill_cat), size = 3, lineheight = 0.8) +
+    geom_text(aes(label = label, color = fill_cat), size = 3.5, lineheight = 0.8) +
     scale_color_manual(
       values = c("top" = "white", "sig" = "black", "ns" = "grey50"),
       guide = "none"
     ) +
-    labs(x = "PC axis", y = "Dendrogram node",
-         subtitle = "BH-adjusted PERMANOVA per PC axis") +
+    scale_x_discrete(labels = pc_labels) +
+    labs(x = NULL, y = "Dendrogram node") +
     theme_minimal(base_size = 13) +
-    theme(plot.title = element_text(face = "bold"),
-          panel.grid = element_blank(),
-          legend.position = "bottom")
+    theme(panel.grid = element_blank(),
+          legend.position = "bottom",
+          axis.text.x = element_text(size = 8, lineheight = 0.85))
 )
 
 dev.off()
