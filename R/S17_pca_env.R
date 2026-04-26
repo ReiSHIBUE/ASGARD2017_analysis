@@ -991,7 +991,7 @@ cat("  CSV: output/survey/beta_diversity/env_C_dendrogram_node_pairwise.csv\n")
 # Section: ノード×PC軸 ヒートマップ / Node x PC axis heatmap
 # ==============================================================================
 
-node_order <- c("C1 vs C2", "C1a vs C1b", "C2a vs C2b", "C2b1 vs C2b2", "C1b1 vs C1b2")
+node_order <- c("C1 vs C2", "C1a vs C1b", "C1b1 vs C1b2", "C2a vs C2b", "C2b1 vs C2b2")
 
 # PC axis labels with main loadings
 pc_labels <- c(
