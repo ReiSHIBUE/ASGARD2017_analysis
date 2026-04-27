@@ -36,8 +36,33 @@ for (var in c("salinity", "temp", "depth_m", "DO", "POC (ug/L)", "chl (ug/l)",
 }
 
 # ==============================================================================
-# Section 2: 環境変数の選択とスケーリング / Select and scale environmental variables
-# temp, salinity, DO, NO3, FlECO-AFL を選択 (VIF < 10 を確認済み)
+# Section 2: VIF確認 / Check VIF for variable selection
+# ==============================================================================
+
+# All 9 candidate variables
+all_env_vars <- c("temp", "salinity", "DO", "NO3(uM)", "PO4(uM)", "Sil(uM)",
+                   "NH4(uM)", "FlECO-AFL(mg/m^3)", "depth_m")
+env_all <- asgard_pcoa_df[, all_env_vars]
+cc_all <- complete.cases(env_all)
+env_all_cc <- scale(env_all[cc_all, ])
+bray_all_cc <- vegdist(asgard_frtprop[cc_all, ], method = "bray")
+
+# VIF with all 9 variables
+model_all9 <- capscale(bray_all_cc ~ ., data = as.data.frame(env_all_cc))
+vif_all9 <- vif.cca(model_all9)
+message("\n--- VIF with all 9 variables ---")
+print(round(vif_all9, 2))
+
+# VIF with final 5 variables (PO4, Sil, NH4, depth removed due to VIF > 10 or redundancy)
+env_5 <- scale(asgard_pcoa_df[cc_all, c("temp", "salinity", "DO", "NO3(uM)", "FlECO-AFL(mg/m^3)")])
+model_5 <- capscale(bray_all_cc ~ ., data = as.data.frame(env_5))
+vif_5 <- vif.cca(model_5)
+message("\n--- VIF with final 5 variables ---")
+print(round(vif_5, 2))
+
+# ==============================================================================
+# Section 3: 環境変数の選択とスケーリング / Select and scale environmental variables
+# temp, salinity, DO, NO3, FlECO-AFL (all VIF < 3)
 # ==============================================================================
 
 asgard_pcoa_df_sub1 <- asgard_pcoa_df %>%
@@ -51,7 +76,7 @@ asgard_pcoa_df_sub2 <- asgard_pcoa_df %>%
 asgard_pcoa_df_sub <- cbind(asgard_pcoa_df_sub1, asgard_pcoa_df_sub2) # 181×12
 
 # ==============================================================================
-# Section 3: Complete cases のみ使用 / Keep rows with complete environmental data
+# Section 4: Complete cases のみ使用 / Keep rows with complete environmental data
 # ==============================================================================
 
 asgard_complete_cases <- complete.cases(asgard_pcoa_df_sub) # logical length 181
@@ -66,7 +91,7 @@ asgard_bray_cc <- vegdist(
 colnames(asgard_pcoa_cc)[colnames(asgard_pcoa_cc) == "chl (ug/l)"] <- "chl_ug_l"
 
 # ==============================================================================
-# Section 4: dbRDA モデル構築 / Fit dbRDA model
+# Section 5: dbRDA モデル構築 / Fit dbRDA model
 # ==============================================================================
 
 asgard_dbrda_model <- capscale(
@@ -88,7 +113,7 @@ print(asgard_anova_axes)
 RsquareAdj(asgard_dbrda_model)
 
 # ==============================================================================
-# Section 5: dbRDA スコア抽出とマージ / Extract scores and merge with metadata
+# Section 6: dbRDA スコア抽出とマージ / Extract scores and merge with metadata
 # ==============================================================================
 
 asgard_dbrda_scores <- as.data.frame(scores(asgard_dbrda_model, display = "sites"))
@@ -117,7 +142,7 @@ asgard_dbrda_merged$division <- factor(
 )
 
 # ==============================================================================
-# Section 6: dbRDA プロット / Plot dbRDA (11 clusters)
+# Section 7: dbRDA プロット / Plot dbRDA (11 clusters)
 # ==============================================================================
 
 dir.create(here::here("output", "survey", "dbrda"), showWarnings = FALSE, recursive = TRUE)
