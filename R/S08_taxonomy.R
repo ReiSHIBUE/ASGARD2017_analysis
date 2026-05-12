@@ -177,10 +177,14 @@ message("  PDF: output/survey/waffle/ASGARD_taxonomy_waffle_11clusters.pdf")
 # 各 ASV の全体平均 RA を重みとして Phylum 別に集計
 asv_mean_ra <- colMeans(asgard_filtered)  # length 258
 
+# Assemblage 別 ASV 数 / ASV counts per assemblage for panel labels
+assem_n <- table(colclusnum)
+assem_label <- function(k) paste0("Assemblage ", k, " (n=", assem_n[as.character(k)], ")")
+
 waffle_col_df <- data.frame(
   ASV    = colnames(asgard_filtered),
   Phylum = asv_phylum,
-  assemblage = paste0("Assemblage ", as.character(colclusnum[colnames(asgard_filtered)])),
+  assemblage = assem_label(as.character(colclusnum[colnames(asgard_filtered)])),
   weight = asv_mean_ra,
   stringsAsFactors = FALSE
 ) %>%
@@ -218,7 +222,7 @@ col_phylum_colors <- setNames(
 )
 
 waffle_col_df$assemblage <- factor(waffle_col_df$assemblage,
-  levels = paste0("Assemblage ", sort(unique(colclusnum))))
+  levels = assem_label(sort(unique(colclusnum))))
 
 pdf(file = here::here("output", "survey", "waffle",
                      "ASGARD_taxonomy_waffle_6assemblages.pdf"),
@@ -341,7 +345,7 @@ message("  PDF: output/survey/waffle/ASGARD_taxonomy_waffle_11clusters_class.pdf
 waffle_col_class <- data.frame(
   ASV    = colnames(asgard_filtered),
   Class  = asv_class,
-  assemblage = paste0("Assemblage ", as.character(colclusnum[colnames(asgard_filtered)])),
+  assemblage = assem_label(as.character(colclusnum[colnames(asgard_filtered)])),
   weight = asv_mean_ra,
   stringsAsFactors = FALSE
 ) %>%
@@ -370,7 +374,7 @@ waffle_col_class <- waffle_col_class %>%
 waffle_col_class$Class <- factor(waffle_col_class$Class,
                                  levels = c(top_col_classes, "Other"))
 waffle_col_class$assemblage <- factor(waffle_col_class$assemblage,
-  levels = paste0("Assemblage ", sort(unique(colclusnum))))
+  levels = assem_label(sort(unique(colclusnum))))
 
 remaining_col <- setdiff(top_col_classes, names(class_emphasis))
 fallback_col  <- brewer.pal(max(3, length(remaining_col)), "Set3")[seq_along(remaining_col)]
