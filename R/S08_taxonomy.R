@@ -240,7 +240,8 @@ print(
     theme_void() +
     theme(plot.title    = element_text(face = "bold", size = 16),
           plot.subtitle = element_text(size = 11),
-          strip.text    = element_text(face = "bold", size = 12),
+          strip.text    = element_text(face = "bold", size = 12,
+                                       margin = margin(t = 6, b = 6)),
           legend.text   = element_text(size = 9))
 )
 
@@ -398,7 +399,8 @@ print(
     theme_void() +
     theme(plot.title    = element_text(face = "bold", size = 16),
           plot.subtitle = element_text(size = 11),
-          strip.text    = element_text(face = "bold", size = 12),
+          strip.text    = element_text(face = "bold", size = 12,
+                                       margin = margin(t = 6, b = 6)),
           legend.text   = element_text(size = 9))
 )
 
