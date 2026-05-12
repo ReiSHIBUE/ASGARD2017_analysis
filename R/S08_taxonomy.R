@@ -16,6 +16,8 @@
 ###   output/survey/taxonomy/ASGARD_taxonomy_barchart_11clusters.pdf
 ###   output/survey/waffle/ASGARD_taxonomy_waffle_11clusters.pdf
 ###   output/survey/waffle/ASGARD_taxonomy_waffle_6assemblages.pdf
+###   output/survey/waffle/ASGARD_taxonomy_waffle_11clusters_class.pdf
+###   output/survey/waffle/ASGARD_taxonomy_waffle_6assemblages_class.pdf
 ###
 ### NOTE: waffle package — install via:
 ###   install.packages("waffle", repos = "https://cinc.rud.is")
@@ -34,15 +36,18 @@ dir.create(here::here("output", "survey", "waffle"), showWarnings = FALSE, recur
 # ==============================================================================
 
 # shorternames の位置でfullnamebootを引く / Look up taxonomy by shortername index
-asv_idx       <- match(colnames(asgard_filtered), shorternames)
+asv_idx        <- match(colnames(asgard_filtered), shorternames)
 asv_phylum_raw <- fullnameboot$Phylum[asv_idx]
+asv_class_raw  <- fullnameboot$Class[asv_idx]
 asv_order_raw  <- fullnameboot$Order[asv_idx]
 
 # "Name (bootstrap)" → "Name" にする / Strip bootstrap suffix
 strip_boot <- function(x) sub("\\s*\\(\\d+\\)\\s*$", "", x)
 asv_phylum <- strip_boot(asv_phylum_raw)
+asv_class  <- strip_boot(asv_class_raw)
 asv_order  <- strip_boot(asv_order_raw)
 names(asv_phylum) <- colnames(asgard_filtered)
+names(asv_class)  <- colnames(asgard_filtered)
 names(asv_order)  <- colnames(asgard_filtered)
 
 # ==============================================================================
@@ -232,6 +237,159 @@ print(
 
 dev.off()
 message("  PDF: output/survey/waffle/ASGARD_taxonomy_waffle_6assemblages.pdf")
+
+# ==============================================================================
+# Section 5: Waffle chart — 11 sample clusters at CLASS level
+# 11 サンプルクラスター毎の Class レベル組成
+# ==============================================================================
+
+# Class情報をlongに追加 / Add Class to long table
+long_class <- as.data.frame(asgard_filtered) %>%
+  rownames_to_column("Sample") %>%
+  pivot_longer(-Sample, names_to = "ASV", values_to = "Abundance") %>%
+  mutate(Class = asv_class[ASV],
+         cluster = factor(as.character(clusnum11[Sample]), levels = hier_levels_11)) %>%
+  group_by(Sample) %>%
+  mutate(RA = Abundance / sum(Abundance)) %>%
+  ungroup()
+
+waffle_clu_class <- long_class %>%
+  group_by(cluster, Class) %>%
+  summarise(mean_RA = mean(RA, na.rm = TRUE), .groups = "drop") %>%
+  group_by(cluster) %>%
+  mutate(pct = mean_RA / sum(mean_RA) * 100,
+         units = round(pct)) %>%
+  ungroup() %>%
+  filter(units > 0)
+
+class_order <- waffle_clu_class %>%
+  group_by(Class) %>%
+  summarise(total = sum(mean_RA), .groups = "drop") %>%
+  arrange(-total) %>%
+  pull(Class)
+
+n_top_class <- 12
+top_classes <- class_order[seq_len(min(n_top_class, length(class_order)))]
+waffle_clu_class <- waffle_clu_class %>%
+  mutate(Class_grp = ifelse(Class %in% top_classes, Class, "Other")) %>%
+  group_by(cluster, Class_grp) %>%
+  summarise(units = sum(units), .groups = "drop") %>%
+  rename(Class = Class_grp)
+
+waffle_clu_class$Class <- factor(waffle_clu_class$Class,
+                                 levels = c(top_classes, "Other"))
+
+# Class color palette: emphasize bloom-related taxa (Flavobacteriia, Gammaproteobacteria, Alphaproteobacteria)
+class_emphasis <- c(
+  "Alphaproteobacteria" = "#E41A1C",
+  "Gammaproteobacteria" = "#FF7F00",
+  "Flavobacteriia"      = "#377EB8",
+  "Bacteroidia"         = "#4DAF4A",
+  "Verrucomicrobiae"    = "#984EA3",
+  "Planctomycetacia"    = "#A65628",
+  "Mollicutes"          = "#F781BF",
+  "Nitrososphaeria"     = "#984EA3",
+  "Actinobacteria"      = "#FFFF33",
+  "Spirochaetia"        = "#666666",
+  "Acidimicrobiia"      = "#A6CEE3"
+)
+# Fallback for classes not in emphasis
+remaining_classes <- setdiff(top_classes, names(class_emphasis))
+fallback_palette  <- brewer.pal(max(3, length(remaining_classes)), "Set3")[seq_along(remaining_classes)]
+class_colors <- c(class_emphasis[intersect(top_classes, names(class_emphasis))],
+                  setNames(fallback_palette, remaining_classes),
+                  "Other" = "gray70")
+
+pdf(file = here::here("output", "survey", "waffle",
+                     "ASGARD_taxonomy_waffle_11clusters_class.pdf"),
+    width = 16, height = 12)
+
+print(
+  ggplot(waffle_clu_class, aes(fill = Class, values = units)) +
+    geom_waffle(n_rows = 10, size = 0.2, colour = "white", flip = TRUE) +
+    facet_wrap(~ cluster, nrow = 3) +
+    coord_equal() +
+    scale_fill_manual(values = class_colors, drop = FALSE) +
+    labs(title = "Class Composition per Sample Cluster (11 clusters)",
+         subtitle = "Each waffle = 100 units (~ 100% relative abundance); top 12 classes shown",
+         x = NULL, y = NULL) +
+    theme_void() +
+    theme(plot.title    = element_text(face = "bold", size = 16),
+          plot.subtitle = element_text(size = 11),
+          strip.text    = element_text(face = "bold", size = 12),
+          legend.text   = element_text(size = 9))
+)
+
+dev.off()
+message("  PDF: output/survey/waffle/ASGARD_taxonomy_waffle_11clusters_class.pdf")
+
+# ==============================================================================
+# Section 6: Waffle chart — 6 assemblages at CLASS level
+# 6 列クラスター毎の Class レベル組成
+# ==============================================================================
+
+waffle_col_class <- data.frame(
+  ASV    = colnames(asgard_filtered),
+  Class  = asv_class,
+  assemblage = paste0("Assemblage ", as.character(colclusnum[colnames(asgard_filtered)])),
+  weight = asv_mean_ra,
+  stringsAsFactors = FALSE
+) %>%
+  group_by(assemblage, Class) %>%
+  summarise(weight = sum(weight), .groups = "drop") %>%
+  group_by(assemblage) %>%
+  mutate(pct = weight / sum(weight) * 100,
+         units = round(pct)) %>%
+  ungroup() %>%
+  filter(units > 0)
+
+col_class_order <- waffle_col_class %>%
+  group_by(Class) %>%
+  summarise(total = sum(weight), .groups = "drop") %>%
+  arrange(-total) %>%
+  pull(Class)
+
+n_top_col_class <- 12
+top_col_classes <- col_class_order[seq_len(min(n_top_col_class, length(col_class_order)))]
+waffle_col_class <- waffle_col_class %>%
+  mutate(Class_grp = ifelse(Class %in% top_col_classes, Class, "Other")) %>%
+  group_by(assemblage, Class_grp) %>%
+  summarise(units = sum(units), .groups = "drop") %>%
+  rename(Class = Class_grp)
+
+waffle_col_class$Class <- factor(waffle_col_class$Class,
+                                 levels = c(top_col_classes, "Other"))
+waffle_col_class$assemblage <- factor(waffle_col_class$assemblage,
+  levels = paste0("Assemblage ", sort(unique(colclusnum))))
+
+remaining_col <- setdiff(top_col_classes, names(class_emphasis))
+fallback_col  <- brewer.pal(max(3, length(remaining_col)), "Set3")[seq_along(remaining_col)]
+col_class_colors <- c(class_emphasis[intersect(top_col_classes, names(class_emphasis))],
+                      setNames(fallback_col, remaining_col),
+                      "Other" = "gray70")
+
+pdf(file = here::here("output", "survey", "waffle",
+                     "ASGARD_taxonomy_waffle_6assemblages_class.pdf"),
+    width = 14, height = 10)
+
+print(
+  ggplot(waffle_col_class, aes(fill = Class, values = units)) +
+    geom_waffle(n_rows = 10, size = 0.2, colour = "white", flip = TRUE) +
+    facet_wrap(~ assemblage, nrow = 2) +
+    coord_equal() +
+    scale_fill_manual(values = col_class_colors, drop = FALSE) +
+    labs(title = "Class Composition per ASV Assemblage (6 column clusters)",
+         subtitle = "Each waffle = 100 units; top 12 classes shown",
+         x = NULL, y = NULL) +
+    theme_void() +
+    theme(plot.title    = element_text(face = "bold", size = 16),
+          plot.subtitle = element_text(size = 11),
+          strip.text    = element_text(face = "bold", size = 12),
+          legend.text   = element_text(size = 9))
+)
+
+dev.off()
+message("  PDF: output/survey/waffle/ASGARD_taxonomy_waffle_6assemblages_class.pdf")
 
 }  # end if(waffle installed)
 
