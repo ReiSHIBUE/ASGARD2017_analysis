@@ -104,10 +104,15 @@ library(waffle)
 
 # ---- 3a: 11 sample cluster waffle (Phylum) ----
 
-# 各クラスターの平均RA per Phylum / Mean RA per Phylum within each sample cluster
-waffle_clu_df <- asgard_long %>%
+# 正しい集計: per-sample に Phylum 合計を出してから cluster mean を取る
+# (mean(RA) を直接取ると ASV 数の少ない分類群が過大評価されるため)
+sample_phylum_sum <- asgard_long %>%
+  group_by(Sample, cluster, Phylum) %>%
+  summarise(sample_RA = sum(RA), .groups = "drop")
+
+waffle_clu_df <- sample_phylum_sum %>%
   group_by(cluster, Phylum) %>%
-  summarise(mean_RA = mean(RA, na.rm = TRUE), .groups = "drop") %>%
+  summarise(mean_RA = mean(sample_RA), .groups = "drop") %>%
   group_by(cluster) %>%
   mutate(pct = mean_RA / sum(mean_RA) * 100,
          units = round(pct)) %>%
@@ -253,9 +258,14 @@ long_class <- as.data.frame(asgard_filtered) %>%
   mutate(RA = Abundance / sum(Abundance)) %>%
   ungroup()
 
-waffle_clu_class <- long_class %>%
+# per-sample に Class 合計 → cluster mean (Phylum版と同じ正しい集計)
+sample_class_sum <- long_class %>%
+  group_by(Sample, cluster, Class) %>%
+  summarise(sample_RA = sum(RA), .groups = "drop")
+
+waffle_clu_class <- sample_class_sum %>%
   group_by(cluster, Class) %>%
-  summarise(mean_RA = mean(RA, na.rm = TRUE), .groups = "drop") %>%
+  summarise(mean_RA = mean(sample_RA), .groups = "drop") %>%
   group_by(cluster) %>%
   mutate(pct = mean_RA / sum(mean_RA) * 100,
          units = round(pct)) %>%
