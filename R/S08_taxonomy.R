@@ -303,7 +303,7 @@ class_emphasis <- c(
   "Verrucomicrobiae"    = "#984EA3",
   "Planctomycetacia"    = "#A65628",
   "Mollicutes"          = "#F781BF",
-  "Nitrososphaeria"     = "#984EA3",
+  "Nitrososphaeria"     = "#17BECF",
   "Actinobacteria"      = "#FFFF33",
   "Spirochaetia"        = "#666666",
   "Acidimicrobiia"      = "#A6CEE3"
