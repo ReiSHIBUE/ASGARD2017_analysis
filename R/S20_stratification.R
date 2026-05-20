@@ -239,12 +239,13 @@ print(
     geom_point(alpha = 0.6, size = 1.5) +
     scale_y_reverse() +
     facet_grid(sea ~ variable, scales = "free_x") +
-    scale_color_manual(values = sea_colors, guide = "none") +
+    scale_color_manual(values = sea_colors, name = "Sea") +
     labs(title = "Vertical profiles by sea (rows) × variable (cols)",
          x = NULL, y = "Depth (m)") +
     theme_bw(base_size = 11) +
-    theme(strip.text = element_text(face = "bold"),
-          plot.title = element_text(face = "bold", size = 14))
+    theme(strip.text   = element_text(face = "bold"),
+          plot.title   = element_text(face = "bold", size = 14),
+          legend.position = "top")
 )
 
 # Page 3: per-station profile lines colored by sea
