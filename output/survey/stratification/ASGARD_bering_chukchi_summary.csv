@@ -1,0 +1,7 @@
+"sea","depth_type","n","temp_mean","sal_mean","sigma_mean","DO_mean","NO3_mean","chl_mean"
+"Bering Sea","surf",24,6.49,31.14,24.42,303,4.93,1.65
+"Bering Sea","mid",22,3.1,32.11,25.55,336.7,4.46,2.93
+"Bering Sea","bottom",26,2.16,32.17,25.69,323.7,7.38,2.22
+"Chukchi Sea","surf",36,4.1,31.92,25.32,337.3,2.15,3.69
+"Chukchi Sea","mid",42,2.93,32.36,25.78,348.6,4.23,4.64
+"Chukchi Sea","bottom",31,2.48,32.19,25.67,338.3,4.04,1.4

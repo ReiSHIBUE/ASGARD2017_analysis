@@ -13,7 +13,9 @@
 ###
 ### OUTPUT:
 ###   output/survey/stratification/ASGARD_vertical_profiles.pdf
+###   output/survey/stratification/ASGARD_bering_chukchi_profiles.pdf
 ###   output/survey/stratification/ASGARD_stratification_summary.csv
+###   output/survey/stratification/ASGARD_bering_chukchi_summary.csv
 
 library(tidyverse)
 
@@ -37,6 +39,10 @@ sigma_theta <- function(T, S) {
     4.8314e-4*S^2 - 1000
 }
 m$sigma_t <- with(m, sigma_theta(temp, salinity))
+
+# Bering vs Chukchi Sea split (Bering Strait ~ 65.7°N)
+m$sea <- factor(ifelse(m$lat < 65.7, "Bering Sea", "Chukchi Sea"),
+                levels = c("Bering Sea", "Chukchi Sea"))
 
 # Region from station prefix
 m$region <- ifelse(grepl("^CBE", m$station),    "CBE",
@@ -82,7 +88,7 @@ print(table(stratification_summary$strat_class))
 # ==============================================================================
 
 plot_df <- m %>%
-  select(Sample, station, lat, lon, depth_m, depth_type, cluster11, division, region,
+  select(Sample, station, lat, lon, depth_m, depth_type, cluster11, division, region, sea,
          temp, salinity, DO, `NO3(uM)`, `chl (ug/l)`) %>%
   rename(NO3 = `NO3(uM)`, chl = `chl (ug/l)`) %>%
   pivot_longer(cols = c(temp, salinity, DO, NO3, chl),
@@ -199,12 +205,92 @@ for (cl in hier_levels_11) {
 dev.off()
 
 # ==============================================================================
-# Section 4: CSV summary
+# Section 4: Bering Sea vs Chukchi Sea vertical profiles
+# Bering Strait (~65.7°N) で2海域に分割した鉛直分布
+# ==============================================================================
+
+pdf(file = here::here("output", "survey", "stratification",
+                     "ASGARD_bering_chukchi_profiles.pdf"),
+    width = 16, height = 10)
+
+sea_colors <- c("Bering Sea" = "#E41A1C", "Chukchi Sea" = "#377EB8")
+
+# Page 1: side-by-side scatter, 5 variable panels
+print(
+  ggplot(plot_df %>% filter(!is.na(sea)),
+         aes(x = value, y = depth_m, color = sea)) +
+    geom_point(alpha = 0.6, size = 1.5) +
+    scale_y_reverse() +
+    facet_wrap(~ variable, scales = "free_x", nrow = 1) +
+    scale_color_manual(values = sea_colors) +
+    labs(title = "Vertical profiles: Bering Sea vs Chukchi Sea",
+         subtitle = "Split at the Bering Strait (~65.7°N)",
+         x = NULL, y = "Depth (m)", color = "Sea") +
+    theme_bw(base_size = 12) +
+    theme(strip.text   = element_text(face = "bold"),
+          plot.title   = element_text(face = "bold", size = 14),
+          legend.position = "top")
+)
+
+# Page 2: sea (rows) × variable (cols) grid
+print(
+  ggplot(plot_df %>% filter(!is.na(sea)),
+         aes(x = value, y = depth_m, color = sea)) +
+    geom_point(alpha = 0.6, size = 1.5) +
+    scale_y_reverse() +
+    facet_grid(sea ~ variable, scales = "free_x") +
+    scale_color_manual(values = sea_colors, guide = "none") +
+    labs(title = "Vertical profiles by sea (rows) × variable (cols)",
+         x = NULL, y = "Depth (m)") +
+    theme_bw(base_size = 11) +
+    theme(strip.text = element_text(face = "bold"),
+          plot.title = element_text(face = "bold", size = 14))
+)
+
+# Page 3: per-station profile lines colored by sea
+print(
+  ggplot(plot_df %>% filter(!is.na(sea)),
+         aes(x = value, y = depth_m, group = station, color = sea)) +
+    geom_path(alpha = 0.5) +
+    geom_point(alpha = 0.7, size = 1) +
+    scale_y_reverse() +
+    facet_wrap(~ variable, scales = "free_x", nrow = 1) +
+    scale_color_manual(values = sea_colors) +
+    labs(title = "Per-station vertical profiles: Bering vs Chukchi",
+         x = NULL, y = "Depth (m)", color = "Sea") +
+    theme_bw(base_size = 12) +
+    theme(strip.text   = element_text(face = "bold"),
+          plot.title   = element_text(face = "bold", size = 14),
+          legend.position = "top")
+)
+
+dev.off()
+
+# ==============================================================================
+# Section 5: CSV summaries
 # ==============================================================================
 
 write.csv(stratification_summary,
           here::here("output", "survey", "stratification",
                      "ASGARD_stratification_summary.csv"),
+          row.names = FALSE)
+
+# Per-sea × depth_type mean values
+sea_depth_summary <- m %>%
+  filter(!is.na(sea)) %>%
+  group_by(sea, depth_type) %>%
+  summarise(n = n(),
+            temp_mean    = round(mean(temp, na.rm = TRUE), 2),
+            sal_mean     = round(mean(salinity, na.rm = TRUE), 2),
+            sigma_mean   = round(mean(sigma_t, na.rm = TRUE), 2),
+            DO_mean      = round(mean(DO, na.rm = TRUE), 1),
+            NO3_mean     = round(mean(`NO3(uM)`, na.rm = TRUE), 2),
+            chl_mean     = round(mean(`chl (ug/l)`, na.rm = TRUE), 2),
+            .groups = "drop")
+
+write.csv(sea_depth_summary,
+          here::here("output", "survey", "stratification",
+                     "ASGARD_bering_chukchi_summary.csv"),
           row.names = FALSE)
 
 message("\nS20_stratification.R: done.")
@@ -215,5 +301,9 @@ message("  Weakly stratified (0.5 < Δ <= 1.0): ",
         sum(stratification_summary$strat_class == "weakly stratified"))
 message("  Well-mixed (Δ <= 0.5): ",
         sum(stratification_summary$strat_class == "well-mixed"))
+message("  Bering Sea samples: ", sum(m$sea == "Bering Sea", na.rm = TRUE))
+message("  Chukchi Sea samples: ", sum(m$sea == "Chukchi Sea", na.rm = TRUE))
 message("  PDF: output/survey/stratification/ASGARD_vertical_profiles.pdf")
+message("  PDF: output/survey/stratification/ASGARD_bering_chukchi_profiles.pdf")
 message("  CSV: output/survey/stratification/ASGARD_stratification_summary.csv")
+message("  CSV: output/survey/stratification/ASGARD_bering_chukchi_summary.csv")
