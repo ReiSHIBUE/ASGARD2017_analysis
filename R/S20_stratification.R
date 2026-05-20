@@ -176,6 +176,24 @@ print(
           plot.title = element_text(face = "bold", size = 14))
 )
 
+# Page 6: boxplots per variable × cluster, x-axis = depth_type (surf/mid/bottom)
+# 6 variables × 11 clusters のグリッド、各セル内で depth_type 別 boxplot
+print(
+  ggplot(plot_df %>% filter(!is.na(depth_type)),
+         aes(x = depth_type, y = value)) +
+    geom_boxplot(aes(fill = cluster11), outlier.size = 0.7, alpha = 0.7) +
+    geom_jitter(width = 0.2, size = 0.4, alpha = 0.5) +
+    facet_grid(variable ~ cluster11, scales = "free_y") +
+    scale_fill_manual(values = cc11, guide = "none") +
+    labs(title = "Variable distribution by depth-type, within each cluster",
+         subtitle = "Rows: variable, cols: cluster; x-axis = surface/mid/bottom",
+         x = "Depth type", y = NULL) +
+    theme_bw(base_size = 10) +
+    theme(strip.text = element_text(face = "bold", size = 9),
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+          plot.title = element_text(face = "bold", size = 14))
+)
+
 dev.off()
 
 # ==============================================================================
