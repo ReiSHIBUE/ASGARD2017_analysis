@@ -176,21 +176,25 @@ print(
           plot.title = element_text(face = "bold", size = 14))
 )
 
-# Page 6: vertical profiles faceted by depth_type × variable
-# 3 行 (surf/mid/bottom) × 6 列 (variable), Y = depth_m, X = value, 色 = cluster11
-print(
-  ggplot(plot_df %>% filter(!is.na(depth_type)),
-         aes(x = value, y = depth_m, color = cluster11)) +
-    geom_point(alpha = 0.7, size = 1.5) +
-    scale_y_reverse() +
-    facet_grid(depth_type ~ variable, scales = "free_x") +
-    scale_color_manual(values = cc11, name = "Cluster") +
-    labs(title = "Vertical profiles faceted by depth-type (rows) × variable (cols)",
-         x = NULL, y = "Depth (m)") +
-    theme_bw(base_size = 11) +
-    theme(strip.text = element_text(face = "bold", size = 10),
-          plot.title = element_text(face = "bold", size = 14))
-)
+# Pages 6+: vertical profiles per cluster, faceted by depth_type × variable
+# 各クラスター毎に1ページ: depth_type (rows) × variable (cols) の vertical profile グリッド
+for (cl in hier_levels_11) {
+  d <- plot_df %>% filter(cluster11 == cl, !is.na(depth_type))
+  if (nrow(d) == 0) next
+  print(
+    ggplot(d, aes(x = value, y = depth_m)) +
+      geom_point(color = cc11[[cl]], alpha = 0.8, size = 1.8) +
+      scale_y_reverse() +
+      facet_grid(depth_type ~ variable, scales = "free_x") +
+      labs(title = paste0("Cluster ", cl, " — vertical profiles by depth-type"),
+           subtitle = paste0("n = ", sum(clusnum11 == cl), " samples"),
+           x = NULL, y = "Depth (m)") +
+      theme_bw(base_size = 11) +
+      theme(strip.text   = element_text(face = "bold", size = 10),
+            plot.title   = element_text(face = "bold", size = 14),
+            plot.subtitle = element_text(size = 11))
+  )
+}
 
 dev.off()
 
