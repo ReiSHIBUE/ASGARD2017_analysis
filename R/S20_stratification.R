@@ -99,7 +99,7 @@ dir.create(here::here("output", "survey", "stratification"),
 
 pdf(file = here::here("output", "survey", "stratification",
                      "ASGARD_vertical_profiles.pdf"),
-    width = 14, height = 10)
+    width = 22, height = 12)
 
 # Page 1: vertical profiles colored by Division (A/B/C)
 print(
@@ -158,6 +158,22 @@ print(
          y = "Δ Sigma-t (kg/m³)",
          color = "Stratification class") +
     theme_bw(base_size = 12)
+)
+
+# Page 5: vertical profiles faceted by 11-cluster × variable
+# 11 クラスター × 6 変数のグリッド (各セルが独立した鉛直分布)
+print(
+  ggplot(plot_df, aes(x = value, y = depth_m)) +
+    geom_point(aes(color = cluster11), alpha = 0.7, size = 1.3) +
+    scale_y_reverse() +
+    facet_grid(variable ~ cluster11, scales = "free_x") +
+    scale_color_manual(values = cc11, guide = "none") +
+    labs(title = "Vertical profiles by 11-cluster (rows: variable, cols: cluster)",
+         x = NULL, y = "Depth (m)") +
+    theme_bw(base_size = 10) +
+    theme(strip.text = element_text(face = "bold", size = 9),
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+          plot.title = element_text(face = "bold", size = 14))
 )
 
 dev.off()
