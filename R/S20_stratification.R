@@ -264,6 +264,26 @@ print(
           legend.position = "top")
 )
 
+# Page 4: same as Page 2 but with LOESS-smoothed trend lines + 95% CI ribbons
+print(
+  ggplot(plot_df %>% filter(!is.na(sea)),
+         aes(x = value, y = depth_m, color = sea, fill = sea)) +
+    geom_point(alpha = 0.5, size = 1.2) +
+    geom_smooth(method = "loess", orientation = "y", se = TRUE,
+                alpha = 0.2, linewidth = 1) +
+    scale_y_reverse() +
+    facet_grid(sea ~ variable, scales = "free_x") +
+    scale_color_manual(values = sea_colors, guide = "none") +
+    scale_fill_manual(values = sea_colors, guide = "none") +
+    labs(title = "Vertical profiles with LOESS trend (sea × variable grid)",
+         subtitle = "Solid lines: LOESS smooth; ribbon: 95% confidence interval",
+         x = NULL, y = "Depth (m)") +
+    theme_bw(base_size = 11) +
+    theme(strip.text    = element_text(face = "bold"),
+          plot.title    = element_text(face = "bold", size = 14),
+          plot.subtitle = element_text(size = 10))
+)
+
 dev.off()
 
 # ==============================================================================
