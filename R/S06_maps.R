@@ -303,7 +303,7 @@ asm_long$Assemblage <- factor(
 )
 
 pdf(here::here("output", "survey", "maps", "map_colclus_abundance_11clusters.pdf"),
-    width = 18, height = 14)
+    width = 22, height = 12)
 
 # Page 1: 6 assemblage panels (all depths combined)
 print(
@@ -328,7 +328,7 @@ print(
                alpha = 0.7) +
     scale_color_manual(values = cc11, name = "Cluster") +
     scale_size_continuous(range = c(0.5, 6), name = "Assemblage RA (%)") +
-    facet_grid(Assemblage ~ depth_type) +
+    facet_grid(depth_type ~ Assemblage) +
     labs(title = "Per-assemblage abundance × depth type",
          x = "Longitude", y = "Latitude") +
     theme(strip.text  = element_text(face = "bold", size = 10),
