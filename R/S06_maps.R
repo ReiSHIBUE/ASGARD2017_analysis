@@ -303,7 +303,7 @@ asm_long$Assemblage <- factor(
 )
 
 pdf(here::here("output", "survey", "maps", "map_colclus_abundance_11clusters.pdf"),
-    width = 22, height = 12)
+    width = 24, height = 12)
 
 # Page 1: 6 assemblage panels (all depths combined)
 print(
@@ -332,6 +332,29 @@ print(
     labs(title = "Per-assemblage abundance × depth type",
          x = "Longitude", y = "Latitude") +
     theme(strip.text  = element_text(face = "bold", size = 10),
+          plot.title  = element_text(face = "bold", size = 16))
+)
+
+# Page 3: 11-cluster × depth_type grid (sample locations)
+# Sample counts per cluster for panel labels
+cluster_n_tab <- table(a_map$cluster11)
+a_map$cluster11_lab <- factor(
+  paste0(as.character(a_map$cluster11),
+         " (n=", cluster_n_tab[as.character(a_map$cluster11)], ")"),
+  levels = paste0(hier_levels_11,
+                  " (n=", cluster_n_tab[hier_levels_11], ")")
+)
+
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = a_map,
+               aes(x = lon, y = lat, color = cluster11),
+               size = 2, alpha = 0.8) +
+    scale_color_manual(values = cc11, guide = "none") +
+    facet_grid(depth_type ~ cluster11_lab) +
+    labs(title = "Sample locations by cluster × depth type (11 clusters)",
+         x = "Longitude", y = "Latitude") +
+    theme(strip.text  = element_text(face = "bold", size = 9),
           plot.title  = element_text(face = "bold", size = 16))
 )
 
