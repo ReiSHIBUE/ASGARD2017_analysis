@@ -235,14 +235,20 @@ stations_all <- meta_asgard %>%
   distinct(station, .keep_all = TRUE) %>%
   select(station, lat, lon)
 
-stations_all$prefix <- factor(
-  sub("[0-9.]+$", "", stations_all$station),
-  levels = c("SLY", "CBE", "CB", "CBW", "CPL", "DBO", "CNL", "IL", "KL", "CL")
+# Assign transect group (DBO split into DBO1, DBO2, DBO3)
+stations_all$prefix <- sub("[0-9.]+$", "", stations_all$station)
+stations_all$prefix <- ifelse(grepl("^DBO1", stations_all$station), "DBO1",
+                       ifelse(grepl("^DBO2", stations_all$station), "DBO2",
+                       ifelse(grepl("^DBO3", stations_all$station), "DBO3",
+                       stations_all$prefix)))
+stations_all$prefix <- factor(stations_all$prefix,
+  levels = c("SLY", "CBE", "CB", "CBW", "CPL", "DBO1", "DBO2", "DBO3", "CNL", "IL", "KL", "CL")
 )
 
 prefix_colors <- c(
   "SLY" = "#D32F2F", "CBE" = "#F57C00", "CB" = "#000000",
-  "CBW" = "#1565C0", "CPL" = "#2E7D32", "DBO" = "#C2185B",
+  "CBW" = "#1565C0", "CPL" = "#2E7D32", "DBO1" = "#C2185B",
+  "DBO2" = "#E91E63", "DBO3" = "#880E4F",
   "CNL" = "#7B1FA2", "IL" = "#00838F", "KL" = "#FFEB3B",
   "CL" = "#4E342E"
 )
@@ -264,8 +270,76 @@ print(
 
 dev.off()
 
+# ==============================================================================
+# Section 7: Assemblage abundance × depth-type grid map
+# 6 ASV assemblage × 3 depth type (surf/mid/bottom) のグリッドマップ
+# REQUIRES: colclusnum (from S02), asgard_filtered (from S01)
+# ==============================================================================
+
+# Per-sample total RA in each ASV assemblage (1..6), in %
+assem_ra <- sapply(1:6, function(k) {
+  asv_k <- names(colclusnum)[colclusnum == k]
+  rowSums(asgard_filtered[, asv_k, drop = FALSE])
+}) * 100
+colnames(assem_ra) <- paste0("Assemblage_", 1:6)
+
+# Long table with lat/lon, cluster11, depth_type
+asm_long <- as.data.frame(assem_ra) %>%
+  tibble::rownames_to_column("Sample") %>%
+  tidyr::pivot_longer(-Sample, names_to = "Assemblage", values_to = "RA_pct") %>%
+  dplyr::inner_join(
+    a_map %>% dplyr::select(Sample = ID, lat, lon, cluster11, depth_type) %>%
+      dplyr::mutate(Sample = rownames(a_map)[match(Sample, a_map$ID)]),
+    by = "Sample"
+  )
+
+# Assemblage labels with ASV count
+assem_n_tab <- table(colclusnum)
+asm_long$Assemblage <- factor(
+  asm_long$Assemblage,
+  levels = paste0("Assemblage_", 1:6),
+  labels = paste0("Assemblage ", 1:6,
+                  " (n=", assem_n_tab[as.character(1:6)], ")")
+)
+
+pdf(here::here("output", "survey", "maps", "map_colclus_abundance_11clusters.pdf"),
+    width = 18, height = 14)
+
+# Page 1: 6 assemblage panels (all depths combined)
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = asm_long,
+               aes(x = lon, y = lat, color = cluster11, size = RA_pct),
+               alpha = 0.7) +
+    scale_color_manual(values = cc11, name = "Cluster") +
+    scale_size_continuous(range = c(0.5, 6), name = "Assemblage RA (%)") +
+    facet_wrap(~ Assemblage, nrow = 2) +
+    labs(title = "Per-assemblage abundance per sample",
+         x = "Longitude", y = "Latitude") +
+    theme(strip.text  = element_text(face = "bold", size = 12),
+          plot.title  = element_text(face = "bold", size = 16))
+)
+
+# Page 2: Assemblage × depth_type grid
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = asm_long,
+               aes(x = lon, y = lat, color = cluster11, size = RA_pct),
+               alpha = 0.7) +
+    scale_color_manual(values = cc11, name = "Cluster") +
+    scale_size_continuous(range = c(0.5, 6), name = "Assemblage RA (%)") +
+    facet_grid(Assemblage ~ depth_type) +
+    labs(title = "Per-assemblage abundance × depth type",
+         x = "Longitude", y = "Latitude") +
+    theme(strip.text  = element_text(face = "bold", size = 10),
+          plot.title  = element_text(face = "bold", size = 16))
+)
+
+dev.off()
+
 message("\nS06_maps.R: done.")
 message("  PDF: ASGARD_survey_map_11clusters.pdf, ASGARD_survey_map_11clusters_detail.pdf")
 message("  PDF: ASGARD_survey_all_stations.pdf")
+message("  PDF: map_colclus_abundance_11clusters.pdf")
 message("  CSV: output/survey/maps/cluster11_geographic_summary.csv")
 message("  CSV: output/survey/maps/cluster11_depth_type_test.csv")
