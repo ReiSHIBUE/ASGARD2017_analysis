@@ -176,20 +176,19 @@ print(
           plot.title = element_text(face = "bold", size = 14))
 )
 
-# Page 6: points per variable × cluster, x-axis = depth_type (surf/mid/bottom)
-# 6 variables × 11 clusters のグリッド、各セル内で depth_type 別の点プロット
+# Page 6: vertical profiles faceted by depth_type × variable
+# 3 行 (surf/mid/bottom) × 6 列 (variable), Y = depth_m, X = value, 色 = cluster11
 print(
   ggplot(plot_df %>% filter(!is.na(depth_type)),
-         aes(x = depth_type, y = value, color = cluster11)) +
-    geom_jitter(width = 0.2, size = 1.2, alpha = 0.7) +
-    facet_grid(variable ~ cluster11, scales = "free_y") +
-    scale_color_manual(values = cc11, guide = "none") +
-    labs(title = "Variable distribution by depth-type, within each cluster",
-         subtitle = "Rows: variable, cols: cluster; x-axis = surface/mid/bottom",
-         x = "Depth type", y = NULL) +
-    theme_bw(base_size = 10) +
-    theme(strip.text = element_text(face = "bold", size = 9),
-          axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+         aes(x = value, y = depth_m, color = cluster11)) +
+    geom_point(alpha = 0.7, size = 1.5) +
+    scale_y_reverse() +
+    facet_grid(depth_type ~ variable, scales = "free_x") +
+    scale_color_manual(values = cc11, name = "Cluster") +
+    labs(title = "Vertical profiles faceted by depth-type (rows) × variable (cols)",
+         x = NULL, y = "Depth (m)") +
+    theme_bw(base_size = 11) +
+    theme(strip.text = element_text(face = "bold", size = 10),
           plot.title = element_text(face = "bold", size = 14))
 )
 
