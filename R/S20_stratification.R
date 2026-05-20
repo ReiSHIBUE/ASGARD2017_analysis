@@ -83,15 +83,15 @@ print(table(stratification_summary$strat_class))
 
 plot_df <- m %>%
   select(Sample, station, lat, lon, depth_m, depth_type, cluster11, division, region,
-         temp, salinity, DO, sigma_t, `NO3(uM)`, `chl (ug/l)`) %>%
+         temp, salinity, DO, `NO3(uM)`, `chl (ug/l)`) %>%
   rename(NO3 = `NO3(uM)`, chl = `chl (ug/l)`) %>%
-  pivot_longer(cols = c(temp, salinity, sigma_t, DO, NO3, chl),
+  pivot_longer(cols = c(temp, salinity, DO, NO3, chl),
                names_to = "variable", values_to = "value") %>%
   filter(!is.na(value), !is.na(depth_m))
 
 plot_df$variable <- factor(plot_df$variable,
-  levels = c("temp", "salinity", "sigma_t", "DO", "NO3", "chl"),
-  labels = c("Temperature (°C)", "Salinity (PSU)", "Sigma-t (kg/m³)",
+  levels = c("temp", "salinity", "DO", "NO3", "chl"),
+  labels = c("Temperature (°C)", "Salinity (PSU)",
              "DO (µmol/kg)", "NO3 (µM)", "Chl a (µg/L)"))
 
 dir.create(here::here("output", "survey", "stratification"),
