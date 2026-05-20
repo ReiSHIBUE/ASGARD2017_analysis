@@ -1,0 +1,7 @@
+"Assemblage_clean","n_surf","n_mid","n_bottom","mean_surf","mean_mid","mean_bottom","chi_sq","df","p_value","sig"
+"Assemblage 1",60,64,57,3.81,2.33,2.22,1.104,2,0.5759,"ns"
+"Assemblage 2",60,64,57,3.3,4.43,4.86,3.867,2,0.1446,"ns"
+"Assemblage 3",60,64,57,1.96,1.07,1.25,0.672,2,0.7145,"ns"
+"Assemblage 4",60,64,57,15.45,11.88,12.89,2.3,2,0.3166,"ns"
+"Assemblage 5",60,64,57,7.76,7.18,7.54,0.631,2,0.7293,"ns"
+"Assemblage 6",60,64,57,67.38,72.69,70.76,2.832,2,0.2427,"ns"

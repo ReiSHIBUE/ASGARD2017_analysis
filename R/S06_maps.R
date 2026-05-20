@@ -360,9 +360,44 @@ print(
 
 dev.off()
 
+# ==============================================================================
+# Section 8: Kruskal-Wallis test: assemblage RA ~ depth_type
+# Assemblage 別に「相対存在量が depth_type で異なるか」を検定
+# ==============================================================================
+
+kw_long <- asm_long %>%
+  dplyr::filter(!is.na(depth_type)) %>%
+  dplyr::mutate(Assemblage_clean = sub(" \\(n=.+\\)$", "", as.character(Assemblage)))
+
+kw_results <- kw_long %>%
+  dplyr::group_by(Assemblage_clean) %>%
+  dplyr::summarise(
+    n_surf   = sum(depth_type == "surf"),
+    n_mid    = sum(depth_type == "mid"),
+    n_bottom = sum(depth_type == "bottom"),
+    mean_surf   = round(mean(RA_pct[depth_type == "surf"]),   2),
+    mean_mid    = round(mean(RA_pct[depth_type == "mid"]),    2),
+    mean_bottom = round(mean(RA_pct[depth_type == "bottom"]), 2),
+    chi_sq  = round(kruskal.test(RA_pct ~ depth_type)$statistic, 3),
+    df      = kruskal.test(RA_pct ~ depth_type)$parameter,
+    p_value = round(kruskal.test(RA_pct ~ depth_type)$p.value, 4),
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(sig = ifelse(p_value < 0.001, "***",
+                       ifelse(p_value < 0.01,  "**",
+                       ifelse(p_value < 0.05,  "*", "ns"))))
+
+cat("\n--- Kruskal-Wallis: assemblage RA ~ depth_type ---\n")
+print(as.data.frame(kw_results), row.names = FALSE)
+
+write.csv(kw_results,
+  here::here("output", "survey", "maps", "assemblage_RA_depth_kruskal.csv"),
+  row.names = FALSE)
+
 message("\nS06_maps.R: done.")
 message("  PDF: ASGARD_survey_map_11clusters.pdf, ASGARD_survey_map_11clusters_detail.pdf")
 message("  PDF: ASGARD_survey_all_stations.pdf")
 message("  PDF: map_colclus_abundance_11clusters.pdf")
 message("  CSV: output/survey/maps/cluster11_geographic_summary.csv")
 message("  CSV: output/survey/maps/cluster11_depth_type_test.csv")
+message("  CSV: output/survey/maps/assemblage_RA_depth_kruskal.csv")

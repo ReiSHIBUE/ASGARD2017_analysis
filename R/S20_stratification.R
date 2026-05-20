@@ -287,6 +287,52 @@ print(
 dev.off()
 
 # ==============================================================================
+# Section 4b: Statistical test — Bering vs Chukchi Δσt
+# ==============================================================================
+
+# Assign sea to each station via lat of the first sample
+station_sea <- m %>%
+  group_by(station) %>%
+  summarise(sea = first(sea), .groups = "drop")
+strat_sea <- stratification_summary %>%
+  left_join(station_sea, by = "station")
+
+cat("\n--- Sample sizes per sea (stations with n>=2 depths) ---\n")
+print(table(strat_sea$sea))
+
+cat("\n--- Welch t-test: delta_sigma ~ sea ---\n")
+tt_dsigma <- t.test(delta_sigma ~ sea, data = strat_sea)
+print(tt_dsigma)
+
+cat("\n--- Wilcoxon rank-sum: delta_sigma ~ sea ---\n")
+wt_dsigma <- wilcox.test(delta_sigma ~ sea, data = strat_sea)
+print(wt_dsigma)
+
+cat("\n--- Fisher exact: strat_class × sea ---\n")
+ct_strat <- table(strat_sea$sea, strat_sea$strat_class)
+print(ct_strat)
+ft_strat <- fisher.test(ct_strat, simulate.p.value = TRUE, B = 10000)
+print(ft_strat)
+
+# Save test summary as CSV
+sea_test_summary <- data.frame(
+  test = c("Welch t-test", "Wilcoxon rank-sum", "Fisher exact (strat_class)"),
+  statistic = c(round(tt_dsigma$statistic, 3),
+                round(wt_dsigma$statistic, 3),
+                NA),
+  df = c(round(tt_dsigma$parameter, 2), NA, NA),
+  p_value = c(round(tt_dsigma$p.value, 4),
+              round(wt_dsigma$p.value, 4),
+              round(ft_strat$p.value, 4)),
+  mean_Bering  = round(mean(strat_sea$delta_sigma[strat_sea$sea == "Bering Sea"]),  3),
+  mean_Chukchi = round(mean(strat_sea$delta_sigma[strat_sea$sea == "Chukchi Sea"]), 3)
+)
+write.csv(sea_test_summary,
+  here::here("output", "survey", "stratification",
+             "ASGARD_dsigma_bering_chukchi_test.csv"),
+  row.names = FALSE)
+
+# ==============================================================================
 # Section 5: CSV summaries
 # ==============================================================================
 
@@ -327,3 +373,4 @@ message("  PDF: output/survey/stratification/ASGARD_vertical_profiles.pdf")
 message("  PDF: output/survey/stratification/ASGARD_bering_chukchi_profiles.pdf")
 message("  CSV: output/survey/stratification/ASGARD_stratification_summary.csv")
 message("  CSV: output/survey/stratification/ASGARD_bering_chukchi_summary.csv")
+message("  CSV: output/survey/stratification/ASGARD_dsigma_bering_chukchi_test.csv")

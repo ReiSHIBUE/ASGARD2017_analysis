@@ -1,0 +1,4 @@
+"test","statistic","df","p_value","mean_Bering","mean_Chukchi"
+"Welch t-test",2.611,27.83,0.0144,1.259,0.429
+"Wilcoxon rank-sum",542,NA,0.0428,1.259,0.429
+"Fisher exact (strat_class)",NA,NA,0.1308,1.259,0.429
