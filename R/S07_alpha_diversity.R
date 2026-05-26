@@ -29,7 +29,8 @@ library(tidyverse)
 
 shannon_vals <- vegan::diversity(asgard_seqcount, index = "shannon")
 simpson_vals <- vegan::diversity(asgard_seqcount, index = "simpson")
-chao1_vals   <- estimateR(asgard_seqcount)[1, ]  # row 1 = Chao1
+# estimateR(): row 1 = S.obs, row 2 = S.chao1, row 3 = se.chao1, ...
+chao1_vals   <- estimateR(asgard_seqcount)["S.chao1", ]
 
 asgard_alpha_df <- data.frame(
   Sample        = rownames(asgard_seqcount),
