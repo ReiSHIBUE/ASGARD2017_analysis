@@ -79,36 +79,52 @@ plot_df <- cluster_genus %>%
   filter(genus %in% top100) %>%
   filter(mean_RA_pct > 0)  # drop zero entries (no bubble drawn)
 
-# Phylum for each top-100 genus (for color)
-genus_phylum <- plot_df %>%
+# Class for each top-100 genus (for color)
+genus_class <- plot_df %>%
   group_by(genus) %>%
   summarise(phylum = first(phylum),
             class  = first(class),
             overall = sum(mean_RA_pct),
             .groups = "drop")
 
-# Order genera by phylum, then by overall abundance (top first within phylum)
-genus_order <- genus_phylum %>%
-  arrange(phylum, -overall) %>%
+# Order genera by class, then by overall abundance (top first within class)
+genus_order <- genus_class %>%
+  arrange(class, -overall) %>%
   pull(genus)
 plot_df$genus <- factor(plot_df$genus, levels = rev(genus_order))
 
-# Color by phylum (limit to top 10 phyla, others "Other")
-top_phyla <- genus_phylum %>%
-  group_by(phylum) %>%
+# Color by class (limit to top 12 classes, others "Other")
+top_classes <- genus_class %>%
+  group_by(class) %>%
   summarise(total = sum(overall), .groups = "drop") %>%
   arrange(-total) %>%
-  slice_head(n = 10) %>%
-  pull(phylum)
+  slice_head(n = 12) %>%
+  pull(class)
 
 plot_df <- plot_df %>%
-  mutate(phylum_grp = ifelse(phylum %in% top_phyla, phylum, "Other"))
-phylum_colors <- setNames(
-  c(brewer.pal(min(length(top_phyla), 8), "Set1"),
-    if (length(top_phyla) > 8) brewer.pal(length(top_phyla) - 8, "Set2") else NULL,
-    "gray70"),
-  c(top_phyla, "Other")
+  mutate(class_grp = ifelse(class %in% top_classes, class, "Other"))
+
+# Use same colour scheme as the Class waffle for consistency
+class_emphasis <- c(
+  "Alphaproteobacteria" = "#E41A1C",
+  "Gammaproteobacteria" = "#FF7F00",
+  "Flavobacteriia"      = "#377EB8",
+  "Bacteroidia"         = "#4DAF4A",
+  "Verrucomicrobiae"    = "#984EA3",
+  "Planctomycetacia"    = "#A65628",
+  "Mollicutes"          = "#F781BF",
+  "Nitrososphaeria"     = "#17BECF",
+  "Actinobacteria"      = "#FFFF33",
+  "Spirochaetia"        = "#666666",
+  "Acidimicrobiia"      = "#A6CEE3"
 )
+remaining_classes <- setdiff(top_classes, names(class_emphasis))
+fallback_palette  <- suppressWarnings(
+  brewer.pal(max(3, length(remaining_classes)), "Set3")
+)[seq_along(remaining_classes)]
+class_colors <- c(class_emphasis[intersect(top_classes, names(class_emphasis))],
+                  setNames(fallback_palette, remaining_classes),
+                  "Other" = "gray70")
 
 # ==============================================================================
 # Section 4: Bubble plot
@@ -123,15 +139,15 @@ pdf(file = here::here("output", "survey", "bubble",
 
 print(
   ggplot(plot_df, aes(x = cluster, y = genus,
-                      size = mean_RA_pct, color = phylum_grp)) +
+                      size = mean_RA_pct, color = class_grp)) +
     geom_point(alpha = 0.8) +
     scale_size_continuous(range = c(0.5, 8),
                           name = "Mean RA (%)",
                           breaks = c(0.5, 1, 2, 5, 10, 20)) +
-    scale_color_manual(values = phylum_colors, name = "Phylum") +
+    scale_color_manual(values = class_colors, name = "Class") +
     labs(title = "Top 100 genera across 11 sample clusters",
          subtitle = paste0("Bubble size = mean relative abundance (%) within cluster; ",
-                           "genera ordered by phylum then overall abundance"),
+                           "genera ordered by class then overall abundance"),
          x = "Cluster", y = NULL) +
     theme_bw(base_size = 9) +
     theme(plot.title    = element_text(face = "bold", size = 14),
