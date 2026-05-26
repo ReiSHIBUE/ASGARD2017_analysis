@@ -27,9 +27,14 @@ asv_phylum     <- strip_boot(fullnameboot$Phylum[asv_idx])
 asv_class      <- strip_boot(fullnameboot$Class[asv_idx])
 asv_order      <- strip_boot(fullnameboot$Order[asv_idx])
 asv_family     <- strip_boot(fullnameboot$Family[asv_idx])
-names(asv_genus)  <- colnames(asgard_filtered)
-names(asv_phylum) <- colnames(asgard_filtered)
-names(asv_class)  <- colnames(asgard_filtered)
+
+# Combined "Family; Genus" label per ASV (clarifies "uncultured" entries)
+asv_fam_gen <- paste(asv_family, asv_genus, sep = "; ")
+names(asv_genus)   <- colnames(asgard_filtered)
+names(asv_phylum)  <- colnames(asgard_filtered)
+names(asv_class)   <- colnames(asgard_filtered)
+names(asv_family)  <- colnames(asgard_filtered)
+names(asv_fam_gen) <- colnames(asgard_filtered)
 
 # ==============================================================================
 # Section 2: Compute per-cluster mean RA per genus
@@ -39,7 +44,7 @@ names(asv_class)  <- colnames(asgard_filtered)
 long_g <- as.data.frame(asgard_filtered) %>%
   rownames_to_column("Sample") %>%
   pivot_longer(-Sample, names_to = "ASV", values_to = "Abundance") %>%
-  mutate(genus   = asv_genus[ASV],
+  mutate(fam_gen = asv_fam_gen[ASV],
          phylum  = asv_phylum[ASV],
          class   = asv_class[ASV],
          cluster = factor(as.character(clusnum11[Sample]), levels = hier_levels_11)) %>%
@@ -47,14 +52,14 @@ long_g <- as.data.frame(asgard_filtered) %>%
   mutate(RA = Abundance / sum(Abundance)) %>%
   ungroup()
 
-# Per-sample sum per genus
+# Per-sample sum per family-genus combination
 sample_genus <- long_g %>%
-  group_by(Sample, cluster, phylum, class, genus) %>%
+  group_by(Sample, cluster, phylum, class, fam_gen) %>%
   summarise(sample_RA = sum(RA), .groups = "drop")
 
 # Per-cluster mean
 cluster_genus <- sample_genus %>%
-  group_by(cluster, phylum, class, genus) %>%
+  group_by(cluster, phylum, class, fam_gen) %>%
   summarise(mean_RA_pct = round(mean(sample_RA) * 100, 3),
             .groups = "drop")
 
@@ -63,35 +68,35 @@ cluster_genus <- sample_genus %>%
 # ==============================================================================
 
 overall_genus <- long_g %>%
-  group_by(Sample, genus) %>%
+  group_by(Sample, fam_gen) %>%
   summarise(sample_RA = sum(RA), .groups = "drop") %>%
-  group_by(genus) %>%
+  group_by(fam_gen) %>%
   summarise(overall_mean = mean(sample_RA), .groups = "drop") %>%
   arrange(-overall_mean)
 
-top100 <- overall_genus %>% slice_head(n = 100) %>% pull(genus)
+top100 <- overall_genus %>% slice_head(n = 100) %>% pull(fam_gen)
 
-cat("Top 100 genera selected; first 10:\n")
+cat("Top 100 family;genus combinations selected; first 10:\n")
 print(head(overall_genus, 10))
 
 # Limit to top 100
 plot_df <- cluster_genus %>%
-  filter(genus %in% top100) %>%
+  filter(fam_gen %in% top100) %>%
   filter(mean_RA_pct > 0)  # drop zero entries (no bubble drawn)
 
-# Class for each top-100 genus (for color)
+# Class for each top-100 family-genus (for color)
 genus_class <- plot_df %>%
-  group_by(genus) %>%
+  group_by(fam_gen) %>%
   summarise(phylum = first(phylum),
             class  = first(class),
             overall = sum(mean_RA_pct),
             .groups = "drop")
 
-# Order genera by class, then by overall abundance (top first within class)
+# Order rows by class, then by overall abundance (top first within class)
 genus_order <- genus_class %>%
   arrange(class, -overall) %>%
-  pull(genus)
-plot_df$genus <- factor(plot_df$genus, levels = rev(genus_order))
+  pull(fam_gen)
+plot_df$fam_gen <- factor(plot_df$fam_gen, levels = rev(genus_order))
 
 # Color by class (limit to top 12 classes, others "Other")
 top_classes <- genus_class %>%
@@ -138,7 +143,7 @@ pdf(file = here::here("output", "survey", "bubble",
     width = 12, height = 22)
 
 print(
-  ggplot(plot_df, aes(x = cluster, y = genus,
+  ggplot(plot_df, aes(x = cluster, y = fam_gen,
                       size = mean_RA_pct, color = class_grp)) +
     geom_point(alpha = 0.8) +
     scale_size_continuous(range = c(0.5, 8),
