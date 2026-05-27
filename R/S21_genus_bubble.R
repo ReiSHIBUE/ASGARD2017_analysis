@@ -12,6 +12,8 @@
 ###
 ### OUTPUT:
 ###   output/survey/bubble/ASGARD_top100_genus_bubble.pdf
+###   output/survey/bubble/ASGARD_top50_genus_bubble.pdf
+###   (plus accompanying CSVs)
 
 library(tidyverse)
 library(RColorBrewer)
@@ -64,7 +66,7 @@ cluster_genus <- sample_genus %>%
             .groups = "drop")
 
 # ==============================================================================
-# Section 3: Select Top 100 genera by overall mean RA
+# Section 3: Overall ranking + colour palette for Class
 # ==============================================================================
 
 overall_genus <- long_g %>%
@@ -74,42 +76,7 @@ overall_genus <- long_g %>%
   summarise(overall_mean = mean(sample_RA), .groups = "drop") %>%
   arrange(-overall_mean)
 
-top100 <- overall_genus %>% slice_head(n = 100) %>% pull(fam_gen)
-
-cat("Top 100 family;genus combinations selected; first 10:\n")
-print(head(overall_genus, 10))
-
-# Limit to top 100
-plot_df <- cluster_genus %>%
-  filter(fam_gen %in% top100) %>%
-  filter(mean_RA_pct > 0)  # drop zero entries (no bubble drawn)
-
-# Class for each top-100 family-genus (for color)
-genus_class <- plot_df %>%
-  group_by(fam_gen) %>%
-  summarise(phylum = first(phylum),
-            class  = first(class),
-            overall = sum(mean_RA_pct),
-            .groups = "drop")
-
-# Order rows by class, then by overall abundance (top first within class)
-genus_order <- genus_class %>%
-  arrange(class, -overall) %>%
-  pull(fam_gen)
-plot_df$fam_gen <- factor(plot_df$fam_gen, levels = rev(genus_order))
-
-# Color by class (limit to top 12 classes, others "Other")
-top_classes <- genus_class %>%
-  group_by(class) %>%
-  summarise(total = sum(overall), .groups = "drop") %>%
-  arrange(-total) %>%
-  slice_head(n = 12) %>%
-  pull(class)
-
-plot_df <- plot_df %>%
-  mutate(class_grp = ifelse(class %in% top_classes, class, "Other"))
-
-# Use same colour scheme as the Class waffle for consistency
+# Same colour scheme as the Class waffle for consistency
 class_emphasis <- c(
   "Alphaproteobacteria" = "#E41A1C",
   "Gammaproteobacteria" = "#FF7F00",
@@ -123,55 +90,80 @@ class_emphasis <- c(
   "Spirochaetia"        = "#666666",
   "Acidimicrobiia"      = "#A6CEE3"
 )
-remaining_classes <- setdiff(top_classes, names(class_emphasis))
-fallback_palette  <- suppressWarnings(
-  brewer.pal(max(3, length(remaining_classes)), "Set3")
-)[seq_along(remaining_classes)]
-class_colors <- c(class_emphasis[intersect(top_classes, names(class_emphasis))],
-                  setNames(fallback_palette, remaining_classes),
-                  "Other" = "gray70")
 
 # ==============================================================================
-# Section 4: Bubble plot
+# Section 4: Bubble-plot helper (parametrized by N)
 # ==============================================================================
 
 dir.create(here::here("output", "survey", "bubble"),
            showWarnings = FALSE, recursive = TRUE)
 
-pdf(file = here::here("output", "survey", "bubble",
-                     "ASGARD_top100_genus_bubble.pdf"),
-    width = 12, height = 22)
+make_bubble <- function(n_top, pdf_h) {
+  top_n <- overall_genus %>% slice_head(n = n_top) %>% pull(fam_gen)
 
-print(
-  ggplot(plot_df, aes(x = cluster, y = fam_gen,
-                      size = mean_RA_pct, color = class_grp)) +
-    geom_point(alpha = 0.8) +
-    scale_size_continuous(range = c(0.5, 8),
-                          name = "Mean RA (%)",
-                          breaks = c(0.5, 1, 2, 5, 10, 20)) +
-    scale_color_manual(values = class_colors, name = "Class") +
-    labs(title = "Top 100 genera across 11 sample clusters",
-         subtitle = paste0("Bubble size = mean relative abundance (%) within cluster; ",
-                           "genera ordered by class then overall abundance"),
-         x = "Cluster", y = NULL) +
-    theme_bw(base_size = 9) +
-    theme(plot.title    = element_text(face = "bold", size = 14),
-          plot.subtitle = element_text(size = 10),
-          axis.text.y   = element_text(size = 6),
-          axis.text.x   = element_text(face = "bold", size = 11),
-          panel.grid.major = element_line(color = "gray92"),
-          panel.grid.minor = element_blank(),
-          legend.position = "right")
-)
+  plot_df <- cluster_genus %>%
+    filter(fam_gen %in% top_n, mean_RA_pct > 0)
 
-dev.off()
+  genus_class <- plot_df %>%
+    group_by(fam_gen) %>%
+    summarise(phylum = first(phylum), class = first(class),
+              overall = sum(mean_RA_pct), .groups = "drop")
 
-# Also save CSV
-write.csv(plot_df,
-  here::here("output", "survey", "bubble", "ASGARD_top100_genus_bubble.csv"),
-  row.names = FALSE)
+  genus_order <- genus_class %>% arrange(class, -overall) %>% pull(fam_gen)
+  plot_df$fam_gen <- factor(plot_df$fam_gen, levels = rev(genus_order))
+
+  top_classes <- genus_class %>%
+    group_by(class) %>% summarise(total = sum(overall), .groups = "drop") %>%
+    arrange(-total) %>% slice_head(n = 12) %>% pull(class)
+
+  plot_df <- plot_df %>%
+    mutate(class_grp = ifelse(class %in% top_classes, class, "Other"))
+
+  remaining <- setdiff(top_classes, names(class_emphasis))
+  fallback  <- suppressWarnings(
+    brewer.pal(max(3, length(remaining)), "Set3"))[seq_along(remaining)]
+  class_colors <- c(class_emphasis[intersect(top_classes, names(class_emphasis))],
+                    setNames(fallback, remaining),
+                    "Other" = "gray70")
+
+  out_pdf <- here::here("output", "survey", "bubble",
+                       paste0("ASGARD_top", n_top, "_genus_bubble.pdf"))
+  out_csv <- here::here("output", "survey", "bubble",
+                       paste0("ASGARD_top", n_top, "_genus_bubble.csv"))
+
+  pdf(file = out_pdf, width = 12, height = pdf_h)
+  print(
+    ggplot(plot_df, aes(x = cluster, y = fam_gen,
+                        size = mean_RA_pct, color = class_grp)) +
+      geom_point(alpha = 0.8) +
+      scale_size_continuous(range = c(0.5, 8),
+                            name = "Mean RA (%)",
+                            breaks = c(0.5, 1, 2, 5, 10, 20)) +
+      scale_color_manual(values = class_colors, name = "Class") +
+      labs(title = paste0("Top ", n_top, " genera across 11 sample clusters"),
+           subtitle = paste0("Bubble size = mean relative abundance (%) within cluster; ",
+                             "genera ordered by class then overall abundance"),
+           x = "Cluster", y = NULL) +
+      theme_bw(base_size = 9) +
+      theme(plot.title    = element_text(face = "bold", size = 14),
+            plot.subtitle = element_text(size = 10),
+            axis.text.y   = element_text(size = 7),
+            axis.text.x   = element_text(face = "bold", size = 11),
+            panel.grid.major = element_line(color = "gray92"),
+            panel.grid.minor = element_blank(),
+            legend.position = "right")
+  )
+  dev.off()
+  write.csv(plot_df, out_csv, row.names = FALSE)
+  message("  PDF: ", sub(".*/", "output/survey/bubble/", out_pdf))
+}
+
+# ==============================================================================
+# Section 5: Generate Top 100 and Top 50 bubble plots
+# ==============================================================================
+
+make_bubble(n_top = 100, pdf_h = 22)
+make_bubble(n_top = 50,  pdf_h = 14)
 
 message("\nS21_genus_bubble.R: done.")
-message("  Top 100 genera selected from ", length(unique(asv_genus)), " unique genera")
-message("  PDF: output/survey/bubble/ASGARD_top100_genus_bubble.pdf")
-message("  CSV: output/survey/bubble/ASGARD_top100_genus_bubble.csv")
+message("  Total unique family;genus combinations: ", length(unique(asv_fam_gen)))
