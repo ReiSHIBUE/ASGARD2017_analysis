@@ -14,10 +14,13 @@
 ###
 ### OUTPUT:
 ###   output/survey/taxonomy/ASGARD_taxonomy_barchart_11clusters.pdf
-###   output/survey/waffle/ASGARD_taxonomy_waffle_11clusters.pdf
-###   output/survey/waffle/ASGARD_taxonomy_waffle_6assemblages.pdf
-###   output/survey/waffle/ASGARD_taxonomy_waffle_11clusters_class.pdf
-###   output/survey/waffle/ASGARD_taxonomy_waffle_6assemblages_class.pdf
+###   output/survey/waffle/ASGARD_taxonomy_waffle_11clusters.pdf           (Phylum)
+###   output/survey/waffle/ASGARD_taxonomy_waffle_11clusters_class.pdf     (Class)
+###   output/survey/waffle/ASGARD_taxonomy_waffle_11clusters_order.pdf     (Order)
+###   output/survey/waffle/ASGARD_taxonomy_waffle_11clusters_family.pdf    (Family)
+###   output/survey/waffle/ASGARD_taxonomy_waffle_11clusters_genus.pdf     (Genus)
+###   output/survey/waffle/ASGARD_taxonomy_waffle_6assemblages.pdf         (Phylum)
+###   output/survey/waffle/ASGARD_taxonomy_waffle_6assemblages_class.pdf   (Class)
 ###
 ### NOTE: waffle package — install via:
 ###   install.packages("waffle", repos = "https://cinc.rud.is")
@@ -40,13 +43,19 @@ asv_idx        <- match(colnames(asgard_filtered), shorternames)
 asv_phylum_raw <- fullnameboot$Phylum[asv_idx]
 asv_class_raw  <- fullnameboot$Class[asv_idx]
 asv_order_raw  <- fullnameboot$Order[asv_idx]
+asv_family_raw <- fullnameboot$Family[asv_idx]
+asv_genus_raw  <- fullnameboot$Genus[asv_idx]
 
 # "Name (bootstrap)" → "Name" にする / Strip bootstrap suffix
 strip_boot <- function(x) sub("\\s*\\(\\d+\\)\\s*$", "", x)
 asv_phylum <- strip_boot(asv_phylum_raw)
 asv_class  <- strip_boot(asv_class_raw)
 asv_order  <- strip_boot(asv_order_raw)
+asv_family <- strip_boot(asv_family_raw)
+asv_genus  <- strip_boot(asv_genus_raw)
 names(asv_phylum) <- colnames(asgard_filtered)
+names(asv_family) <- colnames(asgard_filtered)
+names(asv_genus)  <- colnames(asgard_filtered)
 names(asv_class)  <- colnames(asgard_filtered)
 names(asv_order)  <- colnames(asgard_filtered)
 
@@ -66,6 +75,11 @@ asgard_long <- as.data.frame(asgard_filtered) %>%
   group_by(Sample) %>%
   mutate(RA = Abundance / sum(Abundance)) %>%
   ungroup()
+
+# Cluster labels with sample counts (used by 11-cluster waffle facets)
+cluster_n_tab        <- table(clusnum11)
+make_cluster_label   <- function(k) paste0(k, " (n=", cluster_n_tab[as.character(k)], ")")
+cluster_label_levels <- make_cluster_label(hier_levels_11)
 
 pdf(file = here::here("output", "survey", "taxonomy", "ASGARD_taxonomy_barchart_11clusters.pdf"),
     width = 20, height = 10)
@@ -137,6 +151,9 @@ waffle_clu_df <- waffle_clu_df %>%
 
 waffle_clu_df$Phylum <- factor(waffle_clu_df$Phylum,
                                levels = c(top_phyla, "Other"))
+# Add sample counts to cluster panel labels
+waffle_clu_df$cluster <- factor(make_cluster_label(as.character(waffle_clu_df$cluster)),
+                                levels = cluster_label_levels)
 
 # Color palette: top phyla colored + Other gray
 phylum_colors <- setNames(
@@ -258,7 +275,8 @@ long_class <- as.data.frame(asgard_filtered) %>%
   rownames_to_column("Sample") %>%
   pivot_longer(-Sample, names_to = "ASV", values_to = "Abundance") %>%
   mutate(Class = asv_class[ASV],
-         cluster = factor(as.character(clusnum11[Sample]), levels = hier_levels_11)) %>%
+         cluster = factor(make_cluster_label(as.character(clusnum11[Sample])),
+                          levels = cluster_label_levels)) %>%
   group_by(Sample) %>%
   mutate(RA = Abundance / sum(Abundance)) %>%
   ungroup()
@@ -406,6 +424,118 @@ print(
 
 dev.off()
 message("  PDF: output/survey/waffle/ASGARD_taxonomy_waffle_6assemblages_class.pdf")
+
+# ==============================================================================
+# Section 7-9: Waffle charts — 11 sample clusters at ORDER / FAMILY / GENUS
+# 11 サンプルクラスター × Order / Family / Genus レベル
+# ==============================================================================
+
+# Helper: build cluster-level waffle data at any taxonomic rank
+build_waffle_taxon <- function(taxon_vec, n_top = 15) {
+  # Per-sample sum per taxon → per-cluster mean
+  long_t <- as.data.frame(asgard_filtered) %>%
+    rownames_to_column("Sample") %>%
+    pivot_longer(-Sample, names_to = "ASV", values_to = "Abundance") %>%
+    mutate(taxon   = taxon_vec[ASV],
+           cluster = factor(make_cluster_label(as.character(clusnum11[Sample])),
+                            levels = cluster_label_levels)) %>%
+    group_by(Sample) %>%
+    mutate(RA = Abundance / sum(Abundance)) %>%
+    ungroup()
+
+  sample_sum <- long_t %>%
+    group_by(Sample, cluster, taxon) %>%
+    summarise(sample_RA = sum(RA), .groups = "drop")
+
+  cluster_mean <- sample_sum %>%
+    group_by(cluster, taxon) %>%
+    summarise(mean_RA = mean(sample_RA), .groups = "drop") %>%
+    group_by(cluster) %>%
+    mutate(pct = mean_RA / sum(mean_RA) * 100,
+           units = round(pct)) %>%
+    ungroup() %>%
+    filter(units > 0)
+
+  # Top-n by overall abundance
+  taxon_order <- cluster_mean %>%
+    group_by(taxon) %>%
+    summarise(total = sum(mean_RA), .groups = "drop") %>%
+    arrange(-total) %>%
+    pull(taxon)
+
+  top_t <- taxon_order[seq_len(min(n_top, length(taxon_order)))]
+  cluster_mean <- cluster_mean %>%
+    mutate(taxon_grp = ifelse(taxon %in% top_t, taxon, "Other")) %>%
+    group_by(cluster, taxon_grp) %>%
+    summarise(units = sum(units), .groups = "drop") %>%
+    rename(taxon = taxon_grp)
+  cluster_mean$taxon <- factor(cluster_mean$taxon, levels = c(top_t, "Other"))
+  list(df = cluster_mean, top = top_t)
+}
+
+# Helper: build a colour vector with "Other" as gray
+make_palette <- function(top_taxa) {
+  n <- length(top_taxa)
+  cols <- if (n <= 12) {
+    suppressWarnings(c(brewer.pal(min(n, 8), "Set1"),
+                       brewer.pal(min(max(n - 8, 3), 8), "Set2")))[seq_len(n)]
+  } else {
+    colorRampPalette(c(brewer.pal(8, "Set1"), brewer.pal(8, "Set2"),
+                       brewer.pal(8, "Set3")))(n)
+  }
+  setNames(c(cols, "gray70"), c(top_taxa, "Other"))
+}
+
+# Helper: draw waffle
+draw_taxon_waffle <- function(wdat, palette, title) {
+  ggplot(wdat$df, aes(fill = taxon, values = units)) +
+    geom_waffle(n_rows = 10, size = 0.2, colour = "white", flip = TRUE) +
+    facet_wrap(~ cluster, nrow = 3) +
+    coord_equal() +
+    scale_fill_manual(values = palette, drop = FALSE) +
+    labs(title = title,
+         subtitle = "Each waffle = 100 units (~ 100% relative abundance)",
+         x = NULL, y = NULL) +
+    theme_void() +
+    theme(plot.title    = element_text(face = "bold", size = 16),
+          plot.subtitle = element_text(size = 11),
+          strip.text    = element_text(face = "bold", size = 12),
+          legend.text   = element_text(size = 8),
+          legend.key.size = unit(0.4, "cm"))
+}
+
+# ---- Section 7: Order ----
+wd_order <- build_waffle_taxon(asv_order, n_top = 15)
+pal_order <- make_palette(wd_order$top)
+pdf(file = here::here("output", "survey", "waffle",
+                     "ASGARD_taxonomy_waffle_11clusters_order.pdf"),
+    width = 18, height = 12)
+print(draw_taxon_waffle(wd_order, pal_order,
+                        "Order Composition per Sample Cluster (11 clusters)"))
+dev.off()
+message("  PDF: output/survey/waffle/ASGARD_taxonomy_waffle_11clusters_order.pdf")
+
+# ---- Section 8: Family ----
+wd_family <- build_waffle_taxon(asv_family, n_top = 15)
+pal_family <- make_palette(wd_family$top)
+pdf(file = here::here("output", "survey", "waffle",
+                     "ASGARD_taxonomy_waffle_11clusters_family.pdf"),
+    width = 18, height = 12)
+print(draw_taxon_waffle(wd_family, pal_family,
+                        "Family Composition per Sample Cluster (11 clusters)"))
+dev.off()
+message("  PDF: output/survey/waffle/ASGARD_taxonomy_waffle_11clusters_family.pdf")
+
+# ---- Section 9: Genus ----
+wd_genus <- build_waffle_taxon(asv_genus, n_top = 15)
+pal_genus <- make_palette(wd_genus$top)
+pdf(file = here::here("output", "survey", "waffle",
+                     "ASGARD_taxonomy_waffle_11clusters_genus.pdf"),
+    width = 18, height = 12)
+print(draw_taxon_waffle(wd_genus, pal_genus,
+                        "Genus Composition per Sample Cluster (11 clusters)"))
+dev.off()
+message("  PDF: output/survey/waffle/ASGARD_taxonomy_waffle_11clusters_genus.pdf")
 
 }  # end if(waffle installed)
 
