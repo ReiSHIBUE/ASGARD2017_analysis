@@ -160,11 +160,65 @@ print(
           legend.text   = element_text(size = 9))
 )
 
+# ==============================================================================
+# Section 6: Per-cluster (DBO3 samples only) class composition
+# 各クラスター内の DBO3 サンプルのみで Class 組成
+# ==============================================================================
+
+cluster_class_dbo3 <- sample_class_dbo3 %>%
+  group_by(cluster11, class) %>%
+  summarise(mean_RA = mean(sample_RA), .groups = "drop") %>%
+  group_by(cluster11) %>%
+  mutate(pct   = mean_RA / sum(mean_RA) * 100,
+         units = round(pct)) %>%
+  ungroup() %>%
+  filter(units > 0)
+
+# Re-use the same Top 12 classes selected from station_class so palette matches
+cluster_class_dbo3 <- cluster_class_dbo3 %>%
+  mutate(class_grp = ifelse(class %in% top_classes, class, "Other")) %>%
+  group_by(cluster11, class_grp) %>%
+  summarise(units = sum(units), .groups = "drop") %>%
+  rename(class = class_grp)
+cluster_class_dbo3$class <- factor(cluster_class_dbo3$class,
+                                   levels = c(top_classes, "Other"))
+
+# Cluster labels with (n=X) — DBO3 samples count
+n_per_cluster_dbo3 <- dbo3_m %>% group_by(cluster11) %>%
+  summarise(n = n(), .groups = "drop")
+label_map <- setNames(paste0(n_per_cluster_dbo3$cluster11,
+                             " (n=", n_per_cluster_dbo3$n, ")"),
+                      as.character(n_per_cluster_dbo3$cluster11))
+cluster_class_dbo3$cluster_label <- factor(
+  label_map[as.character(cluster_class_dbo3$cluster11)],
+  levels = label_map[as.character(n_per_cluster_dbo3$cluster11)]
+)
+
+print(
+  ggplot(cluster_class_dbo3, aes(fill = class, values = units)) +
+    geom_waffle(n_rows = 10, size = 0.2, colour = "white", flip = TRUE) +
+    facet_wrap(~ cluster_label, nrow = 2) +
+    coord_equal() +
+    scale_fill_manual(values = class_colors, drop = FALSE) +
+    labs(title = "Class composition of DBO3 samples within each cluster",
+         subtitle = "Each waffle = 100 units; n = number of DBO3 samples in cluster",
+         x = NULL, y = NULL) +
+    theme_void() +
+    theme(plot.title    = element_text(face = "bold", size = 16),
+          plot.subtitle = element_text(size = 11),
+          strip.text    = element_text(face = "bold", size = 11,
+                                       margin = margin(t = 6, b = 6)),
+          legend.text   = element_text(size = 9))
+)
+
 dev.off()
 
 # CSV summary
 write.csv(station_class %>% select(station, class, units),
   here::here("output", "survey", "waffle", "ASGARD_dbo3_class_waffle.csv"),
+  row.names = FALSE)
+write.csv(cluster_class_dbo3 %>% select(cluster11, class, units),
+  here::here("output", "survey", "waffle", "ASGARD_dbo3_per_cluster_waffle.csv"),
   row.names = FALSE)
 
 # Bacteroidia % per station (highlight)
