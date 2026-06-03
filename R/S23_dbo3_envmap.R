@@ -26,7 +26,7 @@ m$depth_type <- factor(m$depth_type, levels = c("surf", "mid", "bottom"))
 
 dbo3 <- m %>%
   filter(grepl("^DBO3", station)) %>%
-  rename(NO3 = `NO3(uM)`, chl = `chl (ug/l)`)
+  rename(NO3 = `NO3(uM)`, chl = `chl (ug/l)`, FlECO = `FlECO-AFL(mg/m^3)`)
 
 cat("=== DBO3 samples ===\n")
 cat("Total: ", nrow(dbo3), "\n")
@@ -45,6 +45,7 @@ dbo3_station <- dbo3 %>%
     n_samples  = n(),
     mean_NO3   = round(mean(NO3, na.rm = TRUE), 2),
     mean_chl   = round(mean(chl, na.rm = TRUE), 2),
+    mean_FlECO = round(mean(FlECO, na.rm = TRUE), 2),
     clusters   = paste(sort(unique(as.character(cluster11))), collapse = ", "),
     .groups    = "drop"
   )
@@ -58,12 +59,13 @@ print(as.data.frame(dbo3_station), row.names = FALSE)
 
 dbo3_depth <- dbo3 %>%
   group_by(station, depth_type) %>%
-  summarise(lat       = mean(lat, na.rm = TRUE),
-            lon       = mean(lon, na.rm = TRUE),
-            mean_NO3  = round(mean(NO3, na.rm = TRUE), 2),
-            mean_chl  = round(mean(chl, na.rm = TRUE), 2),
-            n_samples = n(),
-            .groups   = "drop") %>%
+  summarise(lat        = mean(lat, na.rm = TRUE),
+            lon        = mean(lon, na.rm = TRUE),
+            mean_NO3   = round(mean(NO3, na.rm = TRUE), 2),
+            mean_chl   = round(mean(chl, na.rm = TRUE), 2),
+            mean_FlECO = round(mean(FlECO, na.rm = TRUE), 2),
+            n_samples  = n(),
+            .groups    = "drop") %>%
   filter(!is.na(depth_type))
 
 # ==============================================================================
@@ -116,6 +118,22 @@ print(
     theme(plot.title = element_text(face = "bold", size = 14))
 )
 
+# Page 2b: per-station FlECO-AFL (depth-averaged)
+print(
+  ggmap(mapz_dbo3) +
+    geom_point(data = dbo3_station,
+               aes(x = lon, y = lat, size = mean_FlECO),
+               color = "#9467bd", alpha = 0.7) +
+    geom_text_repel(data = dbo3_station,
+                    aes(x = lon, y = lat,
+                        label = paste0(station, "\n", mean_FlECO, " mg/m³")),
+                    size = 3, max.overlaps = 20) +
+    scale_size_continuous(range = c(2, 14), name = "FlECO-AFL (mg/m³)") +
+    labs(title = "DBO3 station mean FlECO-AFL (depth-averaged)",
+         x = "Longitude", y = "Latitude") +
+    theme(plot.title = element_text(face = "bold", size = 14))
+)
+
 # Page 2: per (station × depth_type) NO3 — faceted by depth
 print(
   ggmap(mapz_dbo3) +
@@ -145,6 +163,23 @@ print(
     scale_size_continuous(range = c(2, 10), name = "Chl-a (µg/L)") +
     facet_wrap(~ depth_type, nrow = 1) +
     labs(title = "DBO3 Chl-a by depth type",
+         x = "Longitude", y = "Latitude") +
+    theme(plot.title = element_text(face = "bold", size = 14),
+          strip.text = element_text(face = "bold", size = 12))
+)
+
+# Page 4: per (station × depth_type) FlECO-AFL
+print(
+  ggmap(mapz_dbo3) +
+    geom_point(data = dbo3_depth,
+               aes(x = lon, y = lat, size = mean_FlECO),
+               color = "#9467bd", alpha = 0.7) +
+    geom_text_repel(data = dbo3_depth,
+                    aes(x = lon, y = lat, label = paste0(station, ": ", mean_FlECO)),
+                    size = 2.5, max.overlaps = 25) +
+    scale_size_continuous(range = c(2, 10), name = "FlECO-AFL (mg/m³)") +
+    facet_wrap(~ depth_type, nrow = 1) +
+    labs(title = "DBO3 FlECO-AFL by depth type",
          x = "Longitude", y = "Latitude") +
     theme(plot.title = element_text(face = "bold", size = 14),
           strip.text = element_text(face = "bold", size = 12))
