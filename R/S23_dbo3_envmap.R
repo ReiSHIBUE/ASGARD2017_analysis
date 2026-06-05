@@ -86,6 +86,37 @@ dir.create(here::here("output", "survey", "maps"), showWarnings = FALSE, recursi
 pdf(here::here("output", "survey", "maps", "ASGARD_dbo3_envmap.pdf"),
     width = 16, height = 10)
 
+# Page 0: NO3 + Chl-a + FlECO combined (3 facets in one page)
+combined_df <- dbo3_station %>%
+  select(station, lat, lon, NO3 = mean_NO3, `Chl-a` = mean_chl,
+         `FlECO-AFL` = mean_FlECO) %>%
+  pivot_longer(cols = c(NO3, `Chl-a`, `FlECO-AFL`),
+               names_to = "variable", values_to = "value") %>%
+  mutate(variable = factor(variable,
+                           levels = c("NO3", "Chl-a", "FlECO-AFL"),
+                           labels = c("NO3 (µM)", "Chl-a (µg/L)",
+                                      "FlECO-AFL (mg/m³)")))
+var_colors <- setNames(c("#1f77b4", "#2ca02c", "#9467bd"),
+                       levels(combined_df$variable))
+
+print(
+  ggmap(mapz_dbo3) +
+    geom_point(data = combined_df,
+               aes(x = lon, y = lat, size = value, color = variable),
+               alpha = 0.75) +
+    geom_text_repel(data = combined_df,
+                    aes(x = lon, y = lat,
+                        label = paste0(station, "\n", round(value, 2))),
+                    size = 2.5, max.overlaps = 25) +
+    scale_size_continuous(range = c(2, 12), name = "Value") +
+    scale_color_manual(values = var_colors, guide = "none") +
+    facet_wrap(~ variable, nrow = 1) +
+    labs(title = "DBO3 station means: NO3, Chl-a, and FlECO-AFL (depth-averaged)",
+         x = "Longitude", y = "Latitude") +
+    theme(plot.title = element_text(face = "bold", size = 14),
+          strip.text = element_text(face = "bold", size = 12))
+)
+
 # Page 1: per-station NO3 (depth-averaged)
 print(
   ggmap(mapz_dbo3) +
