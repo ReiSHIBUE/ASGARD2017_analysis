@@ -1,0 +1,5 @@
+"variable","n_DBO3","n_other","median_DBO3","median_other","W_statistic","p_value","sig"
+"Alphaproteobacteria",30,151,16.93,20.34,2933,0.0109,"*"
+"Gammaproteobacteria",30,151,37.99,40.54,2822,0.0337,"*"
+"Bacteroidia",30,151,40.17,33.87,1329,4e-04,"***"
+"Alpha_share",30,151,31.64,32.72,2517,0.3373,"ns"
