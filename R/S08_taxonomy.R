@@ -14,6 +14,7 @@
 ###
 ### OUTPUT:
 ###   output/survey/taxonomy/ASGARD_taxonomy_barchart_11clusters.pdf
+###   output/survey/taxonomy/ASGARD_class_big3_per_11clusters.csv
 ###   output/survey/waffle/ASGARD_taxonomy_waffle_11clusters.pdf           (Phylum)
 ###   output/survey/waffle/ASGARD_taxonomy_waffle_11clusters_class.pdf     (Class)
 ###   output/survey/waffle/ASGARD_taxonomy_waffle_11clusters_order.pdf     (Order)
@@ -355,6 +356,55 @@ print(
 
 dev.off()
 message("  PDF: output/survey/waffle/ASGARD_taxonomy_waffle_11clusters_class.pdf")
+
+# ==============================================================================
+# Section 5b: CSV table — Alpha / Gamma / Bacteroidia per 11 cluster
+# 11クラスター毎の Big-3 (Alpha + Gamma + Bacteroidia) % をテーブルとして保存
+# ==============================================================================
+
+# Build a clean two-step aggregation directly from clusnum11 (avoids the
+# "(n=X)"-labelled factor levels used in the waffle plots)
+big3_long <- as.data.frame(asgard_filtered) %>%
+  rownames_to_column("Sample") %>%
+  pivot_longer(-Sample, names_to = "ASV", values_to = "Abundance") %>%
+  mutate(Class   = asv_class[ASV],
+         cluster = factor(as.character(clusnum11[Sample]), levels = hier_levels_11)) %>%
+  group_by(Sample) %>% mutate(RA = Abundance / sum(Abundance)) %>% ungroup() %>%
+  group_by(Sample, cluster, Class) %>%
+  summarise(sample_RA = sum(RA), .groups = "drop")
+
+big3_table <- big3_long %>%
+  filter(Class %in% c("Alphaproteobacteria", "Gammaproteobacteria", "Bacteroidia")) %>%
+  group_by(cluster, Class) %>%
+  summarise(mean_pct = round(mean(sample_RA) * 100, 1), .groups = "drop") %>%
+  pivot_wider(names_from = Class, values_from = mean_pct, values_fill = 0) %>%
+  rename(Alpha = Alphaproteobacteria,
+         Gamma = Gammaproteobacteria,
+         Bact  = Bacteroidia)
+
+# Sample counts per cluster
+n_per_cluster <- as.data.frame(table(clusnum11)) %>%
+  rename(cluster = clusnum11, n = Freq)
+n_per_cluster$cluster <- as.character(n_per_cluster$cluster)
+big3_table$cluster <- as.character(big3_table$cluster)
+
+big3_table <- big3_table %>%
+  left_join(n_per_cluster, by = "cluster") %>%
+  mutate(Big3_total  = round(Alpha + Gamma + Bact, 1),
+         Other       = round(100 - Big3_total, 1),
+         Alpha_share = round(Alpha / (Alpha + Gamma) * 100, 1)) %>%
+  select(cluster, n, Alpha, Gamma, Bact, Big3_total, Other, Alpha_share)
+
+big3_table <- big3_table[match(hier_levels_11, big3_table$cluster), ]
+
+cat("\n--- 11 cluster: Alpha / Gamma / Bacteroidia (mean %) ---\n")
+print(as.data.frame(big3_table), row.names = FALSE)
+
+write.csv(big3_table,
+  here::here("output", "survey", "taxonomy",
+             "ASGARD_class_big3_per_11clusters.csv"),
+  row.names = FALSE)
+message("  CSV: output/survey/taxonomy/ASGARD_class_big3_per_11clusters.csv")
 
 # ==============================================================================
 # Section 6: Waffle chart — 6 assemblages at CLASS level
