@@ -180,4 +180,115 @@ for (var in numeric_vars) {
 
 dev.off()
 
+# ==============================================================================
+# Section 5: Environmental variable summary table per 11 cluster
+# 各クラスター × 各環境変数の median と mean±SD を表化（max=magenta, min=cyan）
+# ==============================================================================
+
+env_vars <- c(
+  "lat"                 = "Latitude (°N)",
+  "depth_m"             = "Depth (m)",
+  "temp"                = "Temperature (°C)",
+  "salinity"            = "Salinity (PSU)",
+  "DO"                  = "DO (µmol/kg)",
+  "NO3(uM)"             = "NO3 (µM)",
+  "PO4(uM)"             = "PO4 (µM)",
+  "Sil(uM)"             = "Sil (µM)",
+  "NH4(uM)"             = "NH4 (µM)",
+  "FlECO-AFL(mg/m^3)"   = "FlECO-AFL (mg/m³)",
+  "chl (ug/l)"          = "Chl-a (µg/L)"
+)
+
+# Build cluster column on metadata using clusnum11
+env_df <- meta_asgard
+env_df$cluster <- factor(as.character(clusnum11[rownames(env_df)]),
+                         levels = hier_levels_11)
+
+stats_long <- bind_rows(lapply(names(env_vars), function(v) {
+  env_df %>% group_by(cluster) %>%
+    summarise(median = median(.data[[v]], na.rm = TRUE),
+              mean   = mean(  .data[[v]], na.rm = TRUE),
+              sd     = sd(    .data[[v]], na.rm = TRUE),
+              .groups = "drop") %>%
+    mutate(variable_raw = v, variable = env_vars[[v]])
+}))
+
+stats_long <- stats_long %>%
+  mutate(median_r = round(median, 2),
+         mean_r   = round(mean, 2),
+         sd_r     = round(sd, 2),
+         mean_sd  = paste0(mean_r, " ± ", sd_r),
+         cell     = paste0(median_r, " (", mean_sd, ")")) %>%
+  group_by(variable_raw) %>%
+  mutate(is_max = median == max(median, na.rm = TRUE),
+         is_min = median == min(median, na.rm = TRUE)) %>%
+  ungroup()
+
+dir.create(here::here("output", "survey", "env_table"),
+           showWarnings = FALSE, recursive = TRUE)
+
+# Wide table for CSV export
+median_wide <- stats_long %>%
+  select(variable, cluster, median_r) %>%
+  pivot_wider(names_from = cluster, values_from = median_r)
+mean_wide <- stats_long %>%
+  select(variable, cluster, mean_sd) %>%
+  pivot_wider(names_from = cluster, values_from = mean_sd)
+combined_wide <- stats_long %>%
+  select(variable, cluster, cell) %>%
+  pivot_wider(names_from = cluster, values_from = cell)
+
+write.csv(median_wide,
+  here::here("output", "survey", "env_table",
+             "ASGARD_cluster_env_median.csv"), row.names = FALSE)
+write.csv(mean_wide,
+  here::here("output", "survey", "env_table",
+             "ASGARD_cluster_env_mean_sd.csv"), row.names = FALSE)
+write.csv(combined_wide,
+  here::here("output", "survey", "env_table",
+             "ASGARD_cluster_env_combined.csv"), row.names = FALSE)
+
+# Styled HTML output (max=magenta, min=cyan) using kableExtra if available
+if (requireNamespace("kableExtra", quietly = TRUE)) {
+  library(kableExtra)
+
+  cluster_cols <- as.character(hier_levels_11)
+  display <- combined_wide
+  for (i in seq_len(nrow(display))) {
+    var_i <- display$variable[i]
+    sub   <- stats_long %>% filter(variable == var_i)
+    for (cl in cluster_cols) {
+      rm <- sub %>% filter(cluster == cl)
+      if (nrow(rm) == 0) next
+      col_idx <- which(colnames(display) == cl)
+      val <- display[[col_idx]][i]
+      bg  <- if (isTRUE(rm$is_max)) "#FF66FF"
+             else if (isTRUE(rm$is_min)) "#66FFFF"
+             else NULL
+      if (!is.null(bg) && !is.na(val)) {
+        display[[col_idx]][i] <- cell_spec(val, background = bg, format = "html")
+      }
+    }
+  }
+
+  k <- kbl(display,
+           caption = paste0("Environmental variables per 11 cluster: ",
+                            "median (mean ± SD). ",
+                            "Max highlighted magenta, min highlighted cyan."),
+           escape = FALSE, format = "html",
+           align = c("l", rep("c", length(cluster_cols)))) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                  full_width = FALSE, font_size = 11)
+
+  save_kable(k, here::here("output", "survey", "env_table",
+                           "ASGARD_cluster_env_summary.html"))
+  message("  HTML: output/survey/env_table/ASGARD_cluster_env_summary.html")
+} else {
+  message("  kableExtra not installed; install with install.packages(\"kableExtra\")")
+}
+
+message("  CSV: output/survey/env_table/ASGARD_cluster_env_median.csv")
+message("  CSV: output/survey/env_table/ASGARD_cluster_env_mean_sd.csv")
+message("  CSV: output/survey/env_table/ASGARD_cluster_env_combined.csv")
+
 message("S04_beta_diversity_pcoa.R: done. asgard_pcoa_df (", nrow(asgard_pcoa_df), "×", ncol(asgard_pcoa_df), ") ready.")
