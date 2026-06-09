@@ -248,44 +248,49 @@ write.csv(combined_wide,
   here::here("output", "survey", "env_table",
              "ASGARD_cluster_env_combined.csv"), row.names = FALSE)
 
-# Styled HTML output (max=magenta, min=cyan) using kableExtra if available
-if (requireNamespace("kableExtra", quietly = TRUE)) {
-  library(kableExtra)
+# PDF tables (two pages: median, mean±SD), max=magenta, min=cyan via ggplot tiles
+make_table_plot <- function(value_col, title_txt) {
+  plot_df <- stats_long %>%
+    mutate(value_txt = value_col,
+           fill_col  = case_when(is_max ~ "#FF66FF",
+                                 is_min ~ "#66FFFF",
+                                 TRUE   ~ "white")) %>%
+    select(variable, cluster, value_txt, fill_col)
 
-  cluster_cols <- as.character(hier_levels_11)
-  display <- combined_wide
-  for (i in seq_len(nrow(display))) {
-    var_i <- display$variable[i]
-    sub   <- stats_long %>% filter(variable == var_i)
-    for (cl in cluster_cols) {
-      rm <- sub %>% filter(cluster == cl)
-      if (nrow(rm) == 0) next
-      col_idx <- which(colnames(display) == cl)
-      val <- display[[col_idx]][i]
-      bg  <- if (isTRUE(rm$is_max)) "#FF66FF"
-             else if (isTRUE(rm$is_min)) "#66FFFF"
-             else NULL
-      if (!is.null(bg) && !is.na(val)) {
-        display[[col_idx]][i] <- cell_spec(val, background = bg, format = "html")
-      }
-    }
-  }
+  plot_df$variable <- factor(plot_df$variable,
+                             levels = rev(unname(env_vars)))
+  plot_df$cluster  <- factor(plot_df$cluster, levels = hier_levels_11)
 
-  k <- kbl(display,
-           caption = paste0("Environmental variables per 11 cluster: ",
-                            "median (mean ± SD). ",
-                            "Max highlighted magenta, min highlighted cyan."),
-           escape = FALSE, format = "html",
-           align = c("l", rep("c", length(cluster_cols)))) %>%
-    kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
-                  full_width = FALSE, font_size = 11)
-
-  save_kable(k, here::here("output", "survey", "env_table",
-                           "ASGARD_cluster_env_summary.html"))
-  message("  HTML: output/survey/env_table/ASGARD_cluster_env_summary.html")
-} else {
-  message("  kableExtra not installed; install with install.packages(\"kableExtra\")")
+  ggplot(plot_df, aes(x = cluster, y = variable)) +
+    geom_tile(aes(fill = fill_col), color = "gray70", linewidth = 0.3) +
+    scale_fill_identity() +
+    geom_text(aes(label = value_txt), size = 3.0) +
+    labs(title = title_txt,
+         subtitle = "Max = magenta, Min = cyan (per row)",
+         x = "Cluster", y = NULL) +
+    theme_minimal(base_size = 11) +
+    theme(plot.title    = element_text(face = "bold", size = 14),
+          plot.subtitle = element_text(size = 11),
+          axis.text.x   = element_text(face = "bold"),
+          axis.text.y   = element_text(face = "bold"),
+          panel.grid    = element_blank())
 }
+
+# Build the column-text vectors aligned with stats_long
+stats_long$median_txt <- as.character(stats_long$median_r)
+stats_long$mean_txt   <- as.character(stats_long$mean_sd)
+
+pdf(here::here("output", "survey", "env_table",
+               "ASGARD_cluster_env_summary.pdf"),
+    width = 14, height = 7)
+
+print(make_table_plot(stats_long$median_txt,
+                      "Environmental variables per 11 cluster — median"))
+print(make_table_plot(stats_long$mean_txt,
+                      "Environmental variables per 11 cluster — mean ± SD"))
+
+dev.off()
+message("  PDF: output/survey/env_table/ASGARD_cluster_env_summary.pdf")
 
 message("  CSV: output/survey/env_table/ASGARD_cluster_env_median.csv")
 message("  CSV: output/survey/env_table/ASGARD_cluster_env_mean_sd.csv")
