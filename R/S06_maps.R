@@ -394,6 +394,76 @@ write.csv(kw_results,
   here::here("output", "survey", "maps", "assemblage_RA_depth_kruskal.csv"),
   row.names = FALSE)
 
+# ==============================================================================
+# Section 9: Per-station / per-transect breakdown for selected clusters
+# B2a, B2b, C2b1, C2b2 がどのステーション・トランセクトで多く採取されたか
+# ==============================================================================
+
+mb <- meta_asgard %>% tibble::rownames_to_column("Sample")
+mb$cluster <- factor(as.character(clusnum11[mb$Sample]), levels = hier_levels_11)
+
+mb$transect <- ifelse(grepl("^DBO3", mb$station), "DBO3",
+               ifelse(grepl("^DBO2", mb$station), "DBO2",
+               ifelse(grepl("^DBO1", mb$station), "DBO1",
+               ifelse(grepl("^CBE",  mb$station), "CBE",
+               ifelse(grepl("^CBW",  mb$station), "CBW",
+               ifelse(grepl("^CB[0-9]", mb$station), "CB",
+               ifelse(grepl("^CNL",  mb$station), "CNL",
+               ifelse(grepl("^CPL",  mb$station), "CPL",
+               ifelse(grepl("^IL",   mb$station), "IL",
+               ifelse(grepl("^KL",   mb$station), "KL",
+               ifelse(grepl("^CL",   mb$station), "CL",
+               ifelse(grepl("^SLY",  mb$station), "SLY", "Other"))))))))))))
+
+target_clusters <- c("B2a", "B2b", "C2b1", "C2b2")
+
+station_breakdown  <- list()
+transect_breakdown <- list()
+
+for (cl in target_clusters) {
+  sub <- mb %>% dplyr::filter(cluster == cl)
+  if (nrow(sub) == 0) next
+
+  st <- sub %>%
+    dplyr::group_by(station) %>%
+    dplyr::summarise(n_samples = dplyr::n(), .groups = "drop") %>%
+    dplyr::mutate(pct_of_cluster = round(n_samples / sum(n_samples) * 100, 1),
+                  cluster = cl) %>%
+    dplyr::arrange(-n_samples)
+  station_breakdown[[cl]] <- st
+
+  tr <- sub %>%
+    dplyr::group_by(transect) %>%
+    dplyr::summarise(n_samples  = dplyr::n(),
+                     n_stations = dplyr::n_distinct(station),
+                     stations   = paste(sort(unique(station)), collapse = ", "),
+                     .groups = "drop") %>%
+    dplyr::mutate(pct_of_cluster = round(n_samples / sum(n_samples) * 100, 1),
+                  cluster = cl) %>%
+    dplyr::arrange(-n_samples)
+  transect_breakdown[[cl]] <- tr
+
+  cat("\n--- Cluster", cl, "---\n")
+  cat("Total samples:", nrow(sub),
+      "; unique stations:", length(unique(sub$station)), "\n")
+  cat("\nPer station:\n")
+  print(as.data.frame(st), row.names = FALSE)
+  cat("\nPer transect:\n")
+  print(as.data.frame(tr), row.names = FALSE)
+}
+
+station_breakdown_df  <- dplyr::bind_rows(station_breakdown) %>%
+  dplyr::select(cluster, station, n_samples, pct_of_cluster)
+transect_breakdown_df <- dplyr::bind_rows(transect_breakdown) %>%
+  dplyr::select(cluster, transect, n_samples, n_stations, pct_of_cluster, stations)
+
+write.csv(station_breakdown_df,
+  here::here("output", "survey", "maps", "B2_C2b_per_station.csv"),
+  row.names = FALSE)
+write.csv(transect_breakdown_df,
+  here::here("output", "survey", "maps", "B2_C2b_per_transect.csv"),
+  row.names = FALSE)
+
 message("\nS06_maps.R: done.")
 message("  PDF: ASGARD_survey_map_11clusters.pdf, ASGARD_survey_map_11clusters_detail.pdf")
 message("  PDF: ASGARD_survey_all_stations.pdf")
@@ -401,3 +471,5 @@ message("  PDF: map_colclus_abundance_11clusters.pdf")
 message("  CSV: output/survey/maps/cluster11_geographic_summary.csv")
 message("  CSV: output/survey/maps/cluster11_depth_type_test.csv")
 message("  CSV: output/survey/maps/assemblage_RA_depth_kruskal.csv")
+message("  CSV: output/survey/maps/B2_C2b_per_station.csv")
+message("  CSV: output/survey/maps/B2_C2b_per_transect.csv")
