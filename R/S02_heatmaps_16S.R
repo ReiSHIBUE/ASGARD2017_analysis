@@ -199,7 +199,7 @@ cc11 <- c(
   "A1"   = "#E31A1C",  "A2"   = "#FF7F00",
   "B1"   = "#33A02C",  "B2a"  = "#B2DF8A",  "B2b"  = "#A6D854",
   "C1a"  = "#1F78B4",  "C1b1" = "#6A3D9A",  "C1b2" = "#B15928",
-  "C2a"  = "#A6CEE3",  "C2b1" = "#CAB2D6",  "C2b2" = "#B3B3B3"
+  "C2a"  = "#A6CEE3",  "C2b1" = "#CAB2D6",  "C2b2" = "#525252"
 )
 
 rsc11 <- cc11[as.character(clusnum11)]
