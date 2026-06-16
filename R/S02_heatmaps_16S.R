@@ -271,17 +271,22 @@ heatmap.2(asgard_frtmat,
   main = "", trace = "none",
   labRow = FALSE, labCol = FALSE, key = FALSE,
   add.expr = {
+    row_text_cols <- ifelse(
+      names(cluster_centers11) %in% c("B2a", "B2b", "C2a", "C2b1"),
+      "black", "white")
+    col_text_cols <- ifelse(
+      names(col_cluster_centers11) == "1", "black", "white")
     text(x = rep(-6, length(cluster_centers11)),
          y = cluster_centers11,
          labels = names(cluster_centers11),
-         col = "white",
+         col = row_text_cols,
          xpd = NA, adj = c(0.5, 0.5),
          srt = 90,
          cex = 3.5, font = 2)
     text(x = col_cluster_centers11,
          y = rep(nrow_h11 + 5.5, length(col_cluster_centers11)),
          labels = names(col_cluster_centers11),
-         col = "white",
+         col = col_text_cols,
          xpd = NA, adj = c(0.5, 0.5),
          cex = 3.5, font = 2)
   })
