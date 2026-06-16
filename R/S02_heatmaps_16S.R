@@ -205,6 +205,26 @@ cc11 <- c(
 rsc11 <- cc11[as.character(clusnum11)]
 names(rsc11) <- names(clusnum11)
 
+# クラスタ名オーバーレイ用の中央位置計算
+row_ord11           <- as.hclust(h1$rowDendrogram)$order
+samples_ord11       <- rownames(asgard_frtmat)[row_ord11]
+clus_ord11          <- as.character(clusnum11[samples_ord11])
+cluster_centers11   <- sapply(hier_levels_11, function(cn) {
+  idx <- which(clus_ord11 == cn)
+  if (length(idx) == 0) return(NA)
+  mean(idx)
+})
+col_ord11           <- as.hclust(h1$colDendrogram)$order
+asvs_ord11          <- colnames(asgard_frtmat)[col_ord11]
+colclus_ord11       <- as.character(colclusnum[asvs_ord11])
+col_cluster_centers11 <- sapply(1:6, function(k) {
+  idx <- which(colclus_ord11 == as.character(k))
+  if (length(idx) == 0) return(NA)
+  mean(idx)
+})
+names(col_cluster_centers11) <- as.character(1:6)
+nrow_h11 <- nrow(asgard_frtmat)
+
 # 11クラスター版ヒートマップ
 pdf(file = here::here("output", "survey", "heatmaps", "ASGARD_hm_survey_16S_11clusters.pdf"),
     width = 20, height = 20)
@@ -215,7 +235,7 @@ heatmap.2(asgard_frtmat,
   col = viridis, Rowv = h1$rowDendrogram, Colv = h1$colDendrogram,
   margins = c(15, 15), scale = "none",
   main = "ASGARD Survey 16S — Bray/ward.D", trace = "none",
-  cexCol = 0.2, cexRow = 0.3)
+  cexCol = 0.2, cexRow = 0.3, key = FALSE)
 
 heatmap.2(asgard_frtmat,
   distfun = function(x) vegdist(x, method = "bray"),
@@ -226,7 +246,7 @@ heatmap.2(asgard_frtmat,
   Rowv = h1$rowDendrogram, Colv = h1$colDendrogram,
   margins = c(15, 15), scale = "none",
   main = "ASGARD Survey 16S — 11 row clusters, 6 col clusters", trace = "none",
-  cexCol = 0.2, cexRow = 0.3)
+  cexCol = 0.2, cexRow = 0.3, key = FALSE)
 
 heatmap.2(asgard_frtmat,
   distfun = function(x) vegdist(x, method = "bray"),
@@ -238,7 +258,7 @@ heatmap.2(asgard_frtmat,
   margins = c(15, 15), scale = "none",
   main = "ASGARD Survey 16S — 11 clusters (station names)", trace = "none",
   cexCol = 0.2, cexRow = 0.3,
-  labRow = meta_asgard[rownames(asgard_frtmat), "station"])
+  labRow = meta_asgard[rownames(asgard_frtmat), "station"], key = FALSE)
 
 heatmap.2(asgard_frtmat,
   distfun = function(x) vegdist(x, method = "bray"),
@@ -248,8 +268,23 @@ heatmap.2(asgard_frtmat,
   ColSideColors = colrsc[colnames(asgard_frtmat)],
   Rowv = h1$rowDendrogram, Colv = h1$colDendrogram,
   margins = c(2, 2), scale = "none",
-  main = "ASGARD Survey 16S — 11 row clusters, 6 col clusters", trace = "none",
-  labRow = FALSE, labCol = FALSE)
+  main = "", trace = "none",
+  labRow = FALSE, labCol = FALSE, key = FALSE,
+  add.expr = {
+    text(x = rep(-6, length(cluster_centers11)),
+         y = cluster_centers11,
+         labels = names(cluster_centers11),
+         col = "white",
+         xpd = NA, adj = c(0.5, 0.5),
+         srt = 90,
+         cex = 3.5, font = 2)
+    text(x = col_cluster_centers11,
+         y = rep(nrow_h11 + 5.5, length(col_cluster_centers11)),
+         labels = names(col_cluster_centers11),
+         col = "white",
+         xpd = NA, adj = c(0.5, 0.5),
+         cex = 3.5, font = 2)
+  })
 
 # ASV名（列名）表示版 / With ASV names as column labels
 heatmap.2(asgard_frtmat,
@@ -262,7 +297,7 @@ heatmap.2(asgard_frtmat,
   margins = c(25, 5), scale = "none",
   main = "ASGARD Survey 16S — 11 clusters (ASV names)", trace = "none",
   cexCol = 0.15, cexRow = 0.15,
-  labRow = FALSE)
+  labRow = FALSE, key = FALSE)
 
 dev.off()
 
