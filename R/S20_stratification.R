@@ -232,19 +232,24 @@ print(
           legend.position = "top")
 )
 
-# Page 2: sea (rows) × variable (cols) grid
+# Page 2: sea (rows) × variable (cols) grid, with per-station line
 print(
   ggplot(plot_df %>% filter(!is.na(sea)),
-         aes(x = value, y = depth_m, color = sea)) +
-    geom_point(alpha = 0.6, size = 1.5) +
+         aes(x = value, y = depth_m, color = sea, group = station)) +
+    geom_path(alpha = 0.6, linewidth = 0.8) +
+    geom_point(alpha = 0.8, size = 2) +
     scale_y_reverse() +
     facet_grid(sea ~ variable, scales = "free_x") +
     scale_color_manual(values = sea_colors, name = "Sea") +
     labs(title = "Vertical profiles by sea (rows) × variable (cols)",
          x = NULL, y = "Depth (m)") +
-    theme_bw(base_size = 11) +
-    theme(strip.text   = element_text(face = "bold"),
-          plot.title   = element_text(face = "bold", size = 14),
+    theme_bw(base_size = 16) +
+    theme(strip.text      = element_text(face = "bold", size = 16),
+          plot.title      = element_text(face = "bold", size = 20),
+          axis.title      = element_text(size = 16),
+          axis.text       = element_text(size = 13),
+          legend.title    = element_text(size = 15, face = "bold"),
+          legend.text     = element_text(size = 14),
           legend.position = "top")
 )
 
