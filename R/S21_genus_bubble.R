@@ -165,5 +165,103 @@ make_bubble <- function(n_top, pdf_h) {
 make_bubble(n_top = 100, pdf_h = 22)
 make_bubble(n_top = 50,  pdf_h = 14)
 
+# ==============================================================================
+# Section 6: 3 bloom-responsive classes with objective filter
+#   - Bacteroidia, Gammaproteobacteria, Alphaproteobacteria
+#   - Filter: occurrence > 10% AND cumulative within-class RA ≤ 95%
+# ==============================================================================
+
+target_classes_3 <- c("Bacteroidia", "Gammaproteobacteria", "Alphaproteobacteria")
+
+keep_asvs_3   <- names(asv_class)[asv_class %in% target_classes_3]
+mat3          <- asgard_filtered[, keep_asvs_3, drop = FALSE]
+gen_vec_3     <- asv_fam_gen[keep_asvs_3]
+class_vec_3   <- asv_class[keep_asvs_3]
+gen_levels_3  <- unique(gen_vec_3)
+genus_mat_3   <- sapply(gen_levels_3, function(g) {
+  asvs <- names(gen_vec_3)[gen_vec_3 == g]
+  if (length(asvs) == 1) mat3[, asvs] else rowSums(mat3[, asvs, drop = FALSE])
+})
+rownames(genus_mat_3) <- rownames(mat3)
+
+gen2class_3       <- tapply(class_vec_3, gen_vec_3,
+                            function(x) names(sort(table(x), decreasing = TRUE))[1])
+sample_total_3cl  <- rowSums(genus_mat_3)
+genus_RA_3cl      <- sweep(genus_mat_3, 1, sample_total_3cl, "/")
+genus_RA_3cl[is.na(genus_RA_3cl)] <- 0
+
+genus_summary_3 <- tibble(
+  fam_gen     = colnames(genus_mat_3),
+  class       = gen2class_3[colnames(genus_mat_3)],
+  occurrence  = colMeans(genus_mat_3 > 0),
+  mean_RA     = colMeans(genus_RA_3cl)
+) %>%
+  filter(occurrence > 0.10) %>%
+  arrange(-mean_RA) %>%
+  mutate(cumRA = cumsum(mean_RA) / sum(mean_RA))
+
+# 累積95%まで（超える直前まで含む）
+selected_3 <- genus_summary_3 %>%
+  filter(cumRA <= 0.95 | lag(cumRA, default = 0) < 0.95)
+
+selected_genera_3 <- selected_3$fam_gen
+
+plot_df_3 <- as.data.frame(genus_mat_3) %>%
+  rownames_to_column("Sample") %>%
+  pivot_longer(-Sample, names_to = "fam_gen", values_to = "abundance") %>%
+  mutate(cluster = factor(as.character(clusnum11[Sample]), levels = hier_levels_11),
+         class   = gen2class_3[fam_gen],
+         RA      = abundance / sample_total_3cl[Sample]) %>%
+  filter(fam_gen %in% selected_genera_3) %>%
+  group_by(cluster, fam_gen, class) %>%
+  summarise(mean_RA_pct = round(mean(RA, na.rm = TRUE) * 100, 3), .groups = "drop") %>%
+  filter(mean_RA_pct > 0)
+
+gen_order_3 <- selected_3 %>% arrange(class, -mean_RA) %>% pull(fam_gen)
+plot_df_3$fam_gen <- factor(plot_df_3$fam_gen, levels = rev(gen_order_3))
+
+class_colors_3 <- c(
+  "Alphaproteobacteria" = "#E41A1C",
+  "Gammaproteobacteria" = "#FF7F00",
+  "Bacteroidia"         = "#4DAF4A"
+)
+
+n_genus_3 <- length(unique(plot_df_3$fam_gen))
+pdf_h_3   <- max(8, n_genus_3 * 0.32)
+
+out_pdf_3 <- here::here("output", "survey", "bubble",
+                        "ASGARD_3classes_objective_bubble.pdf")
+out_csv_3 <- here::here("output", "survey", "bubble",
+                        "ASGARD_3classes_objective_bubble.csv")
+
+pdf(file = out_pdf_3, width = 13, height = pdf_h_3)
+print(
+  ggplot(plot_df_3, aes(x = cluster, y = fam_gen,
+                        size = mean_RA_pct, color = class)) +
+    geom_point(alpha = 0.85) +
+    scale_size_continuous(range = c(1, 12),
+                          name = "Mean RA within 3 classes (%)",
+                          breaks = c(0.5, 1, 2, 5, 10, 20)) +
+    scale_color_manual(values = class_colors_3, name = "Class") +
+    labs(title = "Major genera in Bacteroidia / Gamma / Alphaproteobacteria",
+         subtitle = paste0("Filter: occurrence > 10% AND cumulative RA <= 95% (",
+                           n_genus_3, " genera)"),
+         x = "Cluster", y = NULL) +
+    theme_bw(base_size = 13) +
+    theme(plot.title    = element_text(face = "bold", size = 18),
+          plot.subtitle = element_text(size = 12),
+          axis.text.y   = element_text(size = 11),
+          axis.text.x   = element_text(face = "bold", size = 15),
+          legend.title  = element_text(size = 12),
+          legend.text   = element_text(size = 11),
+          panel.grid.major = element_line(color = "gray92"),
+          panel.grid.minor = element_blank(),
+          legend.position = "right")
+)
+dev.off()
+write.csv(plot_df_3, out_csv_3, row.names = FALSE)
+message("  PDF: output/survey/bubble/ASGARD_3classes_objective_bubble.pdf (",
+        n_genus_3, " genera)")
+
 message("\nS21_genus_bubble.R: done.")
 message("  Total unique family;genus combinations: ", length(unique(asv_fam_gen)))
