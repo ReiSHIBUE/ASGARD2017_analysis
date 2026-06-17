@@ -240,15 +240,14 @@ print(
     geom_point(alpha = 0.8, size = 2) +
     scale_y_reverse() +
     facet_grid(sea ~ variable, scales = "free_x") +
-    scale_color_manual(values = sea_colors, name = "Sea") +
-    labs(title = "Vertical profiles by sea (rows) × variable (cols)",
-         x = NULL, y = "Depth (m)") +
+    scale_color_manual(values = sea_colors, name = NULL) +
+    labs(x = NULL, y = "Depth (m)") +
     theme_bw(base_size = 16) +
-    theme(strip.text      = element_text(face = "bold", size = 16),
-          plot.title      = element_text(face = "bold", size = 20),
+    theme(strip.text.x    = element_text(face = "bold", size = 16),
+          strip.text.y    = element_blank(),
+          strip.background.y = element_blank(),
           axis.title      = element_text(size = 16),
           axis.text       = element_text(size = 13),
-          legend.title    = element_text(size = 15, face = "bold"),
           legend.text     = element_text(size = 14),
           legend.position = "top")
 )
