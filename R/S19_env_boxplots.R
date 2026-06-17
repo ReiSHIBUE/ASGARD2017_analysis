@@ -121,6 +121,33 @@ for (i in seq_along(selected_vars)) {
 
 print(gridExtra::grid.arrange(grobs = sel_plot_list, ncol = 2))
 
+# Combined page: 5 selected variables (temp, sal, DO, FlECO-AFL, NO3)
+five_vars <- list(
+  list(var = "temp",                 label = "Temperature (°C)"),
+  list(var = "salinity",             label = "Salinity (PSU)"),
+  list(var = "DO",                   label = "DO (µmol/kg)"),
+  list(var = "FlECO-AFL(mg/m^3)",   label = "FlECO-AFL (mg/m³)"),
+  list(var = "NO3(uM)",             label = "NO3 (µM)")
+)
+
+five_plot_list <- list()
+for (i in seq_along(five_vars)) {
+  ev <- five_vars[[i]]
+  five_plot_list[[i]] <- ggplot(df, aes(x = cluster11, y = .data[[ev$var]])) +
+    geom_boxplot(aes(fill = cluster11), outlier.shape = NA) +
+    geom_jitter(width = 0.3, size = 0.8, alpha = 0.5) +
+    scale_fill_manual(values = cc11, guide = "none") +
+    facet_grid(~ division, scales = "free_x", space = "free_x") +
+    labs(x = NULL, y = ev$label) +
+    theme_bw(base_size = 14) +
+    theme(strip.text  = element_text(face = "bold", size = 14),
+          axis.title  = element_text(size = 14),
+          axis.text.y = element_text(size = 11),
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 11))
+}
+
+print(gridExtra::grid.arrange(grobs = five_plot_list, ncol = 3))
+
 dev.off()
 
 message("  PDF: output/survey/beta_diversity/ASGARD_boxplots_11clusters.pdf")
