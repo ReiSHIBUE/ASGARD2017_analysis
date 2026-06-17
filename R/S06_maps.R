@@ -397,6 +397,66 @@ print(
           plot.title  = element_text(face = "bold", size = 16))
 )
 
+# Page 6: Per-division ASV community contribution × depth
+# サンプル別 RA 化 → 各ASVを「mean RAが最大のdivision」に割り当て
+# → 各サンプルの A/B/C 成分RA を depth × division でmap化
+mat_div <- sweep(asgard_filtered, 1, rowSums(asgard_filtered), "/")
+asv_division_assignment <- character(ncol(mat_div))
+names(asv_division_assignment) <- colnames(mat_div)
+asv_max_mean_d <- rep(-Inf, ncol(mat_div))
+for (d in c("A", "B", "C")) {
+  smp <- names(clusnum11)[substr(as.character(clusnum11), 1, 1) == d]
+  asv_mean_d <- colMeans(mat_div[smp, , drop = FALSE])
+  upd <- asv_mean_d > asv_max_mean_d
+  asv_division_assignment[upd] <- d
+  asv_max_mean_d[upd] <- asv_mean_d[upd]
+}
+asv_div_f <- factor(asv_division_assignment, levels = c("A", "B", "C"))
+n_asv_div <- table(asv_div_f)
+
+comp_RA_mat <- sapply(c("A", "B", "C"), function(d) {
+  rowSums(mat_div[, asv_div_f == d, drop = FALSE])
+})
+
+comp_df <- as.data.frame(comp_RA_mat) %>%
+  tibble::rownames_to_column("Sample") %>%
+  dplyr::mutate(cluster11  = factor(as.character(clusnum11[Sample]),
+                                    levels = hier_levels_11),
+                lat        = meta_asgard[Sample, "lat"],
+                lon        = meta_asgard[Sample, "lon"],
+                depth_type = meta_asgard[Sample, "depth_type"]) %>%
+  dplyr::filter(!is.na(lat), !is.na(lon), !is.na(depth_type)) %>%
+  tidyr::pivot_longer(c("A", "B", "C"),
+                      names_to = "Division", values_to = "RA") %>%
+  dplyr::mutate(RA_pct     = RA * 100,
+                Division   = factor(Division, levels = c("A", "B", "C")),
+                depth_type = factor(depth_type,
+                                    levels = c("surf", "mid", "bottom")))
+
+comp_df$Division_lab <- factor(
+  paste0("Division ", as.character(comp_df$Division),
+         " (", n_asv_div[as.character(comp_df$Division)], " ASVs)"),
+  levels = paste0("Division ", c("A", "B", "C"),
+                  " (", n_asv_div[c("A", "B", "C")], " ASVs)")
+)
+
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = comp_df,
+               aes(x = lon, y = lat,
+                   size = RA_pct, color = cluster11),
+               alpha = 0.75) +
+    scale_color_manual(values = cc11, name = "Cluster") +
+    scale_size_continuous(range = c(0.5, 8),
+                          name = "Component RA (%)",
+                          breaks = c(0, 25, 50, 75)) +
+    facet_grid(depth_type ~ Division_lab) +
+    labs(title = "Per-division ASV community contribution x depth type",
+         x = "Longitude", y = "Latitude") +
+    theme(strip.text = element_text(face = "bold", size = 13),
+          plot.title = element_text(face = "bold", size = 16))
+)
+
 dev.off()
 
 # ==============================================================================
@@ -431,6 +491,42 @@ print(as.data.frame(kw_results), row.names = FALSE)
 
 write.csv(kw_results,
   here::here("output", "survey", "maps", "assemblage_RA_depth_kruskal.csv"),
+  row.names = FALSE)
+
+# ==============================================================================
+# Section 8b: Kruskal-Wallis test: ASV-division component RA ~ depth_type
+# (Page 6 の数値検定。各サンプルにおける A/B/C 成分RAが depth で異なるか)
+# Bonferroni 補正: α = 0.05 / 3 = 0.0167
+# ==============================================================================
+
+div_kw_df <- comp_df %>%
+  dplyr::select(Sample, Division, RA_pct, depth_type)
+
+div_kw_results <- div_kw_df %>%
+  dplyr::group_by(Division) %>%
+  dplyr::summarise(
+    n_surf      = sum(depth_type == "surf"),
+    n_mid       = sum(depth_type == "mid"),
+    n_bottom    = sum(depth_type == "bottom"),
+    mean_surf   = round(mean(RA_pct[depth_type == "surf"]),   2),
+    mean_mid    = round(mean(RA_pct[depth_type == "mid"]),    2),
+    mean_bottom = round(mean(RA_pct[depth_type == "bottom"]), 2),
+    chi_sq      = round(kruskal.test(RA_pct ~ depth_type)$statistic, 3),
+    df          = kruskal.test(RA_pct ~ depth_type)$parameter,
+    p_value     = round(kruskal.test(RA_pct ~ depth_type)$p.value, 4),
+    .groups     = "drop"
+  ) %>%
+  dplyr::mutate(
+    bonferroni_alpha = 0.05 / 3,
+    sig_bonferroni   = ifelse(p_value < bonferroni_alpha, "*", "ns")
+  )
+
+cat("\n--- Kruskal-Wallis: ASV-division component RA ~ depth_type ---\n")
+cat("(Bonferroni alpha = 0.05/3 = 0.0167)\n")
+print(as.data.frame(div_kw_results), row.names = FALSE)
+
+write.csv(div_kw_results,
+  here::here("output", "survey", "maps", "division_componentRA_depth_kruskal.csv"),
   row.names = FALSE)
 
 # ==============================================================================
