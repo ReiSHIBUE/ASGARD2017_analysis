@@ -358,6 +358,45 @@ print(
           plot.title  = element_text(face = "bold", size = 16))
 )
 
+# Page 4: k=3 division (A / B / C) sample locations
+a_map$division3 <- factor(substr(as.character(a_map$cluster11), 1, 1),
+                          levels = c("A", "B", "C"))
+div3_n <- table(a_map$division3)
+a_map$division3_lab <- factor(
+  paste0(as.character(a_map$division3),
+         " (n=", div3_n[as.character(a_map$division3)], ")"),
+  levels = paste0(c("A", "B", "C"),
+                  " (n=", div3_n[c("A", "B", "C")], ")")
+)
+div3_colors <- c("A" = "#E31A1C", "B" = "#33A02C", "C" = "#1F78B4")
+
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = a_map,
+               aes(x = lon, y = lat, color = division3),
+               size = 2.5, alpha = 0.8) +
+    scale_color_manual(values = div3_colors, name = "Division") +
+    facet_wrap(~ division3_lab, nrow = 1) +
+    labs(title = "Sample locations by k=3 division (A / B / C)",
+         x = "Longitude", y = "Latitude") +
+    theme(strip.text  = element_text(face = "bold", size = 14),
+          plot.title  = element_text(face = "bold", size = 16))
+)
+
+# Page 5: k=3 division × depth_type grid
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = a_map,
+               aes(x = lon, y = lat, color = division3),
+               size = 2.5, alpha = 0.8) +
+    scale_color_manual(values = div3_colors, name = "Division") +
+    facet_grid(depth_type ~ division3_lab) +
+    labs(title = "Sample locations by k=3 division × depth type",
+         x = "Longitude", y = "Latitude") +
+    theme(strip.text  = element_text(face = "bold", size = 12),
+          plot.title  = element_text(face = "bold", size = 16))
+)
+
 dev.off()
 
 # ==============================================================================
