@@ -121,13 +121,14 @@ for (i in seq_along(selected_vars)) {
 
 print(gridExtra::grid.arrange(grobs = sel_plot_list, ncol = 2))
 
-# Combined page: 5 selected variables (temp, sal, DO, FlECO-AFL, NO3)
+# Combined page: 6 selected variables (temp, sal, DO, FlECO-AFL, NO3, depth)
 five_vars <- list(
   list(var = "temp",                 label = "Temperature (°C)"),
   list(var = "salinity",             label = "Salinity (PSU)"),
   list(var = "DO",                   label = "DO (µmol/kg)"),
   list(var = "FlECO-AFL(mg/m^3)",   label = "FlECO-AFL (mg/m³)"),
-  list(var = "NO3(uM)",             label = "NO3 (µM)")
+  list(var = "NO3(uM)",             label = "NO3 (µM)"),
+  list(var = "depth_m",              label = "Sampling depth (m)")
 )
 
 five_plot_list <- list()
