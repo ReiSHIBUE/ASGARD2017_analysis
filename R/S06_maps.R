@@ -434,9 +434,9 @@ comp_df <- as.data.frame(comp_RA_mat) %>%
                                     levels = c("surf", "mid", "bottom")))
 
 comp_df$Division_lab <- factor(
-  paste0("Division ", as.character(comp_df$Division),
+  paste0(as.character(comp_df$Division),
          " (", n_asv_div[as.character(comp_df$Division)], " ASVs)"),
-  levels = paste0("Division ", c("A", "B", "C"),
+  levels = paste0(c("A", "B", "C"),
                   " (", n_asv_div[c("A", "B", "C")], " ASVs)")
 )
 
@@ -447,14 +447,16 @@ print(
                    size = RA_pct, color = cluster11),
                alpha = 0.75) +
     scale_color_manual(values = cc11, name = "Cluster") +
-    scale_size_continuous(range = c(0.5, 8),
+    scale_size_continuous(range = c(0.5, 10),
                           name = "Component RA (%)",
                           breaks = c(0, 25, 50, 75)) +
     facet_grid(depth_type ~ Division_lab) +
-    labs(title = "Per-division ASV community contribution x depth type",
-         x = "Longitude", y = "Latitude") +
-    theme(strip.text = element_text(face = "bold", size = 13),
-          plot.title = element_text(face = "bold", size = 16))
+    labs(x = "Longitude", y = "Latitude") +
+    theme(strip.text   = element_text(face = "bold", size = 20),
+          axis.title   = element_text(size = 18),
+          axis.text    = element_text(size = 14),
+          legend.title = element_text(size = 17, face = "bold"),
+          legend.text  = element_text(size = 15))
 )
 
 dev.off()

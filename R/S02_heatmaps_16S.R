@@ -225,6 +225,38 @@ col_cluster_centers11 <- sapply(1:6, function(k) {
 names(col_cluster_centers11) <- as.character(1:6)
 nrow_h11 <- nrow(asgard_frtmat)
 
+# A/B/C (k=3) ラベル: 各サブツリーのルート merge 点の位置を計算
+hc_row3      <- as.hclust(h1$rowDendrogram)
+cuts3        <- cutree(hc_row3, k = 3)
+leaf_y3      <- setNames(seq_along(hc_row3$order), hc_row3$labels[hc_row3$order])
+leaves_below3 <- vector("list", nrow(hc_row3$merge))
+merge_y3     <- numeric(nrow(hc_row3$merge))
+for (i in seq_len(nrow(hc_row3$merge))) {
+  l <- hc_row3$merge[i, 1]; r <- hc_row3$merge[i, 2]
+  ll <- if (l < 0) -l else leaves_below3[[l]]
+  rr <- if (r < 0) -r else leaves_below3[[r]]
+  leaves_below3[[i]] <- c(ll, rr)
+  yl <- if (l < 0) leaf_y3[hc_row3$labels[-l]] else merge_y3[l]
+  yr <- if (r < 0) leaf_y3[hc_row3$labels[-r]] else merge_y3[r]
+  merge_y3[i] <- (yl + yr) / 2
+}
+abc_root_idx <- sapply(c("A", "B", "C"), function(lab) {
+  cid <- unique(cuts3[names(clusnum11)[substr(as.character(clusnum11), 1, 1) == lab]])
+  samples <- which(cuts3 == cid)
+  internal <- which(sapply(leaves_below3, function(s) all(s %in% samples)))
+  internal[which.max(hc_row3$height[internal])]
+})
+abc_root_h        <- setNames(hc_row3$height[abc_root_idx], c("A", "B", "C"))
+abc_root_y_real   <- setNames(merge_y3[abc_root_idx], c("A", "B", "C"))
+max_h3            <- max(hc_row3$height)
+abc_leaves_x      <- -40
+abc_root_x_lim    <- -190
+abc_root_x        <- abc_leaves_x + (abc_root_h / max_h3) * (abc_root_x_lim - abc_leaves_x)
+# A と B は同じ x に揃える（平均値）
+ab_mean_x         <- mean(abc_root_x[c("A", "B")])
+abc_root_x["A"]   <- ab_mean_x
+abc_root_x["B"]   <- ab_mean_x
+
 # 11クラスター版ヒートマップ
 pdf(file = here::here("output", "survey", "heatmaps", "ASGARD_hm_survey_16S_11clusters.pdf"),
     width = 20, height = 20)
@@ -289,6 +321,12 @@ heatmap.2(asgard_frtmat,
          col = col_text_cols,
          xpd = NA, adj = c(0.5, 0.5),
          cex = 3.5, font = 2)
+    # A / B / C ラベル（k=3 サブツリーのルート merge 点）
+    text(x = abc_root_x,
+         y = abc_root_y_real + 6,
+         labels = names(abc_root_y_real),
+         col = "black", xpd = NA, adj = c(0.5, 0.5),
+         cex = 6, font = 2)
   })
 
 # ASV名（列名）表示版 / With ASV names as column labels
