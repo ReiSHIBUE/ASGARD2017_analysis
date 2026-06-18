@@ -15,8 +15,8 @@
 ###   esv_zero_only            - 0.2 µm-absent ASVs with lat/lon/filter (78*52)
 ###
 ### OUTPUT:
-###   output/processing_map.pdf
-###   output/maps_pa.pdf
+###   output_p/processing_map.pdf
+###   output_p/maps_pa.pdf
 ###
 ### NOTE: requires ggmap (uses Stadia Maps). Set API key if needed:
 ###   ggmap::register_stadiamaps("YOUR_API_KEY")
@@ -58,7 +58,7 @@ a$cluster <- as.factor(clusnum_p)
 a$depth_type <- factor(a$depth_type, levels = c("surf", "mid", "bottom"))
 a <- a %>% filter(Sample != "BOX_6_26") # 77*48
 
-pdf(here::here("output", "maps", "processing_map.pdf"), width = 20, height = 20)
+pdf(here::here("output_p", "maps", "processing_map.pdf"), width = 20, height = 20)
 
 # クラスター × 水深で分割 / Faceted by depth and cluster
 map_plot_3 <- ggmap(mapz) +
@@ -104,7 +104,7 @@ esv <- asgard_processing_ggmap %>%
 esv_zero_only <- asgard_processing_ggmap %>%
   select(lat, lon, filter, any_of(zero_cols)) # 78*52
 
-pdf(here::here("output", "maps", "maps_pa.pdf"), width = 8, height = 6)
+pdf(here::here("output_p", "maps", "maps_pa.pdf"), width = 8, height = 6)
 
 asv_cols <- colnames(esv_zero_only)[4:ncol(esv_zero_only)]
 

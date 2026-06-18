@@ -111,7 +111,7 @@ p2 <- ggtern(data = ternary_prop_color2,
   theme_rotate(-90)
 
 # PDFに保存 / Save both ternary plots to PDF
-pdf(file = here::here("output", "ternary", "ternary_plots.pdf"), width = 8, height = 7)
+pdf(file = here::here("output_p", "ternary", "ternary_plots.pdf"), width = 8, height = 7)
 print(p1)
 print(p2)
 dev.off()

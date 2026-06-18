@@ -130,7 +130,7 @@ asgard_dbrda_merged_p$filter <- factor(
 clusnum_p_db <- clusnum_p[!names(clusnum_p) %in% c("BOX_6_6", "BOX_6_7", "BOX_6_26")]
 clusnum_p_db <- factor(clusnum_p_db, levels = c("1", "2", "3", "4")) # length 75
 
-pdf(file = here::here("output", "dbrda", "dbrda_ordination.pdf"), width = 10, height = 8)
+pdf(file = here::here("output_p", "dbrda", "dbrda_ordination.pdf"), width = 10, height = 8)
 
 # ggplot2 で db-RDA を描画 / Plot db-RDA in ggplot2
 print(ggplot() +
