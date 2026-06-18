@@ -162,6 +162,13 @@ mds2_pct <- round(prop_expl["MDS2"] * 100, 1)
 cap1_range <- range(asgard_dbrda_merged$CAP1) * 1.1
 cap2_range <- range(asgard_dbrda_merged$CAP2) * 1.1
 
+dbrda_theme <- theme_grey() + theme(
+  axis.title   = element_text(size = 18, face = "bold"),
+  axis.text    = element_text(size = 14),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text  = element_text(size = 14),
+  strip.text   = element_text(face = "bold", size = 16))
+
 print(ggplot() +
   geom_point(data = asgard_dbrda_merged,
              aes(x = CAP1, y = CAP2, color = cluster11, size = `NO3(uM)`),
@@ -174,13 +181,11 @@ print(ggplot() +
                color = "black", linewidth = 1) +
   geom_text(data = asgard_dbrda_vectors,
             aes(x = CAP1 * 1.15, y = CAP2 * 1.15, label = label),
-            size = 5, fontface = "bold") +
+            size = 6, fontface = "bold") +
   coord_cartesian(xlim = cap1_range, ylim = cap2_range) +
   labs(x = paste0("CAP1 (", cap1_pct, "%)"),
-       y = paste0("CAP2 (", cap2_pct, "%)"),
-       title = "dbRDA CAP axes (11 clusters)") +
-  theme_grey() +
-  theme(plot.title = element_text(face = "bold", size = 16)))
+       y = paste0("CAP2 (", cap2_pct, "%)")) +
+  dbrda_theme)
 
 # Page 2: CAP axes faceted by Division
 print(ggplot() +
@@ -192,11 +197,8 @@ print(ggplot() +
   facet_grid(~ division) +
   coord_cartesian(xlim = cap1_range, ylim = cap2_range) +
   labs(x = paste0("CAP1 (", cap1_pct, "%)"),
-       y = paste0("CAP2 (", cap2_pct, "%)"),
-       title = "dbRDA CAP axes (by Division A/B/C)") +
-  theme_grey() +
-  theme(plot.title = element_text(face = "bold", size = 16),
-        strip.text = element_text(face = "bold", size = 14)))
+       y = paste0("CAP2 (", cap2_pct, "%)")) +
+  dbrda_theme)
 
 # Page 3: MDS axes (unconstrained)
 mds1_range <- range(asgard_dbrda_merged$MDS1) * 1.1
@@ -210,10 +212,8 @@ print(ggplot() +
   scale_size_continuous(range = c(1, 6), name = "NO3 (uM)") +
   coord_cartesian(xlim = mds1_range, ylim = mds2_range) +
   labs(x = paste0("MDS1 (", mds1_pct, "%)"),
-       y = paste0("MDS2 (", mds2_pct, "%)"),
-       title = "dbRDA MDS axes (11 clusters)") +
-  theme_grey() +
-  theme(plot.title = element_text(face = "bold", size = 16)))
+       y = paste0("MDS2 (", mds2_pct, "%)")) +
+  dbrda_theme)
 
 # Page 4: MDS axes faceted by Division
 print(ggplot() +
@@ -225,11 +225,8 @@ print(ggplot() +
   facet_grid(~ division) +
   coord_cartesian(xlim = mds1_range, ylim = mds2_range) +
   labs(x = paste0("MDS1 (", mds1_pct, "%)"),
-       y = paste0("MDS2 (", mds2_pct, "%)"),
-       title = "dbRDA MDS axes (by Division A/B/C)") +
-  theme_grey() +
-  theme(plot.title = element_text(face = "bold", size = 16),
-        strip.text = element_text(face = "bold", size = 14)))
+       y = paste0("MDS2 (", mds2_pct, "%)")) +
+  dbrda_theme)
 
 dev.off()
 

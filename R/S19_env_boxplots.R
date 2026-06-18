@@ -200,6 +200,13 @@ pdf(file = here::here("output", "survey", "beta_diversity",
                        "ASGARD_bloom_autotrophy_index_11clusters.pdf"),
     width = 14, height = 6)
 
+bloom_theme <- theme_bw() + theme(
+  axis.title   = element_text(size = 18, face = "bold"),
+  axis.text    = element_text(size = 14),
+  strip.text   = element_text(face = "bold", size = 16),
+  legend.title = element_text(size = 14, face = "bold"),
+  legend.text  = element_text(size = 12))
+
 # Page 1: Bloom Index boxplot
 print(
   ggplot(pca_scores, aes(x = cluster11, y = bloom_index)) +
@@ -208,10 +215,8 @@ print(
     scale_fill_manual(values = cc11, guide = "none") +
     scale_color_manual(values = cc11, guide = "none") +
     facet_grid(~ division, scales = "free_x", space = "free_x") +
-    labs(title = "Bloom Index by Cluster (rescaled PC1)",
-         x = "Cluster", y = "Bloom Index (0 = pre-bloom, 1 = post-bloom)") +
-    theme_bw() + theme(text = element_text(size = 13),
-                        strip.text = element_text(face = "bold", size = 14))
+    labs(x = "Cluster", y = "Bloom Index (0 = pre-bloom, 1 = post-bloom)") +
+    bloom_theme
 )
 
 # Page 2: Autotrophy Index boxplot
@@ -222,10 +227,8 @@ print(
     scale_fill_manual(values = cc11, guide = "none") +
     scale_color_manual(values = cc11, guide = "none") +
     facet_grid(~ division, scales = "free_x", space = "free_x") +
-    labs(title = "Autotrophy Index by Cluster (rescaled PC2)",
-         x = "Cluster", y = "Autotrophy Index (0 = low, 1 = high)") +
-    theme_bw() + theme(text = element_text(size = 13),
-                        strip.text = element_text(face = "bold", size = 14))
+    labs(x = "Cluster", y = "Autotrophy Index (0 = low, 1 = high)") +
+    bloom_theme
 )
 
 # Pages 3+: Environmental variables with dot size = Bloom/Autotrophy Index
@@ -237,10 +240,8 @@ for (ev in env_plot_vars) {
     scale_color_manual(values = cc11, guide = "none") +
     scale_size_continuous(name = "Bloom\nIndex", range = c(0.5, 4)) +
     facet_grid(~ division, scales = "free_x", space = "free_x") +
-    labs(title = paste(ev$label, "-- dot size: Bloom Index"),
-         x = "Cluster", y = ev$label) +
-    theme_bw() + theme(text = element_text(size = 12),
-                        strip.text = element_text(face = "bold", size = 13))
+    labs(x = "Cluster", y = ev$label) +
+    bloom_theme
 
   p_auto <- ggplot(pca_scores, aes(x = cluster11, y = .data[[ev$var]])) +
     geom_boxplot(aes(fill = cluster11), outlier.shape = NA, alpha = 0.5) +
@@ -249,10 +250,8 @@ for (ev in env_plot_vars) {
     scale_color_manual(values = cc11, guide = "none") +
     scale_size_continuous(name = "Autotrophy\nIndex", range = c(0.5, 4)) +
     facet_grid(~ division, scales = "free_x", space = "free_x") +
-    labs(title = paste(ev$label, "-- dot size: Autotrophy Index"),
-         x = "Cluster", y = ev$label) +
-    theme_bw() + theme(text = element_text(size = 12),
-                        strip.text = element_text(face = "bold", size = 13))
+    labs(x = "Cluster", y = ev$label) +
+    bloom_theme
 
   print(grid.arrange(p_bloom, p_auto, ncol = 1))
 }

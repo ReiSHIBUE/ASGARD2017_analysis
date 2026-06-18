@@ -92,13 +92,13 @@ print(
     scale_color_manual(values = cc11, labels = clbl_ts) +
     coord_cartesian(xlim = c(24, 35.5), ylim = c(-2.5, 13)) +
     labs(x = "Salinity", y = "Potential Temperature (\u00B0C)",
-         title = "T-S Diagram \u2014 ASGARD 2017 Survey (11 clusters)",
-         subtitle = "Water mass boxes: Danielson et al. (2020)",
          color = "Cluster") +
-    theme_bw(base_size = 14) +
+    theme_bw(base_size = 18) +
     theme(
-      plot.title    = element_text(face = "bold", size = 18),
-      plot.subtitle = element_text(size = 13),
+      axis.title    = element_text(size = 20, face = "bold"),
+      axis.text     = element_text(size = 15),
+      legend.title  = element_text(size = 17, face = "bold"),
+      legend.text   = element_text(size = 14),
       legend.position      = c(0.01, 0.99),
       legend.justification = c(0, 1),
       legend.background    = element_rect(fill = alpha("white", 0.9))
@@ -127,14 +127,12 @@ print(
     scale_color_manual(values = cc11, guide = "none") +
     facet_wrap(~ cluster11, ncol = 4) +
     coord_cartesian(xlim = c(24, 35.5), ylim = c(-2.5, 13)) +
-    labs(x = "Salinity", y = "Potential Temperature (\u00B0C)",
-         title = "T-S Diagram by Cluster \u2014 ASGARD 2017 Survey",
-         subtitle = "Water mass boxes: Danielson et al. (2020)") +
-    theme_bw(base_size = 12) +
+    labs(x = "Salinity", y = "Potential Temperature (\u00B0C)") +
+    theme_bw(base_size = 15) +
     theme(
-      plot.title    = element_text(face = "bold", size = 16),
-      plot.subtitle = element_text(size = 11),
-      strip.text    = element_text(face = "bold", size = 12)
+      axis.title    = element_text(size = 18, face = "bold"),
+      axis.text     = element_text(size = 13),
+      strip.text    = element_text(face = "bold", size = 16)
     )
 )
 
