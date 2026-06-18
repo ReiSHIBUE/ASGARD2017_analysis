@@ -125,8 +125,115 @@ write.csv(env_summary,
                "processing_cluster_env_summary.csv"),
           row.names = FALSE)
 
+# ==============================================================================
+# Section 6: PERMANOVA + PERMDISP (overall + pairwise) on k=4 clusters
+# Bray–Curtis on fourth-root proportions, 999 permutations
+# ==============================================================================
+
+library(vegan)
+
+cluster_p <- factor(clusnum_p[rownames(asgard_filtered_p_hm2)],
+                    levels = c("1", "2", "3", "4"))
+bray_p    <- vegdist((asgard_filtered_p_hm2) ^ 0.25, method = "bray")
+
+set.seed(42)
+
+# --- Overall PERMANOVA ---
+overall_perm <- adonis2(bray_p ~ cluster_p, permutations = 999)
+overall_perm_df <- data.frame(
+  term     = rownames(overall_perm),
+  Df       = overall_perm$Df,
+  SumOfSqs = round(overall_perm$SumOfSqs, 4),
+  R2       = round(overall_perm$R2, 4),
+  F        = round(overall_perm$F, 3),
+  p_value  = overall_perm$`Pr(>F)`
+)
+write.csv(overall_perm_df,
+          here("output_p", "cluster_summary",
+               "processing_permanova_overall.csv"),
+          row.names = FALSE)
+
+# --- Overall PERMDISP ---
+overall_disp <- betadisper(bray_p, group = cluster_p)
+disp_anova   <- anova(overall_disp)
+overall_disp_df <- data.frame(
+  term     = rownames(disp_anova),
+  Df       = disp_anova$Df,
+  SumSq    = round(disp_anova$`Sum Sq`, 4),
+  MeanSq   = round(disp_anova$`Mean Sq`, 4),
+  F        = round(disp_anova$`F value`, 3),
+  p_value  = disp_anova$`Pr(>F)`
+)
+write.csv(overall_disp_df,
+          here("output_p", "cluster_summary",
+               "processing_permdisp_overall.csv"),
+          row.names = FALSE)
+
+# --- Pairwise PERMANOVA (6 pairs) ---
+cl_levels  <- levels(cluster_p)
+pairs_p    <- combn(cl_levels, 2)
+pairwise_perm <- data.frame(pair = character(), F = numeric(),
+                            R2 = numeric(), p_value = numeric())
+mat_bray_p <- as.matrix(bray_p)
+
+for (i in seq_len(ncol(pairs_p))) {
+  a <- pairs_p[1, i]; b <- pairs_p[2, i]
+  smp <- names(cluster_p)[cluster_p %in% c(a, b)]
+  d   <- as.dist(mat_bray_p[smp, smp])
+  g   <- droplevels(cluster_p[smp])
+  res <- adonis2(d ~ g, permutations = 999)
+  pairwise_perm <- rbind(pairwise_perm, data.frame(
+    pair    = paste0(a, " vs ", b),
+    F       = round(res$F[1], 3),
+    R2      = round(res$R2[1], 4),
+    p_value = res$`Pr(>F)`[1]
+  ))
+}
+pairwise_perm$p_adj_BH <- round(p.adjust(pairwise_perm$p_value, "BH"), 4)
+pairwise_perm$sig <- ifelse(pairwise_perm$p_adj_BH <= 0.001, "***",
+                     ifelse(pairwise_perm$p_adj_BH <= 0.01,  "**",
+                     ifelse(pairwise_perm$p_adj_BH <= 0.05,  "*", "ns")))
+write.csv(pairwise_perm,
+          here("output_p", "cluster_summary",
+               "processing_permanova_pairwise.csv"),
+          row.names = FALSE)
+
+# --- Pairwise PERMDISP (TukeyHSD on betadisper) ---
+tk_disp <- TukeyHSD(overall_disp)
+pairwise_disp <- as.data.frame(tk_disp$group)
+pairwise_disp$pair <- rownames(pairwise_disp)
+pairwise_disp <- pairwise_disp[, c("pair", "diff", "lwr", "upr", "p adj")]
+colnames(pairwise_disp) <- c("pair", "diff_dispersion",
+                             "CI_lower", "CI_upper", "p_adj")
+pairwise_disp$diff_dispersion <- round(pairwise_disp$diff_dispersion, 4)
+pairwise_disp$CI_lower        <- round(pairwise_disp$CI_lower, 4)
+pairwise_disp$CI_upper        <- round(pairwise_disp$CI_upper, 4)
+pairwise_disp$p_adj           <- round(pairwise_disp$p_adj, 4)
+pairwise_disp$sig <- ifelse(pairwise_disp$p_adj <= 0.001, "***",
+                     ifelse(pairwise_disp$p_adj <= 0.01,  "**",
+                     ifelse(pairwise_disp$p_adj <= 0.05,  "*", "ns")))
+write.csv(pairwise_disp,
+          here("output_p", "cluster_summary",
+               "processing_permdisp_pairwise.csv"),
+          row.names = FALSE)
+
+message("\n--- PERMANOVA / PERMDISP ---")
+message(sprintf("Overall PERMANOVA: F = %.2f, R2 = %.3f, p = %.4f",
+                overall_perm_df$F[1], overall_perm_df$R2[1],
+                overall_perm_df$p_value[1]))
+message(sprintf("Overall PERMDISP:  F = %.2f, p = %.4f",
+                overall_disp_df$F[1], overall_disp_df$p_value[1]))
+message(sprintf("Pairwise PERMANOVA sig (BH<0.05): %d / %d",
+                sum(pairwise_perm$sig != "ns"), nrow(pairwise_perm)))
+message(sprintf("Pairwise PERMDISP sig  (Tukey<0.05): %d / %d",
+                sum(pairwise_disp$sig != "ns"), nrow(pairwise_disp)))
+
 message("\nP09_cluster_summary.R: done.")
 message("  CSV: output_p/cluster_summary/processing_cluster_summary.csv")
 message("  CSV: output_p/cluster_summary/processing_cluster_stations_long.csv")
 message("  CSV: output_p/cluster_summary/processing_cluster_x_station_counts.csv")
 message("  CSV: output_p/cluster_summary/processing_cluster_env_summary.csv")
+message("  CSV: output_p/cluster_summary/processing_permanova_overall.csv")
+message("  CSV: output_p/cluster_summary/processing_permdisp_overall.csv")
+message("  CSV: output_p/cluster_summary/processing_permanova_pairwise.csv")
+message("  CSV: output_p/cluster_summary/processing_permdisp_pairwise.csv")
