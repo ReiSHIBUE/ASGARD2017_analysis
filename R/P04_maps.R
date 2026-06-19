@@ -154,6 +154,52 @@ cc_d2  <- c("Free-living" = "#E41A1C",
             "Particle-associated" = "#377EB8")
 
 # ==============================================================================
+# Section 4b: Hero overview maps (no station labels) — supplementary figure
+# Page 2 title intentionally removed for slide / manuscript use
+# ==============================================================================
+
+pdf(here::here("output_p", "maps",
+               "ASGARD_processing_map_4clusters.pdf"),
+    width = 16, height = 12)
+
+# Page 1: Full map, all clusters
+print(
+  ggmap(mapz) +
+    geom_point(data = a_map_p,
+               aes(x = lon, y = lat, color = cluster),
+               size = 3, alpha = 0.7) +
+    scale_color_manual(values = cc_p, labels = clbl_p) +
+    labs(title = "ASGARD 2017 Processing - 4 clusters", color = NULL) +
+    theme(plot.title  = element_text(face = "bold", size = 16),
+          legend.text = element_text(size = 11))
+)
+
+# Page 2: Faceted by cluster (no title)
+print(
+  ggmap(mapz) +
+    geom_point(data = a_map_p,
+               aes(x = lon, y = lat, color = cluster),
+               size = 2.5, alpha = 0.8) +
+    scale_color_manual(values = cc_p, guide = "none") +
+    facet_wrap(~ cluster, ncol = 4) +
+    theme(strip.text = element_text(face = "bold", size = 13))
+)
+
+# Page 3: k=2 division (Free-living vs Particle-associated)
+print(
+  ggmap(mapz) +
+    geom_point(data = a_map_p,
+               aes(x = lon, y = lat, color = division2),
+               size = 3, alpha = 0.7) +
+    scale_color_manual(values = cc_d2, labels = clbl_d2) +
+    facet_wrap(~ division2) +
+    labs(color = NULL) +
+    theme(strip.text = element_text(face = "bold", size = 13))
+)
+
+dev.off()
+
+# ==============================================================================
 # Section 5: Detail maps (station labels + depth facets) — main paper figure
 # ==============================================================================
 
