@@ -95,7 +95,7 @@ print(
     scale_color_manual(values = cc11, labels = clbl) +
     geom_text_repel(data = a_map, aes(x = lon, y = lat, label = station),
                     size = 3, max.overlaps = 20, alpha = 0.8) +
-    labs(title = "ASGARD 2017 Survey - 11 clusters", color = NULL) +
+    labs(color = NULL) +
     detail_theme
 )
 
@@ -107,7 +107,7 @@ print(
     geom_text_repel(data = a_map, aes(x = lon, y = lat, label = station),
                     size = 2.5, max.overlaps = 15, alpha = 0.7) +
     facet_wrap(~ depth_type) +
-    labs(title = "ASGARD 2017 Survey - 11 clusters by depth type", color = NULL) +
+    labs(color = NULL) +
     detail_theme
 )
 
@@ -117,7 +117,6 @@ print(
     geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 2.5, alpha = 0.8) +
     scale_color_manual(values = cc11, guide = "none") +
     facet_wrap(~ cluster11, ncol = 4) +
-    labs(title = "ASGARD 2017 Survey - 11 clusters (faceted)") +
     detail_theme
 )
 
@@ -127,7 +126,6 @@ print(
     geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 2, alpha = 0.8) +
     scale_color_manual(values = cc11, guide = "none") +
     facet_grid(depth_type ~ cluster11) +
-    labs(title = "ASGARD 2017 Survey - depth type x cluster") +
     detail_theme + theme(strip.text = element_text(face = "bold", size = 13))
 )
 
