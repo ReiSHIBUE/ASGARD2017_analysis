@@ -102,12 +102,26 @@ for (v in log_vars_p) env_mat_p[[v]] <- log1p(env_mat_p[[v]])
 env_scaled_p <- scale(env_mat_p)
 
 pca_p <- prcomp(env_scaled_p, center = FALSE, scale. = FALSE)
+
+# PCA sign is arbitrary; align orientation so the indices have the same meaning
+# as in the survey pipeline (S19):
+#   PC1: nutrient axis -- want NO3 loading > 0 so 1 - rescale(PC1) = post-bloom
+#   PC2: autotrophy axis -- want FlECO loading > 0 so rescale(PC2) = high autotrophy
+if (pca_p$rotation["NO3(uM)", "PC1"] < 0) {
+  pca_p$rotation[, "PC1"] <- -pca_p$rotation[, "PC1"]
+  pca_p$x[, "PC1"]        <- -pca_p$x[, "PC1"]
+}
+if (pca_p$rotation["FlECO-AFL(mg/m^3)", "PC2"] < 0) {
+  pca_p$rotation[, "PC2"] <- -pca_p$rotation[, "PC2"]
+  pca_p$x[, "PC2"]        <- -pca_p$x[, "PC2"]
+}
+
 pca_scores_p <- as.data.frame(pca_p$x)
 pca_scores_p$cluster   <- env_p_complete$cluster
 pca_scores_p$sample_id <- env_p_complete$sample_id
 
-# Inspect PC1 loadings: ensure direction such that high score = high nutrients
-# (pre-bloom). Bloom Index = 1 - rescale(PC1); Autotrophy Index = rescale(PC2)
+# Bloom Index = 1 - rescale(PC1)   (0 = pre-bloom, 1 = post-bloom)
+# Autotrophy Index = rescale(PC2)  (0 = low, 1 = high)
 rescale01 <- function(x) (x - min(x)) / (max(x) - min(x))
 pca_scores_p$bloom_index      <- 1 - rescale01(pca_scores_p$PC1)
 pca_scores_p$autotrophy_index <- rescale01(pca_scores_p$PC2)
