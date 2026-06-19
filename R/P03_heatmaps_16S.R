@@ -141,6 +141,48 @@ cluster_centers_p <- sapply(c("1", "2", "3", "4"), function(cn) {
 })
 nrow_h_p <- nrow(asgard_filtered_p_hm2)
 
+# k=2 サブツリーのルート merge 点位置 (Free-living vs Particle-associated)
+hc_row2_p     <- as.hclust(h3$rowDendrogram)
+cuts2_p       <- cutree(hc_row2_p, k = 2)
+leaf_y2_p     <- setNames(seq_along(hc_row2_p$order),
+                          hc_row2_p$labels[hc_row2_p$order])
+leaves_below2_p <- vector("list", nrow(hc_row2_p$merge))
+merge_y2_p    <- numeric(nrow(hc_row2_p$merge))
+for (i in seq_len(nrow(hc_row2_p$merge))) {
+  l <- hc_row2_p$merge[i, 1]; r <- hc_row2_p$merge[i, 2]
+  ll <- if (l < 0) -l else leaves_below2_p[[l]]
+  rr <- if (r < 0) -r else leaves_below2_p[[r]]
+  leaves_below2_p[[i]] <- c(ll, rr)
+  yl <- if (l < 0) leaf_y2_p[hc_row2_p$labels[-l]] else merge_y2_p[l]
+  yr <- if (r < 0) leaf_y2_p[hc_row2_p$labels[-r]] else merge_y2_p[r]
+  merge_y2_p[i] <- (yl + yr) / 2
+}
+
+# Cluster 1 → "Free-living", Cluster 2-4 → "Particle-associated"
+fl_samples <- names(clusnum_p)[clusnum_p == 1]
+pa_samples <- names(clusnum_p)[clusnum_p != 1]
+fl_cid <- unique(cuts2_p[fl_samples])
+pa_cid <- unique(cuts2_p[pa_samples])
+
+get_root_idx_p <- function(cid) {
+  ss <- which(cuts2_p == cid)
+  internal <- which(sapply(leaves_below2_p, function(s) all(s %in% ss)))
+  internal[which.max(hc_row2_p$height[internal])]
+}
+fl_root_idx <- get_root_idx_p(fl_cid)
+pa_root_idx <- get_root_idx_p(pa_cid)
+
+fl_root_h <- hc_row2_p$height[fl_root_idx]
+pa_root_h <- hc_row2_p$height[pa_root_idx]
+fl_root_y <- merge_y2_p[fl_root_idx]
+pa_root_y <- merge_y2_p[pa_root_idx]
+
+max_h2_p   <- max(hc_row2_p$height)
+leaves_x_p <- -25
+root_x_p   <- -150
+fl_root_x  <- leaves_x_p + (fl_root_h / max_h2_p) * (root_x_p - leaves_x_p)
+pa_root_x  <- leaves_x_p + (pa_root_h / max_h2_p) * (root_x_p - leaves_x_p)
+
 heatmap.2(
   (asgard_filtered_p_hm2)^.25,
   distfun   = function(x) vegdist(x, method = "bray"),
@@ -162,6 +204,13 @@ heatmap.2(
          labels = names(cluster_centers_p),
          col = "white",
          xpd = NA, adj = c(0.5, 0.5),
+         srt = 90,
+         cex = 3.5, font = 2)
+    # k=2 サブツリーのルートに Free-living / Particle-associated を縦書き
+    text(x = c(fl_root_x, pa_root_x),
+         y = c(fl_root_y, pa_root_y),
+         labels = c("Free-living", "Particle-associated"),
+         col = "black", xpd = NA, adj = c(0.5, 0.5),
          srt = 90,
          cex = 3.5, font = 2)
   }
