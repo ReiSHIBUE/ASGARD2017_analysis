@@ -127,4 +127,138 @@ for (asv in asv_cols) {
 
 dev.off()
 
-message("04_maps.R: done. PDFs written: processing_map.pdf, maps_pa.pdf.")
+# ==============================================================================
+# Section 4: S06-style hero maps (overall + faceted) — 4-cluster main figure
+# ==============================================================================
+
+a_map_p <- meta_asgard_p2
+a_map_p$cluster    <- factor(as.character(clusnum_p[rownames(a_map_p)]),
+                             levels = c("1", "2", "3", "4"))
+a_map_p$depth_type <- factor(a_map_p$depth_type,
+                             levels = c("surf", "mid", "bottom"))
+a_map_p$division2  <- factor(ifelse(a_map_p$cluster == "1",
+                                    "Free-living", "Particle-associated"),
+                             levels = c("Free-living", "Particle-associated"))
+a_map_p <- a_map_p[!is.na(a_map_p$lat) & !is.na(a_map_p$lon), ]
+
+n_per_p     <- table(a_map_p$cluster)
+clbl_p      <- paste0(names(n_per_p), " (n=", n_per_p, ")")
+names(clbl_p) <- names(n_per_p)
+n_per_d2    <- table(a_map_p$division2)
+clbl_d2     <- paste0(names(n_per_d2), " (n=", n_per_d2, ")")
+names(clbl_d2) <- names(n_per_d2)
+
+cc_p   <- c("1" = "#E41A1C", "2" = "#377EB8",
+            "3" = "#4DAF4A", "4" = "#984EA3")
+cc_d2  <- c("Free-living" = "#E41A1C",
+            "Particle-associated" = "#377EB8")
+
+pdf(here::here("output_p", "maps",
+               "ASGARD_processing_map_4clusters.pdf"),
+    width = 16, height = 12)
+
+# Page 1: Full map, all clusters
+print(
+  ggmap(mapz) +
+    geom_point(data = a_map_p,
+               aes(x = lon, y = lat, color = cluster),
+               size = 3, alpha = 0.7) +
+    scale_color_manual(values = cc_p, labels = clbl_p) +
+    labs(title = "ASGARD 2017 Processing - 4 clusters", color = NULL) +
+    theme(plot.title  = element_text(face = "bold", size = 16),
+          legend.text = element_text(size = 11))
+)
+
+# Page 2: Faceted by cluster
+print(
+  ggmap(mapz) +
+    geom_point(data = a_map_p,
+               aes(x = lon, y = lat, color = cluster),
+               size = 2.5, alpha = 0.8) +
+    scale_color_manual(values = cc_p, guide = "none") +
+    facet_wrap(~ cluster, ncol = 4) +
+    labs(title = "ASGARD 2017 Processing - 4 clusters (faceted)") +
+    theme(plot.title = element_text(face = "bold", size = 16),
+          strip.text = element_text(face = "bold", size = 13))
+)
+
+# Page 3: k=2 division (Free-living vs Particle-associated)
+print(
+  ggmap(mapz) +
+    geom_point(data = a_map_p,
+               aes(x = lon, y = lat, color = division2),
+               size = 3, alpha = 0.7) +
+    scale_color_manual(values = cc_d2, labels = clbl_d2) +
+    facet_wrap(~ division2) +
+    labs(title = "ASGARD 2017 Processing - Free-living vs Particle-associated",
+         color = NULL) +
+    theme(plot.title  = element_text(face = "bold", size = 16),
+          strip.text  = element_text(face = "bold", size = 13))
+)
+
+dev.off()
+
+# ==============================================================================
+# Section 5: Detail maps (station labels + depth facets)
+# ==============================================================================
+
+pdf(here::here("output_p", "maps",
+               "ASGARD_processing_map_4clusters_detail.pdf"),
+    width = 20, height = 20)
+
+detail_theme_p <- theme(
+  plot.title   = element_text(face = "bold", size = 20),
+  axis.title   = element_text(size = 18, face = "bold"),
+  axis.text    = element_text(size = 14),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text  = element_text(size = 14),
+  strip.text   = element_text(face = "bold", size = 18))
+
+# With station labels
+print(
+  ggmap(mapz) +
+    geom_point(data = a_map_p,
+               aes(x = lon, y = lat, color = cluster),
+               size = 3.5, alpha = 0.7) +
+    scale_color_manual(values = cc_p, labels = clbl_p) +
+    geom_text_repel(data = a_map_p, aes(x = lon, y = lat, label = station),
+                    size = 3, max.overlaps = 20, alpha = 0.8) +
+    labs(title = "ASGARD 2017 Processing - 4 clusters", color = NULL) +
+    detail_theme_p
+)
+
+# By depth_type
+print(
+  ggmap(mapz) +
+    geom_point(data = a_map_p,
+               aes(x = lon, y = lat, color = cluster),
+               size = 3, alpha = 0.7) +
+    scale_color_manual(values = cc_p, labels = clbl_p) +
+    geom_text_repel(data = a_map_p, aes(x = lon, y = lat, label = station),
+                    size = 2.5, max.overlaps = 15, alpha = 0.7) +
+    facet_wrap(~ depth_type) +
+    labs(title = "ASGARD 2017 Processing - 4 clusters by depth type",
+         color = NULL) +
+    detail_theme_p
+)
+
+# depth_type x cluster grid
+print(
+  ggmap(mapz) +
+    geom_point(data = a_map_p,
+               aes(x = lon, y = lat, color = cluster),
+               size = 2, alpha = 0.8) +
+    scale_color_manual(values = cc_p, guide = "none") +
+    facet_grid(depth_type ~ cluster) +
+    labs(title = "ASGARD 2017 Processing - depth type x cluster") +
+    detail_theme_p +
+    theme(strip.text = element_text(face = "bold", size = 13))
+)
+
+dev.off()
+
+message("04_maps.R: done. PDFs written:")
+message("  output_p/maps/processing_map.pdf (legacy)")
+message("  output_p/maps/maps_pa.pdf (per-ASV PA maps)")
+message("  output_p/maps/ASGARD_processing_map_4clusters.pdf (S06-style hero)")
+message("  output_p/maps/ASGARD_processing_map_4clusters_detail.pdf (S06-style detail)")
