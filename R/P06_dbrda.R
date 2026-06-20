@@ -175,4 +175,116 @@ plot(x   = a_env$salinity,
 
 dev.off()
 
+# ==============================================================================
+# Section 7: S05-style 4-page db-RDA PDF (CAP and MDS, all and by division)
+# ==============================================================================
+
+# Add cluster and k=2 division columns to merged df
+asgard_dbrda_merged_p$cluster  <- factor(
+  as.character(clusnum_p_db), levels = c("1", "2", "3", "4"))
+asgard_dbrda_merged_p$division <- factor(
+  ifelse(asgard_dbrda_merged_p$cluster == "1",
+         "Free-living", "Particle-associated"),
+  levels = c("Free-living", "Particle-associated"))
+
+cc_p_db <- c("1" = "#E41A1C", "2" = "#377EB8",
+             "3" = "#4DAF4A", "4" = "#984EA3")
+
+# Friendly axis labels with % variance
+cap_pct1 <- round(asgard_dbrda_model_p$CCA$eig[1] /
+                  sum(asgard_dbrda_model_p$CCA$eig) * 100, 1)
+cap_pct2 <- round(asgard_dbrda_model_p$CCA$eig[2] /
+                  sum(asgard_dbrda_model_p$CCA$eig) * 100, 1)
+mds_pct1 <- round(asgard_dbrda_model_p$CA$eig[1] /
+                  sum(asgard_dbrda_model_p$CA$eig) * 100, 1)
+mds_pct2 <- round(asgard_dbrda_model_p$CA$eig[2] /
+                  sum(asgard_dbrda_model_p$CA$eig) * 100, 1)
+
+dbrda_theme <- theme_grey() + theme(
+  axis.title   = element_text(size = 18, face = "bold"),
+  axis.text    = element_text(size = 14),
+  legend.title = element_text(size = 16, face = "bold"),
+  legend.text  = element_text(size = 14),
+  strip.text   = element_text(face = "bold", size = 16))
+
+cap1_range <- range(asgard_dbrda_merged_p$CAP1) * 1.1
+cap2_range <- range(asgard_dbrda_merged_p$CAP2) * 1.1
+mds1_range <- range(asgard_dbrda_merged_p$MDS1) * 1.1
+mds2_range <- range(asgard_dbrda_merged_p$MDS2) * 1.1
+
+pdf(file = here::here("output_p", "dbrda",
+                      "ASGARD_dbrda_processing_4clusters.pdf"),
+    width = 12, height = 9)
+
+# Page 1: CAP axes (constrained) all clusters
+print(ggplot() +
+  geom_point(data = asgard_dbrda_merged_p,
+             aes(x = CAP1, y = CAP2, color = cluster, size = `NO3(uM)`),
+             alpha = 0.7) +
+  scale_color_manual(values = cc_p_db, name = "Cluster") +
+  scale_size_continuous(range = c(1, 6), name = "NO3 (z)") +
+  geom_segment(data = asgard_dbrda_vectors_p,
+               aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               arrow = arrow(length = unit(0.2, "cm")),
+               color = "black", linewidth = 1) +
+  geom_text(data = asgard_dbrda_vectors_p,
+            aes(x = CAP1 * 1.15, y = CAP2 * 1.15, label = Variable),
+            size = 6, fontface = "bold") +
+  coord_cartesian(xlim = cap1_range, ylim = cap2_range) +
+  labs(x = paste0("CAP1 (", cap_pct1, "%)"),
+       y = paste0("CAP2 (", cap_pct2, "%)")) +
+  dbrda_theme)
+
+# Page 2: CAP axes faceted by division
+print(ggplot() +
+  geom_point(data = asgard_dbrda_merged_p,
+             aes(x = CAP1, y = CAP2, color = cluster, size = `NO3(uM)`),
+             alpha = 0.7) +
+  scale_color_manual(values = cc_p_db, name = "Cluster") +
+  scale_size_continuous(range = c(1, 6), name = "NO3 (z)") +
+  facet_grid(~ division) +
+  coord_cartesian(xlim = cap1_range, ylim = cap2_range) +
+  labs(x = paste0("CAP1 (", cap_pct1, "%)"),
+       y = paste0("CAP2 (", cap_pct2, "%)")) +
+  dbrda_theme)
+
+# Page 3: MDS axes (unconstrained) all clusters
+print(ggplot() +
+  geom_point(data = asgard_dbrda_merged_p,
+             aes(x = MDS1, y = MDS2, color = cluster, size = `NO3(uM)`),
+             alpha = 0.7) +
+  scale_color_manual(values = cc_p_db, name = "Cluster") +
+  scale_size_continuous(range = c(1, 6), name = "NO3 (z)") +
+  coord_cartesian(xlim = mds1_range, ylim = mds2_range) +
+  labs(x = paste0("MDS1 (", mds_pct1, "%)"),
+       y = paste0("MDS2 (", mds_pct2, "%)")) +
+  dbrda_theme)
+
+# Page 4: MDS axes faceted by division
+print(ggplot() +
+  geom_point(data = asgard_dbrda_merged_p,
+             aes(x = MDS1, y = MDS2, color = cluster, size = `NO3(uM)`),
+             alpha = 0.7) +
+  scale_color_manual(values = cc_p_db, name = "Cluster") +
+  scale_size_continuous(range = c(1, 6), name = "NO3 (z)") +
+  facet_grid(~ division) +
+  coord_cartesian(xlim = mds1_range, ylim = mds2_range) +
+  labs(x = paste0("MDS1 (", mds_pct1, "%)"),
+       y = paste0("MDS2 (", mds_pct2, "%)")) +
+  dbrda_theme)
+
+dev.off()
+
+# Save ANOVA results to txt
+sink(here::here("output_p", "dbrda",
+                "ASGARD_dbrda_processing_anova.txt"))
+cat("=== Overall db-RDA ANOVA ===\n"); print(asgard_anova_dbrda_p)
+cat("\n=== Per-variable margin ANOVA ===\n"); print(asgard_anova_env_p)
+cat("\n=== Per-axis ANOVA ===\n"); print(asgard_anova_axes_p)
+cat("\n=== Adjusted R^2 ===\n"); print(RsquareAdj(asgard_dbrda_model_p))
+sink()
+
 message("06_dbrda.R: done. asgard_dbrda_merged_p (75 samples) and ANOVA results ready.")
+message("  PDF: output_p/dbrda/dbrda_ordination.pdf (legacy)")
+message("  PDF: output_p/dbrda/ASGARD_dbrda_processing_4clusters.pdf (4 pages)")
+message("  TXT: output_p/dbrda/ASGARD_dbrda_processing_anova.txt")
