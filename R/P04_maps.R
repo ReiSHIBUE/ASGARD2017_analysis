@@ -257,7 +257,159 @@ print(
 
 dev.off()
 
+# ==============================================================================
+# Section 6: division x depth_type sample maps and ASV community contribution
+# Equivalent of S06 Page 5 & 6 for processing (k=2: Free-living vs Particle-associated)
+# ==============================================================================
+
+# Page A: division2 x depth_type grid of sample locations
+div2_colors <- c("Free-living" = "#E41A1C",
+                 "Particle-associated" = "#377EB8")
+
+pdf(here::here("output_p", "maps",
+               "ASGARD_processing_division_depth_map.pdf"),
+    width = 16, height = 14)
+
+print(
+  ggmap(mapz) +
+    geom_point(data = a_map_p,
+               aes(x = lon, y = lat, color = division2),
+               size = 2.5, alpha = 0.8) +
+    scale_color_manual(values = div2_colors, name = "Division") +
+    facet_grid(depth_type ~ division2) +
+    labs(x = "Longitude", y = "Latitude") +
+    theme(strip.text = element_text(face = "bold", size = 14),
+          axis.title = element_text(size = 16, face = "bold"),
+          axis.text  = element_text(size = 12),
+          legend.title = element_text(size = 14, face = "bold"),
+          legend.text  = element_text(size = 12))
+)
+
+# Page B: Per-division ASV community contribution x depth_type
+# Assign each ASV to the division (1 vs 2-4) in which its mean RA is higher
+mat_div_p   <- sweep(asgard_filtered_p_hm2, 1,
+                     rowSums(asgard_filtered_p_hm2), "/")
+fl_samples_p <- names(clusnum_p)[clusnum_p == 1]
+pa_samples_p <- names(clusnum_p)[clusnum_p != 1]
+asv_mean_fl <- colMeans(mat_div_p[fl_samples_p, , drop = FALSE])
+asv_mean_pa <- colMeans(mat_div_p[pa_samples_p, , drop = FALSE])
+asv_div_assign <- ifelse(asv_mean_fl >= asv_mean_pa,
+                         "Free-living", "Particle-associated")
+asv_div_f <- factor(asv_div_assign,
+                    levels = c("Free-living", "Particle-associated"))
+n_asv_div_p <- table(asv_div_f)
+
+comp_RA_mat_p <- sapply(c("Free-living", "Particle-associated"), function(d) {
+  rowSums(mat_div_p[, asv_div_f == d, drop = FALSE])
+})
+
+comp_df_p <- as.data.frame(comp_RA_mat_p) %>%
+  tibble::rownames_to_column("Sample") %>%
+  dplyr::mutate(cluster    = factor(as.character(clusnum_p[Sample]),
+                                    levels = c("1", "2", "3", "4")),
+                lat        = meta_asgard_p2[Sample, "lat"],
+                lon        = meta_asgard_p2[Sample, "lon"],
+                depth_type = meta_asgard_p2[Sample, "depth_type"]) %>%
+  dplyr::filter(!is.na(lat), !is.na(lon), !is.na(depth_type)) %>%
+  tidyr::pivot_longer(c("Free-living", "Particle-associated"),
+                      names_to = "Division", values_to = "RA") %>%
+  dplyr::mutate(RA_pct     = RA * 100,
+                Division   = factor(Division,
+                                    levels = c("Free-living",
+                                               "Particle-associated")),
+                depth_type = factor(depth_type,
+                                    levels = c("surf", "mid", "bottom")))
+
+comp_df_p$Division_lab <- factor(
+  paste0(as.character(comp_df_p$Division),
+         " (", n_asv_div_p[as.character(comp_df_p$Division)], " ASVs)"),
+  levels = paste0(c("Free-living", "Particle-associated"),
+                  " (", n_asv_div_p[c("Free-living",
+                                      "Particle-associated")], " ASVs)")
+)
+
+print(
+  ggmap(mapz) +
+    geom_point(data = comp_df_p,
+               aes(x = lon, y = lat,
+                   size = RA_pct, color = cluster),
+               alpha = 0.75) +
+    scale_color_manual(values = cc_p, name = "Cluster") +
+    scale_size_continuous(range = c(1, 12),
+                          name = "Component RA (%)",
+                          breaks = c(0, 25, 50, 75)) +
+    facet_grid(depth_type ~ Division_lab) +
+    labs(x = "Longitude", y = "Latitude") +
+    theme(strip.text   = element_text(face = "bold", size = 10),
+          axis.title   = element_text(size = 16, face = "bold"),
+          axis.text    = element_text(size = 12),
+          legend.title = element_text(size = 16, face = "bold"),
+          legend.text  = element_text(size = 14))
+)
+
+# Page C: Per-cluster (k=4) ASV community contribution x depth_type
+asv_cluster_assign <- character(ncol(mat_div_p))
+names(asv_cluster_assign) <- colnames(mat_div_p)
+asv_max_mean_c <- rep(-Inf, ncol(mat_div_p))
+for (k in c("1", "2", "3", "4")) {
+  smp_k <- names(clusnum_p)[as.character(clusnum_p) == k]
+  asv_mean_k <- colMeans(mat_div_p[smp_k, , drop = FALSE])
+  upd <- asv_mean_k > asv_max_mean_c
+  asv_cluster_assign[upd] <- k
+  asv_max_mean_c[upd] <- asv_mean_k[upd]
+}
+asv_cluster_f <- factor(asv_cluster_assign, levels = c("1","2","3","4"))
+n_asv_cluster_p <- table(asv_cluster_f)
+
+comp_RA_mat_c <- sapply(c("1","2","3","4"), function(k) {
+  rowSums(mat_div_p[, asv_cluster_f == k, drop = FALSE])
+})
+
+comp_df_c <- as.data.frame(comp_RA_mat_c) %>%
+  tibble::rownames_to_column("Sample") %>%
+  dplyr::mutate(cluster    = factor(as.character(clusnum_p[Sample]),
+                                    levels=c("1","2","3","4")),
+                lat        = meta_asgard_p2[Sample,"lat"],
+                lon        = meta_asgard_p2[Sample,"lon"],
+                depth_type = meta_asgard_p2[Sample,"depth_type"]) %>%
+  dplyr::filter(!is.na(lat), !is.na(lon), !is.na(depth_type)) %>%
+  tidyr::pivot_longer(c("1","2","3","4"),
+                      names_to="CC", values_to="RA") %>%
+  dplyr::mutate(RA_pct=RA*100,
+                CC=factor(CC, levels=c("1","2","3","4")),
+                depth_type=factor(depth_type,
+                                  levels=c("surf","mid","bottom")))
+
+comp_df_c$CC_lab <- factor(
+  paste0("Cluster ", as.character(comp_df_c$CC),
+         " (", n_asv_cluster_p[as.character(comp_df_c$CC)], " ASVs)"),
+  levels = paste0("Cluster ", c("1","2","3","4"),
+                  " (", n_asv_cluster_p[c("1","2","3","4")], " ASVs)")
+)
+
+print(
+  ggmap(mapz) +
+    geom_point(data = comp_df_c,
+               aes(x = lon, y = lat, size = RA_pct, color = cluster),
+               alpha = 0.75) +
+    scale_color_manual(values = cc_p, name = "Cluster") +
+    scale_size_continuous(range = c(1, 12),
+                          name = "Component RA (%)",
+                          breaks = c(0, 25, 50, 75)) +
+    facet_grid(depth_type ~ CC_lab) +
+    labs(x = "Longitude", y = "Latitude") +
+    theme(strip.text   = element_text(face = "bold", size = 14),
+          axis.title   = element_text(size = 16, face = "bold"),
+          axis.text    = element_text(size = 12),
+          legend.title = element_text(size = 14, face = "bold"),
+          legend.text  = element_text(size = 12))
+)
+
+dev.off()
+
 message("04_maps.R: done. PDFs written:")
 message("  output_p/maps/processing_map.pdf (legacy)")
 message("  output_p/maps/maps_pa.pdf (per-ASV PA maps)")
-message("  output_p/maps/ASGARD_processing_map_4clusters_detail.pdf (S06-style)")
+message("  output_p/maps/ASGARD_processing_map_4clusters.pdf (hero)")
+message("  output_p/maps/ASGARD_processing_map_4clusters_detail.pdf (detail)")
+message("  output_p/maps/ASGARD_processing_division_depth_map.pdf (division x depth)")
