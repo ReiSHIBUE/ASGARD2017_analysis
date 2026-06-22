@@ -160,16 +160,19 @@ small_theme <- theme_bw(base_size = 11) +
         legend.box      = "vertical")
 
 p1s <- p1 + small_theme +
+  labs(title = "(b) ASVs by Class (3 bloom classes)") +
   guides(color = guide_legend(nrow = 2, override.aes = list(size = 4)),
          size  = guide_legend(nrow = 1))
 p2s <- p2 + small_theme +
+  labs(title = "(a) ASVs by dominant sample cluster (k = 4)") +
   guides(color = guide_legend(nrow = 1, override.aes = list(size = 4)),
          size  = guide_legend(nrow = 1))
 p3s <- p3 + small_theme +
+  labs(title = "(c) ASVs with RGB blend + top 20 genera") +
   geom_text(aes(label = label), size = 2.5, fontface = "bold",
             vjust = -1.0, check_overlap = TRUE)
 
-grid.arrange(p1s, p2s, p3s, nrow = 1)
+grid.arrange(p2s, p1s, p3s, nrow = 1)
 dev.off()
 
 message("\nP13_ternary_v2.R: done.")
