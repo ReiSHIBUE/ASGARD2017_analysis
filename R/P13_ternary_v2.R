@@ -173,6 +173,80 @@ p3s <- p3 + small_theme +
             vjust = -1.0, check_overlap = TRUE)
 
 grid.arrange(p2s, p1s, p3s, nrow = 1)
+
+# ============================================================================
+# Page 5: alternative panel using the 3-class objective filter
+#   (c') = filter to Bacteroidia / Alphaproteobacteria / Gammaproteobacteria
+#          with occurrence > 10% AND cumulative within-class RA <= 95%
+# ============================================================================
+
+# Compute objective filter for the 3 bloom classes
+target_3 <- c("Bacteroidia", "Alphaproteobacteria", "Gammaproteobacteria")
+keep_3   <- ternary_df$class %in% target_3
+sub3_df  <- ternary_df[keep_3, ]
+
+# Per-sample 3-class normalized RA
+keep_asvs_3 <- sub3_df$asv
+mat3        <- asgard_filtered_p_hm2[, keep_asvs_3, drop = FALSE]
+sample_total_3 <- rowSums(mat3)
+ra3 <- sweep(mat3, 1, sample_total_3, "/")
+ra3[is.na(ra3)] <- 0
+
+sub3_df$occurrence <- colMeans(mat3 > 0)
+sub3_df$mean_RA_3cl <- colMeans(ra3)
+
+sub3_filt <- sub3_df %>%
+  filter(occurrence > 0.10) %>%
+  arrange(-mean_RA_3cl) %>%
+  mutate(cumRA = cumsum(mean_RA_3cl) / sum(mean_RA_3cl))
+sub3_final <- sub3_filt %>%
+  filter(cumRA <= 0.95 | lag(cumRA, default = 0) < 0.95)
+
+n_objective <- nrow(sub3_final)
+message("Objective filter (page 5 c'): ", n_objective, " ASVs")
+
+# Page-5 (c'): labelled with family;genus
+sub3_final$label_obj <- ifelse(
+  is.na(sub3_final$genus) |
+    sub3_final$genus %in% c("", "uncultured", "uncultured_marine_group"),
+  sub3_final$family, sub3_final$genus
+)
+
+p3_obj <- ggtern(data = sub3_final,
+       aes(x = p02, y = p03, z = p20, size = 100 * mean_RA_3cl)) +
+  geom_point(aes(color = I(rgb)), alpha = 0.85) +
+  geom_text(aes(label = label_obj), size = 3, fontface = "bold",
+            vjust = -1.0, check_overlap = TRUE) +
+  scale_size_continuous(range = c(1, 10),
+                        name = "Mean RA in 3 classes (%)",
+                        breaks = c(0.5, 1, 2, 5, 10)) +
+  labs(title = "ASVs by 3-class objective filter",
+       subtitle = paste0("Occurrence > 10% AND cumulative RA <= 95% (n = ",
+                         n_objective, " ASVs)"),
+       x = "0.2 µm", y = "3 µm", z = "20 µm") +
+  base_tern_theme + theme_showarrows() + theme_rotate(-90)
+
+print(p3_obj)
+
+# Page 6: combined (a) cluster + (b) class + (c') objective
+p2s2 <- p2 + small_theme +
+  labs(title = "(a) ASVs in four clusters") +
+  guides(color = guide_legend(nrow = 1, override.aes = list(size = 4)),
+         size  = guide_legend(nrow = 1))
+p1s2 <- p1 + small_theme +
+  labs(title = "(b) ASVs by Class (3 bloom classes)") +
+  guides(color = guide_legend(nrow = 2, override.aes = list(size = 4)),
+         size  = guide_legend(nrow = 1))
+p3obj_s <- p3_obj + small_theme +
+  labs(title = "(c) Objective-filter ASVs (3 classes)") +
+  geom_text(aes(label = label_obj), size = 2.5, fontface = "bold",
+            vjust = -1.0, check_overlap = TRUE)
+
+grid.arrange(p2s2, p1s2, p3obj_s, nrow = 1)
+
+# Page 7: combined (a) cluster + (b) class only (no RGB/no objective panel)
+grid.arrange(p2s2, p1s2, nrow = 1)
+
 dev.off()
 
 message("\nP13_ternary_v2.R: done.")
