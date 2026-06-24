@@ -104,6 +104,10 @@ asgard_dbrda_scores_p$Sample <- rownames(asgard_dbrda_scores_p)
 # バイプロット矢印の抽出 / Extract biplot arrows for environmental vectors
 asgard_dbrda_vectors_p <- as.data.frame(scores(asgard_dbrda_model_p, display = "bp"))
 asgard_dbrda_vectors_p$Variable <- rownames(asgard_dbrda_vectors_p)
+# Clean labels for arrows: NO3(uM) -> NO3, FlECO-AFL(mg/m^3) -> FlECO
+asgard_dbrda_vectors_p$Variable <- gsub("`", "", asgard_dbrda_vectors_p$Variable)
+asgard_dbrda_vectors_p$Variable[asgard_dbrda_vectors_p$Variable == "NO3(uM)"]            <- "NO3"
+asgard_dbrda_vectors_p$Variable[asgard_dbrda_vectors_p$Variable == "FlECO-AFL(mg/m^3)"]  <- "FlECO"
 
 asgard_dbrda_df_p <- merge(asgard_dbrda_scores_p, asgard_pcoa_cc_p,
                            by = "Sample", sort = FALSE)
@@ -222,7 +226,7 @@ print(ggplot() +
              aes(x = CAP1, y = CAP2, color = cluster, size = `NO3(uM)`),
              alpha = 0.7) +
   scale_color_manual(values = cc_p_db, name = "Cluster") +
-  scale_size_continuous(range = c(1, 6), name = "NO3 (z)") +
+  scale_size_continuous(range = c(1, 6), name = "NO3 (µM)") +
   geom_segment(data = asgard_dbrda_vectors_p,
                aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
                arrow = arrow(length = unit(0.2, "cm")),
@@ -241,7 +245,7 @@ print(ggplot() +
              aes(x = CAP1, y = CAP2, color = cluster, size = `NO3(uM)`),
              alpha = 0.7) +
   scale_color_manual(values = cc_p_db, name = "Cluster") +
-  scale_size_continuous(range = c(1, 6), name = "NO3 (z)") +
+  scale_size_continuous(range = c(1, 6), name = "NO3 (µM)") +
   facet_grid(~ division) +
   coord_cartesian(xlim = cap1_range, ylim = cap2_range) +
   labs(x = paste0("CAP1 (", cap_pct1, "%)"),
@@ -254,7 +258,7 @@ print(ggplot() +
              aes(x = MDS1, y = MDS2, color = cluster, size = `NO3(uM)`),
              alpha = 0.7) +
   scale_color_manual(values = cc_p_db, name = "Cluster") +
-  scale_size_continuous(range = c(1, 6), name = "NO3 (z)") +
+  scale_size_continuous(range = c(1, 6), name = "NO3 (µM)") +
   coord_cartesian(xlim = mds1_range, ylim = mds2_range) +
   labs(x = paste0("MDS1 (", mds_pct1, "%)"),
        y = paste0("MDS2 (", mds_pct2, "%)")) +
@@ -266,7 +270,7 @@ print(ggplot() +
              aes(x = MDS1, y = MDS2, color = cluster, size = `NO3(uM)`),
              alpha = 0.7) +
   scale_color_manual(values = cc_p_db, name = "Cluster") +
-  scale_size_continuous(range = c(1, 6), name = "NO3 (z)") +
+  scale_size_continuous(range = c(1, 6), name = "NO3 (µM)") +
   facet_grid(~ division) +
   coord_cartesian(xlim = mds1_range, ylim = mds2_range) +
   labs(x = paste0("MDS1 (", mds_pct1, "%)"),
