@@ -38,8 +38,8 @@ env_plot_vars <- list(
   list(var = "temp",                label = "Temperature (°C)"),
   list(var = "salinity",            label = "Salinity (PSU)"),
   list(var = "DO",                  label = "DO (µmol/kg)"),
-  list(var = "NO3(uM)",             label = "NO3 (µM)"),
   list(var = "FlECO-AFL(mg/m^3)",   label = "FlECO-AFL (mg/m³)"),
+  list(var = "NO3(uM)",             label = "NO3 (µM)"),
   list(var = "depth_m",             label = "Sampling depth (m)")
 )
 
