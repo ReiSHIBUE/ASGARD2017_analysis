@@ -218,7 +218,7 @@ mds2_range <- range(asgard_dbrda_merged_p$MDS2) * 1.1
 
 pdf(file = here::here("output_p", "dbrda",
                       "ASGARD_dbrda_processing_4clusters.pdf"),
-    width = 12, height = 9)
+    width = 9, height = 9)
 
 # Page 1: CAP axes (constrained) all clusters
 print(ggplot() +
