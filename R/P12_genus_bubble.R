@@ -232,7 +232,7 @@ print(
                           name = "Mean RA within 3 classes (%)",
                           breaks = c(0.5, 1, 2, 5, 10, 20)) +
     scale_color_manual(values = class_colors_p, name = "Class") +
-    labs(title = "Processing major genera in Bacteroidia / Gamma / Alphaproteobacteria",
+    labs(title = "Major genera in Bacteroidia / Gamma / Alphaproteobacteria",
          subtitle = paste0("Filter: occurrence > 10% AND cumulative RA <= 95% (",
                            n_genus_3p, " genera)"),
          x = "Cluster", y = NULL) +
