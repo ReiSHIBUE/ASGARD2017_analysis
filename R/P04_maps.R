@@ -407,9 +407,110 @@ print(
 
 dev.off()
 
+# ==============================================================================
+# Section 7: S06 Page 6-style community-contribution map (per-cluster, k=4)
+# Equivalent of S06 map_colclus_abundance Page 6, adapted to processing.
+# Each ASV is assigned to the cluster (1-4) where its mean RA is highest;
+# per-sample component RA is then mapped by depth_type x cluster-component,
+# coloured by the sample's own cluster, sized by component RA.
+# Overlap mitigation: large bubbles drawn first + alpha 0.5 + small jitter.
+# ==============================================================================
+
+# Assign each ASV to the cluster (1-4) with highest mean RA
+asv_assign_p7 <- character(ncol(mat_div_p))
+names(asv_assign_p7) <- colnames(mat_div_p)
+asv_best_p7 <- rep(-Inf, ncol(mat_div_p))
+for (k in c("1", "2", "3", "4")) {
+  smp_k <- names(clusnum_p)[as.character(clusnum_p) == k]
+  mk    <- colMeans(mat_div_p[smp_k, , drop = FALSE])
+  upd   <- mk > asv_best_p7
+  asv_assign_p7[upd] <- k
+  asv_best_p7[upd]   <- mk[upd]
+}
+asv_f_p7 <- factor(asv_assign_p7, levels = c("1", "2", "3", "4"))
+n_asv_p7 <- table(asv_f_p7)
+
+comp_RA_p7 <- sapply(c("1", "2", "3", "4"),
+                     function(k) rowSums(mat_div_p[, asv_f_p7 == k, drop = FALSE]))
+
+comp_df_p7 <- as.data.frame(comp_RA_p7) %>%
+  tibble::rownames_to_column("Sample") %>%
+  dplyr::mutate(cluster    = factor(as.character(clusnum_p[Sample]),
+                                    levels = c("1", "2", "3", "4")),
+                lat        = meta_asgard_p2[Sample, "lat"],
+                lon        = meta_asgard_p2[Sample, "lon"],
+                depth_type = meta_asgard_p2[Sample, "depth_type"]) %>%
+  dplyr::filter(!is.na(lat), !is.na(lon), !is.na(depth_type)) %>%
+  tidyr::pivot_longer(c("1", "2", "3", "4"),
+                      names_to = "Component", values_to = "RA") %>%
+  dplyr::mutate(RA_pct     = RA * 100,
+                Component  = factor(Component, levels = c("1", "2", "3", "4")),
+                depth_type = factor(depth_type,
+                                    levels = c("surf", "mid", "bottom"))) %>%
+  dplyr::arrange(desc(RA_pct))   # large bubbles first
+
+comp_df_p7$Component_lab <- factor(
+  paste0("Cluster ", as.character(comp_df_p7$Component),
+         " (", n_asv_p7[as.character(comp_df_p7$Component)], " ASVs)"),
+  levels = paste0("Cluster ", c("1", "2", "3", "4"),
+                  " (", n_asv_p7[c("1", "2", "3", "4")], " ASVs)")
+)
+
+pdf(here::here("output_p", "maps",
+               "processing_colclus_abundance_4clusters.pdf"),
+    width = 16, height = 14)
+
+print(
+  ggmap(mapz) +
+    geom_point(data = comp_df_p7,
+               aes(x = lon, y = lat, size = RA_pct, color = cluster),
+               alpha = 0.5,
+               position = position_jitter(width = 0.05, height = 0.05,
+                                          seed = 1)) +
+    scale_color_manual(values = cc_p, name = "Cluster") +
+    scale_size_continuous(range = c(0.5, 11),
+                          name = "Component RA (%)",
+                          breaks = c(0, 25, 50, 75)) +
+    facet_grid(depth_type ~ Component_lab) +
+    labs(x = "Longitude", y = "Latitude") +
+    theme(strip.text   = element_text(face = "bold", size = 14),
+          axis.title   = element_text(size = 16, face = "bold"),
+          axis.text    = element_text(size = 11),
+          legend.title = element_text(size = 14, face = "bold"),
+          legend.text  = element_text(size = 12))
+)
+
+# Page 2: self-only — each Cluster column shows ONLY that cluster's samples
+comp_df_p7_self <- dplyr::filter(comp_df_p7,
+                                 as.character(cluster) == as.character(Component))
+
+print(
+  ggmap(mapz) +
+    geom_point(data = comp_df_p7_self,
+               aes(x = lon, y = lat, size = RA_pct, color = cluster),
+               alpha = 0.6,
+               position = position_jitter(width = 0.05, height = 0.05,
+                                          seed = 1)) +
+    scale_color_manual(values = cc_p, name = "Cluster") +
+    scale_size_continuous(range = c(0.5, 11),
+                          name = "Component RA (%)",
+                          breaks = c(0, 25, 50, 75)) +
+    facet_grid(depth_type ~ Component_lab) +
+    labs(x = "Longitude", y = "Latitude",
+         subtitle = "Each column shows only its own cluster's samples") +
+    theme(strip.text   = element_text(face = "bold", size = 14),
+          axis.title   = element_text(size = 16, face = "bold"),
+          axis.text    = element_text(size = 11),
+          legend.title = element_text(size = 14, face = "bold"),
+          legend.text  = element_text(size = 12))
+)
+
+dev.off()
+
 message("04_maps.R: done. PDFs written:")
 message("  output_p/maps/processing_map.pdf (legacy)")
 message("  output_p/maps/maps_pa.pdf (per-ASV PA maps)")
 message("  output_p/maps/ASGARD_processing_map_4clusters.pdf (hero)")
 message("  output_p/maps/ASGARD_processing_map_4clusters_detail.pdf (detail)")
 message("  output_p/maps/ASGARD_processing_division_depth_map.pdf (division x depth)")
+message("  output_p/maps/processing_colclus_abundance_4clusters.pdf (S06 Page6-style)")
