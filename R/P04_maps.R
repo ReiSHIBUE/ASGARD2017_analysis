@@ -496,8 +496,7 @@ print(
                           name = "Component RA (%)",
                           breaks = c(0, 25, 50, 75)) +
     facet_grid(depth_type ~ Component_lab) +
-    labs(x = "Longitude", y = "Latitude",
-         subtitle = "Each column shows only its own cluster's samples") +
+    labs(x = "Longitude", y = "Latitude") +
     theme(strip.text   = element_text(face = "bold", size = 14),
           axis.title   = element_text(size = 16, face = "bold"),
           axis.text    = element_text(size = 11),
@@ -541,6 +540,40 @@ print(
 )
 
 dev.off()
+
+# ==============================================================================
+# Section 9: Kruskal-Wallis test: FL/PA component RA ~ depth_type
+# Tests whether the free-living / particle-associated component RA differs
+# among surf / mid / bottom (cf. S06 Section 8b). Bonferroni alpha = 0.05/2.
+# ==============================================================================
+
+flpa_kw_results <- comp_df_p %>%
+  dplyr::select(Sample, Division, RA_pct, depth_type) %>%
+  dplyr::group_by(Division) %>%
+  dplyr::summarise(
+    n_surf      = sum(depth_type == "surf"),
+    n_mid       = sum(depth_type == "mid"),
+    n_bottom    = sum(depth_type == "bottom"),
+    mean_surf   = round(mean(RA_pct[depth_type == "surf"]),   2),
+    mean_mid    = round(mean(RA_pct[depth_type == "mid"]),    2),
+    mean_bottom = round(mean(RA_pct[depth_type == "bottom"]), 2),
+    chi_sq      = round(kruskal.test(RA_pct ~ depth_type)$statistic, 3),
+    df          = kruskal.test(RA_pct ~ depth_type)$parameter,
+    p_value     = round(kruskal.test(RA_pct ~ depth_type)$p.value, 4),
+    .groups     = "drop"
+  ) %>%
+  dplyr::mutate(
+    bonferroni_alpha = 0.05 / 2,
+    sig_bonferroni   = ifelse(p_value < bonferroni_alpha, "*", "ns")
+  )
+
+cat("\n--- Kruskal-Wallis: FL/PA component RA ~ depth_type ---\n")
+cat("(Bonferroni alpha = 0.05/2 = 0.025)\n")
+print(as.data.frame(flpa_kw_results), row.names = FALSE)
+
+write.csv(flpa_kw_results,
+  here::here("output_p", "maps", "processing_FLPA_componentRA_depth_kruskal.csv"),
+  row.names = FALSE)
 
 message("04_maps.R: done. PDFs written:")
 message("  output_p/maps/processing_map.pdf (legacy)")
