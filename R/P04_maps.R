@@ -575,6 +575,48 @@ write.csv(flpa_kw_results,
   here::here("output_p", "maps", "processing_FLPA_componentRA_depth_kruskal.csv"),
   row.names = FALSE)
 
+# ==============================================================================
+# Section 10: Kruskal-Wallis test: per-cluster (k=4) component RA ~ depth_type
+# Tests whether each cluster's component RA differs among surf / mid / bottom
+# (processing analogue of S06's A/B/C division test). Reuses comp_df_p7.
+# Bonferroni alpha = 0.05/4 = 0.0125.
+# ==============================================================================
+
+dir.create(here::here("output_p", "cluster_summary"),
+           showWarnings = FALSE, recursive = TRUE)
+
+cluster_kw_results <- comp_df_p7 %>%
+  dplyr::filter(depth_type %in% c("surf", "mid", "bottom")) %>%
+  dplyr::mutate(depth_type = factor(depth_type,
+                                    levels = c("surf", "mid", "bottom"))) %>%
+  dplyr::group_by(Component) %>%
+  dplyr::summarise(
+    n_surf      = sum(depth_type == "surf"),
+    n_mid       = sum(depth_type == "mid"),
+    n_bottom    = sum(depth_type == "bottom"),
+    mean_surf   = round(mean(RA_pct[depth_type == "surf"]),   2),
+    mean_mid    = round(mean(RA_pct[depth_type == "mid"]),    2),
+    mean_bottom = round(mean(RA_pct[depth_type == "bottom"]), 2),
+    chi_sq      = round(kruskal.test(RA_pct ~ depth_type)$statistic, 3),
+    df          = kruskal.test(RA_pct ~ depth_type)$parameter,
+    p_value     = round(kruskal.test(RA_pct ~ depth_type)$p.value, 4),
+    .groups     = "drop"
+  ) %>%
+  dplyr::rename(Cluster = Component) %>%
+  dplyr::mutate(
+    bonferroni_alpha = round(0.05 / 4, 4),
+    sig_bonferroni   = ifelse(p_value < 0.05 / 4, "*", "ns")
+  )
+
+cat("\n--- Kruskal-Wallis: per-cluster component RA ~ depth_type ---\n")
+cat("(Bonferroni alpha = 0.05/4 = 0.0125)\n")
+print(as.data.frame(cluster_kw_results), row.names = FALSE)
+
+write.csv(cluster_kw_results,
+  here::here("output_p", "cluster_summary",
+             "processing_cluster_componentRA_depth_kruskal.csv"),
+  row.names = FALSE)
+
 message("04_maps.R: done. PDFs written:")
 message("  output_p/maps/processing_map.pdf (legacy)")
 message("  output_p/maps/maps_pa.pdf (per-ASV PA maps)")
