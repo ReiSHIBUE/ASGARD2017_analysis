@@ -507,6 +507,41 @@ print(
 
 dev.off()
 
+# ==============================================================================
+# Section 8: Free-living vs Particle-associated (k=2) contribution map,
+# improved style. Same as Section 6 Page B but with overlap mitigation
+# (large bubbles first + alpha 0.5 + small jitter). Reuses comp_df_p.
+# ==============================================================================
+
+comp_df_flpa <- dplyr::arrange(comp_df_p, desc(RA_pct))  # large bubbles first
+
+pdf(here::here("output_p", "maps",
+               "processing_division_contribution_FLPA.pdf"),
+    width = 14, height = 14)
+
+print(
+  ggmap(mapz) +
+    geom_point(data = comp_df_flpa,
+               aes(x = lon, y = lat, size = RA_pct, color = cluster),
+               alpha = 0.5,
+               position = position_jitter(width = 0.05, height = 0.05,
+                                          seed = 1)) +
+    scale_color_manual(values = cc_p, name = "Cluster") +
+    scale_size_continuous(range = c(0.5, 11),
+                          name = "Component RA (%)",
+                          breaks = c(0, 25, 50, 75)) +
+    facet_grid(depth_type ~ Division_lab) +
+    labs(x = "Longitude", y = "Latitude") +
+    theme(strip.text.x = element_text(face = "bold", size = 10),
+          strip.text.y = element_text(face = "bold", size = 14),
+          axis.title   = element_text(size = 16, face = "bold"),
+          axis.text    = element_text(size = 11),
+          legend.title = element_text(size = 14, face = "bold"),
+          legend.text  = element_text(size = 12))
+)
+
+dev.off()
+
 message("04_maps.R: done. PDFs written:")
 message("  output_p/maps/processing_map.pdf (legacy)")
 message("  output_p/maps/maps_pa.pdf (per-ASV PA maps)")
@@ -514,3 +549,4 @@ message("  output_p/maps/ASGARD_processing_map_4clusters.pdf (hero)")
 message("  output_p/maps/ASGARD_processing_map_4clusters_detail.pdf (detail)")
 message("  output_p/maps/ASGARD_processing_division_depth_map.pdf (division x depth)")
 message("  output_p/maps/processing_colclus_abundance_4clusters.pdf (S06 Page6-style)")
+message("  output_p/maps/processing_division_contribution_FLPA.pdf (FL/PA improved)")
