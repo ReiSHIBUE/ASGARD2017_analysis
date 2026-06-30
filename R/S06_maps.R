@@ -644,11 +644,48 @@ print(
 )
 dev.off()
 
+# ==============================================================================
+# Section 11: Kruskal-Wallis: Observed ASVs (richness) ~ depth_type
+# Section 10 の richness が depth (surf/mid/bottom) で異なるかを検定。
+# 全体 + division別 (A/B/C, Bonferroni alpha = 0.05/3)。a_rich を再利用。
+# ==============================================================================
+
+kw_rich <- a_rich
+kw_rich$depth_type <- factor(kw_rich$depth_type, levels = c("surf", "mid", "bottom"))
+kw_rich <- kw_rich[!is.na(kw_rich$depth_type), ]
+
+.kw_summary <- function(sub, label, alpha) {
+  k  <- kruskal.test(Observed_ASVs ~ depth_type, data = sub)
+  md <- tapply(sub$Observed_ASVs, sub$depth_type, median)
+  nn <- table(sub$depth_type)
+  data.frame(group = label, n = nrow(sub),
+             n_surf = as.integer(nn["surf"]), n_mid = as.integer(nn["mid"]),
+             n_bottom = as.integer(nn["bottom"]),
+             median_surf = md["surf"], median_mid = md["mid"], median_bottom = md["bottom"],
+             chi_sq = round(k$statistic, 3), df = k$parameter,
+             p_value = round(k$p.value, 4), bonferroni_alpha = round(alpha, 4),
+             sig = ifelse(k$p.value < alpha, "*", "ns"), row.names = NULL)
+}
+
+richness_kw <- .kw_summary(kw_rich, "Overall", 0.05)
+for (d in c("A", "B", "C")) {
+  sub <- kw_rich[kw_rich$division == d, ]
+  if (nrow(sub) >= 3 && length(unique(as.character(sub$depth_type))) >= 2)
+    richness_kw <- rbind(richness_kw, .kw_summary(sub, paste0("Division_", d), 0.05 / 3))
+}
+
+cat("\n--- Kruskal-Wallis: Observed ASVs (258-set richness) ~ depth_type ---\n")
+print(richness_kw, row.names = FALSE)
+write.csv(richness_kw,
+  here::here("output", "survey", "maps", "richness_depth_kruskal.csv"),
+  row.names = FALSE)
+
 message("\nS06_maps.R: done.")
 message("  PDF: ASGARD_survey_map_11clusters.pdf, ASGARD_survey_map_11clusters_detail.pdf")
 message("  PDF: ASGARD_survey_all_stations.pdf")
 message("  PDF: map_colclus_abundance_11clusters.pdf")
 message("  PDF: ASGARD_survey_richness_by_depth_division.pdf")
+message("  CSV: output/survey/maps/richness_depth_kruskal.csv")
 message("  CSV: output/survey/maps/cluster11_geographic_summary.csv")
 message("  CSV: output/survey/maps/cluster11_depth_type_test.csv")
 message("  CSV: output/survey/maps/assemblage_RA_depth_kruskal.csv")
