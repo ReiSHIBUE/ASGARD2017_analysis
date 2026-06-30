@@ -451,7 +451,7 @@ print(
                alpha = 0.75) +
     scale_color_manual(values = cc11, name = "Cluster") +
     scale_size_continuous(range = c(0.5, 10),
-                          name = "Component RA (%)",
+                          name = "Relative abundance (%)",
                           breaks = c(0, 25, 50, 75)) +
     facet_grid(depth_type ~ Division_lab) +
     labs(x = "Longitude", y = "Latitude") +
@@ -604,10 +604,51 @@ write.csv(transect_breakdown_df,
   here::here("output", "survey", "maps", "B2_C2b_per_transect.csv"),
   row.names = FALSE)
 
+# ==============================================================================
+# Section 10: ASV richness map (Observed ASVs) by depth x division
+# 各サンプルの観測ASV数(richness)を depth × division (A/B/C) グリッドで地図化。
+#   richness = rowSums(asgard_filtered > 0)  ... クラスタリング用258 ASVセット内の存在種数
+#   ドット色 = 11クラスター(cc11)、サイズ = Observed ASVs。ASVのグループ割り当ては不要。
+# NOTE: 全16Sプール(3076)での観測種数・Chao1 は S07 (asgard_alpha_df) を参照。
+# ==============================================================================
+
+a_rich <- a_map
+a_rich$Observed_ASVs <- rowSums(asgard_filtered[rownames(a_rich), ] > 0)
+a_rich$division <- factor(substr(as.character(a_rich$cluster11), 1, 1),
+                          levels = c("A", "B", "C"))
+a_rich <- a_rich[!is.na(a_rich$division), ]
+
+n_div_r <- table(a_rich$division)
+a_rich$division_lab <- factor(
+  paste0(as.character(a_rich$division), " (n=", n_div_r[as.character(a_rich$division)], ")"),
+  levels = paste0(c("A", "B", "C"), " (n=", n_div_r[c("A", "B", "C")], ")"))
+
+pdf(here::here("output", "survey", "maps",
+               "ASGARD_survey_richness_by_depth_division.pdf"),
+    width = 16, height = 14)
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = a_rich,
+               aes(lon, lat, size = Observed_ASVs, color = cluster11),
+               alpha = 0.85) +
+    scale_color_manual(values = cc11, name = "Cluster") +
+    scale_size_continuous(range = c(1, 11), name = "Observed ASVs") +
+    facet_grid(depth_type ~ division_lab) +
+    labs(x = "Longitude", y = "Latitude") +
+    theme(strip.text      = element_text(face = "bold", size = 18),
+          axis.title      = element_text(size = 18, face = "bold"),
+          axis.text       = element_text(size = 13),
+          legend.title    = element_text(size = 17, face = "bold"),
+          legend.text     = element_text(size = 15),
+          legend.key.size = unit(0.9, "cm"))
+)
+dev.off()
+
 message("\nS06_maps.R: done.")
 message("  PDF: ASGARD_survey_map_11clusters.pdf, ASGARD_survey_map_11clusters_detail.pdf")
 message("  PDF: ASGARD_survey_all_stations.pdf")
 message("  PDF: map_colclus_abundance_11clusters.pdf")
+message("  PDF: ASGARD_survey_richness_by_depth_division.pdf")
 message("  CSV: output/survey/maps/cluster11_geographic_summary.csv")
 message("  CSV: output/survey/maps/cluster11_depth_type_test.csv")
 message("  CSV: output/survey/maps/assemblage_RA_depth_kruskal.csv")
