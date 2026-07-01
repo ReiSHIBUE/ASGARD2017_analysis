@@ -336,7 +336,7 @@ print(
                alpha = 0.75) +
     scale_color_manual(values = cc_p, name = "Cluster") +
     scale_size_continuous(range = c(1, 12),
-                          name = "Component RA (%)",
+                          name = "Relative abundance (%)",
                           breaks = c(0, 25, 50, 75)) +
     facet_grid(depth_type ~ Division_lab) +
     labs(x = "Longitude", y = "Latitude") +
@@ -394,7 +394,7 @@ print(
                alpha = 0.75) +
     scale_color_manual(values = cc_p, name = "Cluster") +
     scale_size_continuous(range = c(1, 12),
-                          name = "Component RA (%)",
+                          name = "Relative abundance (%)",
                           breaks = c(0, 25, 50, 75)) +
     facet_grid(depth_type ~ CC_lab) +
     labs(x = "Longitude", y = "Latitude") +
@@ -414,6 +414,8 @@ dev.off()
 # per-sample component RA is then mapped by depth_type x cluster-component,
 # coloured by the sample's own cluster, sized by component RA.
 # Overlap mitigation: large bubbles drawn first + alpha 0.5 + small jitter.
+# NOTE: Page 1 = per-cluster component RA (as above). Page 2 = per-sample ASV
+#       richness (Observed ASVs) faceted by depth x cluster, no ASV assignment.
 # ==============================================================================
 
 # Assign each ASV to the cluster (1-4) with highest mean RA
@@ -469,7 +471,7 @@ print(
                                           seed = 1)) +
     scale_color_manual(values = cc_p, name = "Cluster") +
     scale_size_continuous(range = c(0.5, 11),
-                          name = "Component RA (%)",
+                          name = "Relative abundance (%)",
                           breaks = c(0, 25, 50, 75)) +
     facet_grid(depth_type ~ Component_lab) +
     labs(x = "Longitude", y = "Latitude") +
@@ -480,39 +482,67 @@ print(
           legend.text  = element_text(size = 12))
 )
 
-# Page 2: self-only — each Cluster column shows ONLY that cluster's samples
-comp_df_p7_self <- dplyr::filter(comp_df_p7,
-                                 as.character(cluster) == as.character(Component))
+# Page 2: per-sample ASV richness (Observed ASVs) — faceted by depth x cluster
+# 割り当て無し。各サンプルを自クラスター列に1回だけ配置し、richness(Observed ASVs)を
+# ドットサイズで表示。richness = rowSums(asgard_filtered_p_hm2 > 0)（221 ASVセット内の存在種数）。
+rich_p_smp <- rowSums(asgard_filtered_p_hm2 > 0)
+rich_df_p <- data.frame(
+  Sample        = rownames(asgard_filtered_p_hm2),
+  Observed_ASVs = as.integer(rich_p_smp),
+  cluster       = factor(as.character(clusnum_p[rownames(asgard_filtered_p_hm2)]),
+                         levels = c("1", "2", "3", "4")),
+  lon           = meta_asgard_p2[rownames(asgard_filtered_p_hm2), "lon"],
+  lat           = meta_asgard_p2[rownames(asgard_filtered_p_hm2), "lat"],
+  depth_type    = factor(meta_asgard_p2[rownames(asgard_filtered_p_hm2), "depth_type"],
+                         levels = c("surf", "mid", "bottom")),
+  stringsAsFactors = FALSE
+)
+rich_df_p <- rich_df_p[!is.na(rich_df_p$lon) & !is.na(rich_df_p$lat) &
+                       !is.na(rich_df_p$depth_type) & !is.na(rich_df_p$cluster), ]
+n_cl_p <- table(rich_df_p$cluster)
+rich_df_p$cluster_lab <- factor(
+  paste0("Cluster ", as.character(rich_df_p$cluster),
+         " (n=", n_cl_p[as.character(rich_df_p$cluster)], ")"),
+  levels = paste0("Cluster ", c("1", "2", "3", "4"),
+                  " (n=", n_cl_p[c("1", "2", "3", "4")], ")"))
 
 print(
   ggmap(mapz) +
-    geom_point(data = comp_df_p7_self,
-               aes(x = lon, y = lat, size = RA_pct, color = cluster),
-               alpha = 0.6,
-               position = position_jitter(width = 0.05, height = 0.05,
-                                          seed = 1)) +
+    geom_point(data = rich_df_p,
+               aes(x = lon, y = lat, size = Observed_ASVs, color = cluster),
+               alpha = 0.85) +
     scale_color_manual(values = cc_p, name = "Cluster") +
-    scale_size_continuous(range = c(0.5, 11),
-                          name = "Component RA (%)",
-                          breaks = c(0, 25, 50, 75)) +
-    facet_grid(depth_type ~ Component_lab) +
+    scale_size_continuous(range = c(1, 11), name = "Observed ASVs") +
+    facet_grid(depth_type ~ cluster_lab) +
     labs(x = "Longitude", y = "Latitude") +
-    theme(strip.text   = element_text(face = "bold", size = 14),
-          axis.title   = element_text(size = 16, face = "bold"),
-          axis.text    = element_text(size = 11),
-          legend.title = element_text(size = 14, face = "bold"),
-          legend.text  = element_text(size = 12))
+    theme(strip.text      = element_text(face = "bold", size = 18),
+          axis.title      = element_text(size = 18, face = "bold"),
+          axis.text       = element_text(size = 13),
+          axis.text.x     = element_text(size = 13, angle = 45, hjust = 1),
+          legend.title    = element_text(size = 17, face = "bold"),
+          legend.text     = element_text(size = 15),
+          legend.key.size = unit(0.9, "cm"))
 )
 
 dev.off()
 
 # ==============================================================================
-# Section 8: Free-living vs Particle-associated (k=2) contribution map,
-# improved style. Same as Section 6 Page B but with overlap mitigation
-# (large bubbles first + alpha 0.5 + small jitter). Reuses comp_df_p.
+# Section 8: Free-living vs Particle-associated (k=2) ASV richness map
+# 各サンプルの richness (Observed ASVs) を depth × FL/PA division グリッドで地図化。
+# FL = cluster 1, PA = clusters 2-4（サンプル所属）。割り当て(winner-take-all)は不要。
+# richness = rowSums(asgard_filtered_p_hm2 > 0)。rich_df_p (Section 7) を再利用。
 # ==============================================================================
 
-comp_df_flpa <- dplyr::arrange(comp_df_p, desc(RA_pct))  # large bubbles first
+rich_df_flpa <- rich_df_p
+rich_df_flpa$division2 <- factor(
+  ifelse(rich_df_flpa$cluster == "1", "Free-living", "Particle-associated"),
+  levels = c("Free-living", "Particle-associated"))
+n_d2_p <- table(rich_df_flpa$division2)
+rich_df_flpa$division2_lab <- factor(
+  paste0(as.character(rich_df_flpa$division2),
+         " (n=", n_d2_p[as.character(rich_df_flpa$division2)], ")"),
+  levels = paste0(c("Free-living", "Particle-associated"),
+                  " (n=", n_d2_p[c("Free-living", "Particle-associated")], ")"))
 
 pdf(here::here("output_p", "maps",
                "processing_division_contribution_FLPA.pdf"),
@@ -520,23 +550,21 @@ pdf(here::here("output_p", "maps",
 
 print(
   ggmap(mapz) +
-    geom_point(data = comp_df_flpa,
-               aes(x = lon, y = lat, size = RA_pct, color = cluster),
-               alpha = 0.5,
-               position = position_jitter(width = 0.05, height = 0.05,
-                                          seed = 1)) +
+    geom_point(data = rich_df_flpa,
+               aes(x = lon, y = lat, size = Observed_ASVs, color = cluster),
+               alpha = 0.85) +
     scale_color_manual(values = cc_p, name = "Cluster") +
-    scale_size_continuous(range = c(0.5, 11),
-                          name = "Component RA (%)",
-                          breaks = c(0, 25, 50, 75)) +
-    facet_grid(depth_type ~ Division_lab) +
+    scale_size_continuous(range = c(1, 11), name = "Observed ASVs") +
+    facet_grid(depth_type ~ division2_lab) +
     labs(x = "Longitude", y = "Latitude") +
-    theme(strip.text.x = element_text(face = "bold", size = 10),
-          strip.text.y = element_text(face = "bold", size = 14),
-          axis.title   = element_text(size = 16, face = "bold"),
-          axis.text    = element_text(size = 11),
-          legend.title = element_text(size = 14, face = "bold"),
-          legend.text  = element_text(size = 12))
+    theme(strip.text.x    = element_text(face = "bold", size = 11),
+          strip.text.y    = element_text(face = "bold", size = 18),
+          axis.title      = element_text(size = 18, face = "bold"),
+          axis.text       = element_text(size = 13),
+          axis.text.x     = element_text(size = 13, angle = 45, hjust = 1),
+          legend.title    = element_text(size = 17, face = "bold"),
+          legend.text     = element_text(size = 15),
+          legend.key.size = unit(0.9, "cm"))
 )
 
 dev.off()
@@ -623,5 +651,5 @@ message("  output_p/maps/maps_pa.pdf (per-ASV PA maps)")
 message("  output_p/maps/ASGARD_processing_map_4clusters.pdf (hero)")
 message("  output_p/maps/ASGARD_processing_map_4clusters_detail.pdf (detail)")
 message("  output_p/maps/ASGARD_processing_division_depth_map.pdf (division x depth)")
-message("  output_p/maps/processing_colclus_abundance_4clusters.pdf (S06 Page6-style)")
-message("  output_p/maps/processing_division_contribution_FLPA.pdf (FL/PA improved)")
+message("  output_p/maps/processing_colclus_abundance_4clusters.pdf (p1 component RA; p2 richness)")
+message("  output_p/maps/processing_division_contribution_FLPA.pdf (FL/PA richness)")
