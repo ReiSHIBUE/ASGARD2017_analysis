@@ -243,10 +243,7 @@ print(
                           name = "Mean RA within 3 classes (%)",
                           breaks = c(0.5, 1, 2, 5, 10, 20)) +
     scale_color_manual(values = class_colors_3, name = "Class") +
-    labs(title = "Major genera in Bacteroidia / Gamma / Alphaproteobacteria",
-         subtitle = paste0("Filter: occurrence > 10% AND cumulative RA <= 95% (",
-                           n_genus_3, " genera)"),
-         x = "Cluster", y = NULL) +
+    labs(x = "Cluster", y = NULL) +
     theme_bw(base_size = 13) +
     theme(plot.title    = element_text(face = "bold", size = 18),
           plot.subtitle = element_text(size = 12),

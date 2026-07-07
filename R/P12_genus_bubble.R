@@ -93,7 +93,7 @@ class_emphasis <- c(
 # Section 4: Top-N bubble helper
 # ==============================================================================
 
-make_bubble_p <- function(n_top, pdf_h) {
+make_bubble_p <- function(n_top, pdf_h, show_title = TRUE) {
   top_n <- overall_genus_p %>% slice_head(n = n_top) %>% pull(fam_gen)
   plot_df <- cluster_genus_p %>%
     filter(fam_gen %in% top_n, mean_RA_pct > 0)
@@ -134,7 +134,7 @@ make_bubble_p <- function(n_top, pdf_h) {
                             name = "Mean RA (%)",
                             breaks = c(0.5, 1, 2, 5, 10, 20)) +
       scale_color_manual(values = class_colors, name = "Class") +
-      labs(title = paste0("Top ", n_top, " genera across 4 processing clusters"),
+      labs(title = if (show_title) paste0("Top ", n_top, " genera across 4 processing clusters") else NULL,
            subtitle = "Bubble size = mean relative abundance (%) within cluster",
            x = "Cluster", y = NULL) +
       theme_bw(base_size = 9) +
@@ -152,7 +152,7 @@ make_bubble_p <- function(n_top, pdf_h) {
 }
 
 make_bubble_p(n_top = 100, pdf_h = 22)
-make_bubble_p(n_top = 50,  pdf_h = 14)
+make_bubble_p(n_top = 50,  pdf_h = 14, show_title = FALSE)
 
 # ==============================================================================
 # Section 5: 3 bloom-responsive classes + objective filter
@@ -232,10 +232,7 @@ print(
                           name = "Mean RA within 3 classes (%)",
                           breaks = c(0.5, 1, 2, 5, 10, 20)) +
     scale_color_manual(values = class_colors_p, name = "Class") +
-    labs(title = "Major genera in Bacteroidia / Gamma / Alphaproteobacteria",
-         subtitle = paste0("Filter: occurrence > 10% AND cumulative RA <= 95% (",
-                           n_genus_3p, " genera)"),
-         x = "Cluster", y = NULL) +
+    labs(x = "Cluster", y = NULL) +
     theme_bw(base_size = 13) +
     theme(plot.title    = element_text(face = "bold", size = 18),
           plot.subtitle = element_text(size = 12),
@@ -251,6 +248,58 @@ dev.off()
 write.csv(plot_df_3p, out_csv_3p, row.names = FALSE)
 message("  PDF: output_p/bubble/ASGARD_3classes_objective_bubble.pdf (",
         n_genus_3p, " genera)")
+
+# ==============================================================================
+# Section 6: 3 bloom-responsive classes by FILTER fraction (0.2 / 3 / 20 um)
+#   Same genera as Section 5 (occurrence > 10% AND cumulative within-class
+#   RA <= 95%), but grouped by size fraction to show free-living (0.2 um) vs
+#   particle-associated (3/20 um) partitioning at the genus level.
+#   REQUIRES: meta_asgard_p2 (filter column), from P01.
+# ==============================================================================
+
+plot_df_filt_p <- as.data.frame(genus_mat_p) %>%
+  rownames_to_column("Sample") %>%
+  pivot_longer(-Sample, names_to = "fam_gen", values_to = "abundance") %>%
+  mutate(filter = factor(meta_asgard_p2[Sample, "filter"],
+                         levels = c("0.2 µm", "3 µm", "20 µm")),
+         class  = gen2class_p[fam_gen],
+         RA     = abundance / sample_total_3cl_p[Sample]) %>%
+  filter(fam_gen %in% selected_genera_p, !is.na(filter)) %>%
+  group_by(filter, fam_gen, class) %>%
+  summarise(mean_RA_pct = round(mean(RA, na.rm = TRUE) * 100, 3), .groups = "drop") %>%
+  filter(mean_RA_pct > 0)
+
+plot_df_filt_p$fam_gen <- factor(plot_df_filt_p$fam_gen, levels = rev(gen_order_p))
+
+out_pdf_filt <- here::here("output_p", "bubble",
+                           "ASGARD_3classes_by_filter_bubble.pdf")
+out_csv_filt <- here::here("output_p", "bubble",
+                           "ASGARD_3classes_by_filter_bubble.csv")
+
+pdf(file = out_pdf_filt, width = 11, height = pdf_h_3p)
+print(
+  ggplot(plot_df_filt_p, aes(x = filter, y = fam_gen,
+                             size = mean_RA_pct, color = class)) +
+    geom_point(alpha = 0.85) +
+    scale_size_continuous(range = c(1, 12),
+                          name = "Mean RA within 3 classes (%)",
+                          breaks = c(0.5, 1, 2, 5, 10, 20)) +
+    scale_color_manual(values = class_colors_p, name = "Class") +
+    labs(x = "Filter fraction", y = NULL) +
+    theme_bw(base_size = 13) +
+    theme(plot.title    = element_text(face = "bold", size = 16),
+          plot.subtitle = element_text(size = 11),
+          axis.text.y   = element_text(size = 11),
+          axis.text.x   = element_text(face = "bold", size = 15),
+          legend.title  = element_text(size = 12),
+          legend.text   = element_text(size = 11),
+          panel.grid.major = element_line(color = "gray92"),
+          panel.grid.minor = element_blank(),
+          legend.position = "right")
+)
+dev.off()
+write.csv(plot_df_filt_p, out_csv_filt, row.names = FALSE)
+message("  PDF: output_p/bubble/ASGARD_3classes_by_filter_bubble.pdf")
 
 message("\nP12_genus_bubble.R: done.")
 message("  Total unique family;genus combinations: ", length(unique(asv_fam_gen_p)))
