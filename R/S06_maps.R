@@ -680,11 +680,145 @@ write.csv(richness_kw,
   here::here("output", "survey", "maps", "richness_depth_kruskal.csv"),
   row.names = FALSE)
 
+# ==============================================================================
+# Section 12: Cruise progression map — stations coloured by sampling date,
+# with near-surface temperature / salinity overlaid (as point size) for context.
+#   REQUIRES: a_map (date, temp, salinity, lat, lon), mapz_survey (Section 1).
+#   date format e.g. "Jun 19 2017 21:22"; one (shallowest) sample per station.
+# ==============================================================================
+
+a_prog <- a_map
+# parse English month names + build date labels regardless of session locale
+.old_lct <- Sys.getlocale("LC_TIME"); Sys.setlocale("LC_TIME", "C")
+a_prog$date_p <- as.POSIXct(a_prog$date, format = "%b %d %Y %H:%M", tz = "UTC")
+a_prog <- a_prog[!is.na(a_prog$lat) & !is.na(a_prog$lon) & !is.na(a_prog$date_p), ]
+a_prog <- a_prog[order(a_prog$station, a_prog$depth_m), ]   # shallowest first
+stn_prog <- a_prog[!duplicated(a_prog$station), ]           # one point per station
+stn_prog$date_day <- as.Date(stn_prog$date_p)
+stn_prog$date_num <- as.numeric(stn_prog$date_day)
+stn_track <- stn_prog[order(stn_prog$date_p), ]            # ship route in time order
+date_brks   <- pretty(stn_prog$date_day, n = 5)
+date_labels <- format(date_brks, "%B %d")                  # e.g. "June 17"
+Sys.setlocale("LC_TIME", .old_lct)
+
+prog_theme <- theme(axis.title   = element_text(size = 16, face = "bold"),
+                    axis.text    = element_text(size = 12),
+                    legend.title = element_text(size = 13, face = "bold"),
+                    legend.text  = element_text(size = 11))
+
+prog_date_scale <- scale_color_viridis_c(name = "Date", option = "C",
+                     breaks = as.numeric(date_brks), labels = date_labels)
+
+pdf(here::here("output", "survey", "maps", "ASGARD_survey_cruise_progression.pdf"),
+    width = 12, height = 9)
+
+# Page 1: cruise progression (colour = date) with route line
+print(
+  ggmap(mapz_survey) +
+    geom_path(data = stn_track, aes(lon, lat), color = "grey45",
+              linewidth = 0.4, alpha = 0.6) +
+    geom_point(data = stn_prog, aes(lon, lat, color = date_num), size = 3.5, alpha = 0.9) +
+    prog_date_scale +
+    labs(x = "Longitude", y = "Latitude") +
+    prog_theme
+)
+
+# Page 2: cruise progression with station-name labels
+print(
+  ggmap(mapz_survey) +
+    geom_path(data = stn_track, aes(lon, lat), color = "grey45",
+              linewidth = 0.4, alpha = 0.6) +
+    geom_point(data = stn_prog, aes(lon, lat, color = date_num), size = 3.5, alpha = 0.9) +
+    ggrepel::geom_text_repel(data = stn_prog, aes(lon, lat, label = station),
+                             size = 2.5, max.overlaps = Inf, alpha = 0.85) +
+    prog_date_scale +
+    labs(x = "Longitude", y = "Latitude") +
+    prog_theme
+)
+
+# Page 3: colour = date, size = near-surface temperature
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = stn_prog, aes(lon, lat, color = date_num, size = temp), alpha = 0.85) +
+    prog_date_scale +
+    scale_size_continuous(name = "Temp (°C)", range = c(1, 9)) +
+    labs(x = "Longitude", y = "Latitude") +
+    prog_theme
+)
+
+# Page 4: temperature, with station-name labels
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = stn_prog, aes(lon, lat, color = date_num, size = temp), alpha = 0.85) +
+    ggrepel::geom_text_repel(data = stn_prog, aes(lon, lat, label = station),
+                             size = 2.5, max.overlaps = Inf, alpha = 0.85) +
+    prog_date_scale +
+    scale_size_continuous(name = "Temp (°C)", range = c(1, 9)) +
+    labs(x = "Longitude", y = "Latitude") +
+    prog_theme
+)
+
+# Page 5: colour = date, size = near-surface salinity
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = stn_prog, aes(lon, lat, color = date_num, size = salinity), alpha = 0.85) +
+    prog_date_scale +
+    scale_size_continuous(name = "Salinity", range = c(1, 9)) +
+    guides(color = guide_colorbar(order = 1), size = guide_legend(order = 2)) +
+    labs(x = "Longitude", y = "Latitude") +
+    prog_theme
+)
+
+# Page 6: salinity, with station-name labels
+print(
+  ggmap(mapz_survey) +
+    geom_point(data = stn_prog, aes(lon, lat, color = date_num, size = salinity), alpha = 0.85) +
+    ggrepel::geom_text_repel(data = stn_prog, aes(lon, lat, label = station),
+                             size = 2.5, max.overlaps = Inf, alpha = 0.85) +
+    prog_date_scale +
+    scale_size_continuous(name = "Salinity", range = c(1, 9)) +
+    guides(color = guide_colorbar(order = 1), size = guide_legend(order = 2)) +
+    labs(x = "Longitude", y = "Latitude") +
+    prog_theme
+)
+
+# Page 7: temperature, with station labels and cruise route
+print(
+  ggmap(mapz_survey) +
+    geom_path(data = stn_track, aes(lon, lat), color = "grey45",
+              linewidth = 0.4, alpha = 0.6) +
+    geom_point(data = stn_prog, aes(lon, lat, color = date_num, size = temp), alpha = 0.85) +
+    ggrepel::geom_text_repel(data = stn_prog, aes(lon, lat, label = station),
+                             size = 2.5, max.overlaps = Inf, alpha = 0.85) +
+    prog_date_scale +
+    scale_size_continuous(name = "Temp (°C)", range = c(1, 9)) +
+    labs(x = "Longitude", y = "Latitude") +
+    prog_theme
+)
+
+# Page 8: salinity, with station labels and cruise route
+print(
+  ggmap(mapz_survey) +
+    geom_path(data = stn_track, aes(lon, lat), color = "grey45",
+              linewidth = 0.4, alpha = 0.6) +
+    geom_point(data = stn_prog, aes(lon, lat, color = date_num, size = salinity), alpha = 0.85) +
+    ggrepel::geom_text_repel(data = stn_prog, aes(lon, lat, label = station),
+                             size = 2.5, max.overlaps = Inf, alpha = 0.85) +
+    prog_date_scale +
+    scale_size_continuous(name = "Salinity", range = c(1, 9)) +
+    guides(color = guide_colorbar(order = 1), size = guide_legend(order = 2)) +
+    labs(x = "Longitude", y = "Latitude") +
+    prog_theme
+)
+
+dev.off()
+
 message("\nS06_maps.R: done.")
 message("  PDF: ASGARD_survey_map_11clusters.pdf, ASGARD_survey_map_11clusters_detail.pdf")
 message("  PDF: ASGARD_survey_all_stations.pdf")
 message("  PDF: map_colclus_abundance_11clusters.pdf")
 message("  PDF: ASGARD_survey_richness_by_depth_division.pdf")
+message("  PDF: ASGARD_survey_cruise_progression.pdf")
 message("  CSV: output/survey/maps/richness_depth_kruskal.csv")
 message("  CSV: output/survey/maps/cluster11_geographic_summary.csv")
 message("  CSV: output/survey/maps/cluster11_depth_type_test.csv")
