@@ -891,7 +891,7 @@ print(fc_plot_gg(fc_stn$temp,     seq(-2, 11, by = 1),   "Temp (°C)",  lab_ever
 
 # Pages 15-16: terrain basemap + filled field (fill) + station points coloured by
 # sampling date (colour) + cruise route + labels -> field AND cruise timing.
-fc_plot_gg_date <- function(vals, brks, legend_name, lab_every = 1) {
+fc_plot_gg_date <- function(vals, brks, legend_name, lab_every = 1, pal = fc_jet) {
   gg <- fc_g
   gg$z <- as.vector((fc_W %*% vals) / rowSums(fc_W))
   gg$z[fc_nn > fc_radius_km] <- NA
@@ -899,7 +899,7 @@ fc_plot_gg_date <- function(vals, brks, legend_name, lab_every = 1) {
     geom_contour_filled(data = gg[!is.na(gg$z), ],
                         aes(lon, lat, z = z, fill = after_stat(level_mid)),
                         breaks = brks, alpha = 0.55) +
-    scale_fill_stepsn(colours = fc_jet(length(brks) - 1), breaks = brks,
+    scale_fill_stepsn(colours = pal(length(brks) - 1), breaks = brks,
                       limits = range(brks), name = legend_name,
                       labels = function(b) ifelse(b %% lab_every == 0, as.character(b), ""),
                       guide = guide_colorsteps(barheight = grid::unit(5, "cm"),
@@ -915,7 +915,8 @@ fc_plot_gg_date <- function(vals, brks, legend_name, lab_every = 1) {
     labs(x = "Longitude", y = "Latitude") +
     prog_theme
 }
-print(fc_plot_gg_date(fc_stn$salinity, seq(25, 33, by = 0.5), "Salinity (psu)", lab_every = 1))
+print(fc_plot_gg_date(fc_stn$salinity, seq(25, 33, by = 0.5), "Salinity (psu)",
+                      lab_every = 1, pal = viridisLite::viridis))   # distinct from temp (jet)
 print(fc_plot_gg_date(fc_stn$temp,     seq(-2, 11, by = 1),   "Temp (°C)",  lab_every = 2))
 
 dev.off()
