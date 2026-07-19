@@ -21,6 +21,7 @@
 library(tidyverse)
 library(ggmap)
 library(ggrepel)
+library(sf)          # coastline/land polygons for filled-contour maps (Section 13)
 
 ggmap::register_stadiamaps(Sys.getenv("STADIA_MAPS_KEY"))
 
@@ -810,6 +811,112 @@ print(
     labs(x = "Longitude", y = "Latitude") +
     prog_theme
 )
+
+# ==============================================================================
+# Section 13: distance-masked (30 km) filled-contour maps of near-surface
+# salinity and temperature, added as pages to the cruise progression PDF.
+# IDW (power 2, latitude-corrected km distance); land masked white via
+# rnaturalearth. NOTE: interpolated from sparse ship stations -> only filled
+# within ~30 km of a station (non-synoptic; context only).
+# ==============================================================================
+
+fc_stn <- stn_prog[complete.cases(stn_prog[, c("lon", "lat", "temp", "salinity")]), ]
+fc_radius_km <- 30
+fc_xr <- range(fc_stn$lon) + c(-0.5, 0.5)
+fc_yr <- range(fc_stn$lat) + c(-0.3, 0.3)
+fc_kx <- 111 * cos(mean(fc_stn$lat) * pi / 180); fc_ky <- 111   # km per degree
+fc_g  <- expand.grid(lon = seq(fc_xr[1], fc_xr[2], length.out = 240),
+                     lat = seq(fc_yr[1], fc_yr[2], length.out = 240))
+fc_D  <- sqrt((outer(fc_g$lon, fc_stn$lon, "-") * fc_kx)^2 +
+              (outer(fc_g$lat, fc_stn$lat, "-") * fc_ky)^2)
+fc_W  <- 1 / (fc_D^2); fc_W[!is.finite(fc_W)] <- max(fc_W[is.finite(fc_W)], na.rm = TRUE) * 1e6
+fc_nn <- apply(fc_D, 1, min)
+fc_land <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
+fc_jet  <- colorRampPalette(c("#00007F", "#0000FF", "#007FFF", "#00FFFF",
+                              "#7FFF7F", "#FFFF00", "#FF7F00", "#FF0000", "#7F0000"))
+
+fc_plot <- function(vals, brks, legend_name, lab_every = 1, show_labels = FALSE) {
+  gg <- fc_g
+  gg$z <- as.vector((fc_W %*% vals) / rowSums(fc_W))
+  gg$z[fc_nn > fc_radius_km] <- NA
+  p <- ggplot() +
+    geom_contour_filled(data = gg[!is.na(gg$z), ],
+                        aes(lon, lat, z = z, fill = after_stat(level_mid)), breaks = brks) +
+    scale_fill_stepsn(colours = fc_jet(length(brks) - 1), breaks = brks,
+                      limits = range(brks), name = legend_name,
+                      labels = function(b) ifelse(b %% lab_every == 0, as.character(b), ""),
+                      guide = guide_colorsteps(barheight = grid::unit(6, "cm"),
+                                               show.limits = TRUE)) +
+    geom_sf(data = fc_land, fill = "white", color = "grey30", linewidth = 0.3) +
+    geom_point(data = fc_stn, aes(lon, lat), color = "black", size = 0.6, alpha = 0.6)
+  if (show_labels)
+    p <- p + ggrepel::geom_text_repel(data = fc_stn, aes(lon, lat, label = station),
+                                      size = 2.2, max.overlaps = Inf, alpha = 0.85)
+  p +
+    coord_sf(xlim = fc_xr, ylim = fc_yr, crs = 4326, expand = FALSE) +
+    labs(x = NULL, y = NULL) +
+    theme_bw(base_size = 13) +
+    theme(panel.grid = element_line(color = "grey85", linewidth = 0.2))
+}
+
+# Pages 9-10: salinity / temperature filled contours (clean, final figures)
+print(fc_plot(fc_stn$salinity, seq(25, 33, by = 0.5), "Salinity (psu)", lab_every = 1))
+print(fc_plot(fc_stn$temp,     seq(-2, 11, by = 1),   "Temp (°C)",  lab_every = 2))
+# Pages 11-12: same, with station-name labels (working reference, not for final figs)
+print(fc_plot(fc_stn$salinity, seq(25, 33, by = 0.5), "Salinity (psu)", lab_every = 1, show_labels = TRUE))
+print(fc_plot(fc_stn$temp,     seq(-2, 11, by = 1),   "Temp (°C)",  lab_every = 2, show_labels = TRUE))
+
+# Pages 13-14: filled contour + labels on the terrain basemap (semi-transparent,
+# so the Stadia terrain shows through, like pages 1-8)
+fc_plot_gg <- function(vals, brks, legend_name, lab_every = 1) {
+  gg <- fc_g
+  gg$z <- as.vector((fc_W %*% vals) / rowSums(fc_W))
+  gg$z[fc_nn > fc_radius_km] <- NA
+  ggmap(mapz_survey) +
+    geom_contour_filled(data = gg[!is.na(gg$z), ],
+                        aes(lon, lat, z = z, fill = after_stat(level_mid)),
+                        breaks = brks, alpha = 0.6) +
+    scale_fill_stepsn(colours = fc_jet(length(brks) - 1), breaks = brks,
+                      limits = range(brks), name = legend_name,
+                      labels = function(b) ifelse(b %% lab_every == 0, as.character(b), ""),
+                      guide = guide_colorsteps(barheight = grid::unit(6, "cm"), show.limits = TRUE)) +
+    geom_point(data = fc_stn, aes(lon, lat), color = "black", size = 0.6, alpha = 0.7) +
+    ggrepel::geom_text_repel(data = fc_stn, aes(lon, lat, label = station),
+                             size = 2.2, max.overlaps = Inf, alpha = 0.85) +
+    labs(x = "Longitude", y = "Latitude") +
+    prog_theme
+}
+print(fc_plot_gg(fc_stn$salinity, seq(25, 33, by = 0.5), "Salinity (psu)", lab_every = 1))
+print(fc_plot_gg(fc_stn$temp,     seq(-2, 11, by = 1),   "Temp (°C)",  lab_every = 2))
+
+# Pages 15-16: terrain basemap + filled field (fill) + station points coloured by
+# sampling date (colour) + cruise route + labels -> field AND cruise timing.
+fc_plot_gg_date <- function(vals, brks, legend_name, lab_every = 1) {
+  gg <- fc_g
+  gg$z <- as.vector((fc_W %*% vals) / rowSums(fc_W))
+  gg$z[fc_nn > fc_radius_km] <- NA
+  ggmap(mapz_survey) +
+    geom_contour_filled(data = gg[!is.na(gg$z), ],
+                        aes(lon, lat, z = z, fill = after_stat(level_mid)),
+                        breaks = brks, alpha = 0.55) +
+    scale_fill_stepsn(colours = fc_jet(length(brks) - 1), breaks = brks,
+                      limits = range(brks), name = legend_name,
+                      labels = function(b) ifelse(b %% lab_every == 0, as.character(b), ""),
+                      guide = guide_colorsteps(barheight = grid::unit(5, "cm"),
+                                               show.limits = TRUE, order = 2)) +
+    geom_path(data = stn_track, aes(lon, lat), color = "grey30",
+              linewidth = 0.4, alpha = 0.6) +
+    geom_point(data = fc_stn, aes(lon, lat, color = date_num), size = 2.4, alpha = 0.95) +
+    scale_color_viridis_c(name = "Date", option = "C",
+                          breaks = as.numeric(date_brks), labels = date_labels,
+                          guide = guide_colorbar(order = 1)) +
+    ggrepel::geom_text_repel(data = fc_stn, aes(lon, lat, label = station),
+                             size = 2, max.overlaps = Inf, alpha = 0.8) +
+    labs(x = "Longitude", y = "Latitude") +
+    prog_theme
+}
+print(fc_plot_gg_date(fc_stn$salinity, seq(25, 33, by = 0.5), "Salinity (psu)", lab_every = 1))
+print(fc_plot_gg_date(fc_stn$temp,     seq(-2, 11, by = 1),   "Temp (°C)",  lab_every = 2))
 
 dev.off()
 
