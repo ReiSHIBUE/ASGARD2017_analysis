@@ -218,6 +218,44 @@ for (ev in env_plot_vars) {
 
 dev.off()
 
+# ==============================================================================
+# Section 5: PCA biplot (PC1 vs PC2) — sites coloured by cluster / division,
+# sized by nitrate concentration; environmental-variable loadings as arrows.
+# Reuses pca_p and pca_scores_p from Section 3.
+# ==============================================================================
+
+pca_ve <- summary(pca_p)$importance["Proportion of Variance", ]
+pca_p1 <- round(pca_ve[1] * 100, 1); pca_p2 <- round(pca_ve[2] * 100, 1)
+pca_ld <- as.data.frame(pca_p$rotation[, 1:2])
+pca_ld$lab <- c("Temp", "Salinity", "DO", "NO3", "PO4", "Sil", "NH4", "FlECO", "Depth")
+pca_mult <- 0.85 * min(max(abs(pca_scores_p$PC1)) / max(abs(pca_ld$PC1)),
+                       max(abs(pca_scores_p$PC2)) / max(abs(pca_ld$PC2)))
+pca_ld$x <- pca_ld$PC1 * pca_mult; pca_ld$y <- pca_ld$PC2 * pca_mult
+cc_d2 <- c("Free-living" = "#E41A1C", "Particle-associated" = "#377EB8")
+
+pca_biplot <- function(colvar, cols, name) {
+  ggplot() +
+    geom_hline(yintercept = 0, color = "grey85") +
+    geom_vline(xintercept = 0, color = "grey85") +
+    geom_point(data = pca_scores_p,
+               aes(PC1, PC2, color = .data[[colvar]], size = `NO3(uM)`), alpha = 0.8) +
+    scale_color_manual(values = cols, name = name) +
+    scale_size_continuous(name = "NO3 (µM)", range = c(1, 7)) +
+    geom_segment(data = pca_ld, aes(0, 0, xend = x, yend = y),
+                 arrow = arrow(length = unit(0.2, "cm")), color = "black", linewidth = 0.7) +
+    ggrepel::geom_text_repel(data = pca_ld, aes(x, y, label = lab),
+                             fontface = "bold", size = 4.5, color = "black") +
+    labs(x = paste0("PC1 (", pca_p1, "%)"), y = paste0("PC2 (", pca_p2, "%)")) +
+    coord_equal() + theme_bw(base_size = 14)
+}
+
+pdf(here("output_p", "env_boxplots", "ASGARD_processing_pca_biplot.pdf"),
+    width = 9, height = 8)
+print(pca_biplot("cluster",   cc_p,  "Cluster"))
+print(pca_biplot("division2", cc_d2, "Division"))
+dev.off()
+message("  PDF: output_p/env_boxplots/ASGARD_processing_pca_biplot.pdf")
+
 message("\nP11_env_boxplots.R: done.")
 message("  PDF: output_p/env_boxplots/ASGARD_boxplots_processing.pdf")
 message("  PDF: output_p/env_boxplots/ASGARD_bloom_autotrophy_index_processing.pdf")
