@@ -260,6 +260,44 @@ dev.off()
 
 message("  PDF: output/survey/beta_diversity/ASGARD_bloom_autotrophy_index_11clusters.pdf")
 
+# ==============================================================================
+# Section 4: PCA biplot (PC1 vs PC2) — sites coloured by cluster / division,
+# sized by nitrate concentration; environmental-variable loadings as arrows.
+# Reuses pca_result and pca_scores from Section 2.
+# ==============================================================================
+
+pca_ve_s <- summary(pca_result)$importance["Proportion of Variance", ]
+pca_s1 <- round(pca_ve_s[1] * 100, 1); pca_s2 <- round(pca_ve_s[2] * 100, 1)
+pca_ld_s <- as.data.frame(pca_result$rotation[, 1:2])
+pca_ld_s$lab <- c("Temp", "Salinity", "DO", "NO3", "PO4", "Sil", "NH4", "FlECO", "Depth")
+pca_mult_s <- 0.85 * min(max(abs(pca_scores$PC1)) / max(abs(pca_ld_s$PC1)),
+                         max(abs(pca_scores$PC2)) / max(abs(pca_ld_s$PC2)))
+pca_ld_s$x <- pca_ld_s$PC1 * pca_mult_s; pca_ld_s$y <- pca_ld_s$PC2 * pca_mult_s
+div3_colors <- c("A" = "#E31A1C", "B" = "#33A02C", "C" = "#1F78B4")
+
+pca_biplot_s <- function(colvar, cols, name) {
+  ggplot() +
+    geom_hline(yintercept = 0, color = "grey85") +
+    geom_vline(xintercept = 0, color = "grey85") +
+    geom_point(data = pca_scores,
+               aes(PC1, PC2, color = .data[[colvar]], size = `NO3(uM)`), alpha = 0.8) +
+    scale_color_manual(values = cols, name = name) +
+    scale_size_continuous(name = "NO3 (µM)", range = c(1, 7)) +
+    geom_segment(data = pca_ld_s, aes(0, 0, xend = x, yend = y),
+                 arrow = arrow(length = unit(0.2, "cm")), color = "black", linewidth = 0.7) +
+    ggrepel::geom_text_repel(data = pca_ld_s, aes(x, y, label = lab),
+                             fontface = "bold", size = 4.5, color = "black") +
+    labs(x = paste0("PC1 (", pca_s1, "%)"), y = paste0("PC2 (", pca_s2, "%)")) +
+    coord_equal() + theme_bw(base_size = 14)
+}
+
+pdf(here::here("output", "survey", "beta_diversity", "ASGARD_survey_pca_biplot.pdf"),
+    width = 9, height = 8)
+print(pca_biplot_s("cluster11", cc11,        "Cluster"))
+print(pca_biplot_s("division",  div3_colors, "Division"))
+dev.off()
+message("  PDF: output/survey/beta_diversity/ASGARD_survey_pca_biplot.pdf")
+
 # Clean up temp script output
 rm(env_mat, env_scaled, pca_result, pca_scores, env_df, env_complete)
 
