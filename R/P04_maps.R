@@ -40,7 +40,7 @@ bbox <- make_bbox(
   f   = 0.1
 )
 
-mapz <- get_stadiamap(bbox, maptype = "stamen_terrain", zoom = 4)
+mapz <- get_stadiamap(bbox, maptype = "stamen_terrain", zoom = 6)
 
 asgard_processing_ggmap$filter <- factor(
   asgard_processing_ggmap$filter,
@@ -179,10 +179,12 @@ print(
   ggmap(mapz) +
     geom_point(data = a_map_p,
                aes(x = lon, y = lat, color = cluster),
-               size = 2.5, alpha = 0.8) +
+               size = 4, alpha = 0.8) +
     scale_color_manual(values = cc_p, guide = "none") +
     facet_wrap(~ cluster, ncol = 4) +
-    theme(strip.text = element_text(face = "bold", size = 13))
+    theme(strip.text = element_text(face = "bold", size = 24),
+          axis.title = element_text(size = 20, face = "bold"),
+          axis.text  = element_text(size = 15))
 )
 
 # Page 3: k=2 division (Free-living vs Particle-associated)

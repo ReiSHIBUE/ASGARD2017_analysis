@@ -40,7 +40,7 @@ clbl  <- paste0(names(n_per), " (n=", n_per, ")")
 names(clbl) <- names(n_per)
 
 bbox        <- make_bbox(lon = a_map$lon, lat = a_map$lat, f = 0.1)
-mapz_survey <- get_stadiamap(bbox, maptype = "stamen_terrain", zoom = 4)
+mapz_survey <- get_stadiamap(bbox, maptype = "stamen_terrain", zoom = 6)
 
 # ==============================================================================
 # Section 2: 基本マップ / Basic maps
@@ -112,14 +112,31 @@ print(
     detail_theme
 )
 
-# クラスターでfacet / Faceted by cluster
-print(
-  ggmap(mapz_survey) +
-    geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 2.5, alpha = 0.8) +
+# Per-sub-cluster sampling sites, one panel each, arranged in 3 rows by division
+# (row A: A1 A2; row B: B1 B2a B2b; row C: C1a C1b1 C1b2 C2a C2b1 C2b2)
+a_map$division <- factor(substr(as.character(a_map$cluster11), 1, 1),
+                         levels = c("A", "B", "C"))
+sub_row_theme <- theme(strip.text = element_text(face = "bold", size = 24),
+                       axis.title = element_text(size = 20, face = "bold"),
+                       axis.text  = element_text(size = 15))
+ncol_max <- 6   # widest row (division C)
+make_div_row <- function(dv) {
+  d <- a_map[a_map$division == dv, ]
+  d$cluster11 <- droplevels(d$cluster11)
+  n <- nlevels(d$cluster11)
+  p <- ggmap(mapz_survey) +
+    geom_point(data = d, aes(x = lon, y = lat, color = cluster11), size = 4, alpha = 0.85) +
     scale_color_manual(values = cc11, guide = "none") +
-    facet_wrap(~ cluster11, ncol = 4) +
-    detail_theme
-)
+    facet_wrap(~ cluster11, nrow = 1) +
+    labs(x = NULL, y = NULL) + sub_row_theme
+  # pad with empty space on the right so panels share one width and align left
+  if (n < ncol_max)
+    gridExtra::arrangeGrob(p, grid::nullGrob(), ncol = 2,
+                           widths = c(n, ncol_max - n))
+  else p
+}
+print(gridExtra::grid.arrange(make_div_row("A"), make_div_row("B"),
+                              make_div_row("C"), nrow = 3))
 
 # depth_type x cluster グリッド / Grid
 print(
