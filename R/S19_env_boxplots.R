@@ -207,13 +207,12 @@ bloom_theme <- theme_bw() + theme(
   legend.title = element_text(size = 14, face = "bold"),
   legend.text  = element_text(size = 12))
 
-# Page 1: Bloom Index boxplot
+# Page 1: Bloom Index boxplot (black dots)
 print(
   ggplot(pca_scores, aes(x = cluster11, y = bloom_index)) +
     geom_boxplot(aes(fill = cluster11), outlier.shape = NA) +
-    geom_jitter(aes(color = cluster11), width = 0.3, size = 1.5, alpha = 0.7) +
+    geom_jitter(width = 0.3, size = 1.5, alpha = 0.7, color = "black") +
     scale_fill_manual(values = cc11, guide = "none") +
-    scale_color_manual(values = cc11, guide = "none") +
     facet_grid(~ division, scales = "free_x", space = "free_x") +
     labs(x = "Cluster", y = "Bloom Index (0 = pre-bloom, 1 = post-bloom)") +
     bloom_theme

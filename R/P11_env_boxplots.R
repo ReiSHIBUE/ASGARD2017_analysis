@@ -165,13 +165,12 @@ pdf(file = here("output_p", "env_boxplots",
                 "ASGARD_bloom_autotrophy_index_processing.pdf"),
     width = 14, height = 6)
 
-# Page 1: Bloom Index boxplot
+# Page 1: Bloom Index boxplot (black dots)
 print(
   ggplot(pca_scores_p, aes(x = cluster, y = bloom_index)) +
     geom_boxplot(aes(fill = cluster), outlier.shape = NA) +
-    geom_jitter(aes(color = cluster), width = 0.3, size = 1.5, alpha = 0.7) +
+    geom_jitter(width = 0.3, size = 1.5, alpha = 0.7, color = "black") +
     scale_fill_manual(values = cc_p, guide = "none") +
-    scale_color_manual(values = cc_p, guide = "none") +
     facet_grid(~ division2, scales = "free_x", space = "free_x") +
     labs(x = "Cluster", y = "Bloom Index (0 = pre-bloom, 1 = post-bloom)") +
     bloom_theme
