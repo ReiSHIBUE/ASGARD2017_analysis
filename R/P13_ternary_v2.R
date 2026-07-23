@@ -244,8 +244,22 @@ p3obj_s <- p3_obj + small_theme +
 
 grid.arrange(p2s2, p1s2, p3obj_s, nrow = 1)
 
-# Page 7: combined (a) cluster + (b) class only (no RGB/no objective panel)
-grid.arrange(p2s2, p1s2, nrow = 1)
+# Pages 7-9: (A) clusters and (B) class, each as a full-page ternary with
+# labelled arrows (like page 5), plus a combined (A)+(B) sheet. ggtern arrows are
+# clipped by grid.arrange, so the combined page rasterizes each standalone panel
+# (arrows preserved) before placing them side by side.
+p2s7 <- p2 + labs(title = "(A) ASVs in four clusters")
+p1s7 <- p1 + labs(title = "(B) ASVs by Class (3 bloom classes)")
+
+print(p2s7)   # Page 7: (A) standalone
+print(p1s7)   # Page 8: (B) standalone
+
+# Page 9: combined — rasterize each standalone panel, then arrange side by side
+.tf_a <- tempfile(fileext = ".png"); .tf_b <- tempfile(fileext = ".png")
+png(.tf_a, width = 1100, height = 1000, res = 130); print(p2s7); dev.off()
+png(.tf_b, width = 1100, height = 1000, res = 130); print(p1s7); dev.off()
+grid.arrange(grid::rasterGrob(png::readPNG(.tf_a), interpolate = TRUE),
+             grid::rasterGrob(png::readPNG(.tf_b), interpolate = TRUE), nrow = 1)
 
 dev.off()
 
