@@ -140,13 +140,14 @@ print(
                size = 2, alpha = 0.8) +
     scale_color_manual(values = cc_p, guide = "none") +
     facet_wrap(~ cluster, ncol = 4) +
-    coord_cartesian(xlim = c(24, 35.5), ylim = c(-2.5, 13)) +
+    coord_cartesian(xlim = c(24, 35.5), ylim = c(-2.5, 7.5)) +
     labs(x = "Salinity", y = "Potential Temperature (°C)") +
     theme_bw(base_size = 15) +
     theme(
       axis.title = element_text(size = 18, face = "bold"),
       axis.text  = element_text(size = 13),
-      strip.text = element_text(face = "bold", size = 16)
+      strip.text = element_text(face = "bold", size = 16),
+      plot.margin = margin(t = 2, r = 6, b = 6, l = 6)
     )
 )
 
