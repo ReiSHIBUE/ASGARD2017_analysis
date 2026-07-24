@@ -997,15 +997,15 @@ node_order <- c("C1 vs C2", "C1a vs C1b", "C1b1 vs C1b2", "C2a vs C2b", "C2b1 vs
 
 # PC axis labels with main loadings
 pc_labels <- c(
-  "PC1" = "PC1 (48.1%)\nNutrients(+), Sal(+), Depth(+)",
-  "PC2" = "PC2 (20.7%)\nDO(+) vs Temp(-)",
-  "PC3" = "PC3 (12.2%)\nFlECO(-)",
-  "PC4" = "PC4 (7.2%)\nDepth(-) vs Sal(+)",
-  "PC5" = "PC5 (5.5%)\nSil(+) vs Sal(-), Temp(-)",
-  "PC6" = "PC6 (3.2%)\nNH4(+) vs Sal(-), Depth(-)",
-  "PC7" = "PC7 (2.0%)\nDO(-), Temp(-), NH4(-)",
-  "PC8" = "PC8 (0.7%)\nPO4(+) vs Sil(-)",
-  "PC9" = "PC9 (0.5%)\nNO3(+) vs PO4(-), Sil(-)"
+  "PC1" = "PC1 (48.1%)\nNutrients+, Sal+, Depth+",
+  "PC2" = "PC2 (20.7%)\nDO+ vs Temp-",
+  "PC3" = "PC3 (12.2%)\nFlECO-",
+  "PC4" = "PC4 (7.2%)\nDepth- vs Sal+",
+  "PC5" = "PC5 (5.5%)\nSil+ vs Sal-",
+  "PC6" = "PC6 (3.2%)\nNH4+ vs Sal-",
+  "PC7" = "PC7 (2.0%)\nDO-, Temp-",
+  "PC8" = "PC8 (0.7%)\nPO4+ vs Sil-",
+  "PC9" = "PC9 (0.5%)\nNO3+ vs PO4-"
 )
 
 plot_df_node <- node_df %>%
@@ -1021,7 +1021,7 @@ plot_df_node <- node_df %>%
   )
 
 pdf(here("output", "survey", "beta_diversity", "env_C_node_pairwise_heatmap.pdf"),
-    width = 16, height = 6)
+    width = 24, height = 7)
 
 print(
   ggplot(plot_df_node, aes(x = PC, y = node)) +
@@ -1032,17 +1032,20 @@ print(
       name = NULL,
       drop = FALSE
     ) +
-    geom_text(aes(label = label, color = fill_cat), size = 3.5, lineheight = 0.8) +
+    geom_text(aes(label = label, color = fill_cat), size = 6, lineheight = 0.8) +
     scale_color_manual(
       values = c("top" = "white", "sig" = "black", "ns" = "grey50"),
       guide = "none"
     ) +
     scale_x_discrete(labels = pc_labels) +
     labs(x = NULL, y = "Dendrogram node") +
-    theme_minimal(base_size = 13) +
+    theme_minimal(base_size = 18) +
     theme(panel.grid = element_blank(),
           legend.position = "bottom",
-          axis.text.x = element_text(size = 8, lineheight = 0.85))
+          legend.text = element_text(size = 16),
+          axis.title = element_text(size = 18, face = "bold"),
+          axis.text.y = element_text(size = 16),
+          axis.text.x = element_text(size = 14, lineheight = 0.85))
 )
 
 dev.off()
