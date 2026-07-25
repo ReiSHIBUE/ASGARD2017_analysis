@@ -149,15 +149,12 @@ print(
     facet_wrap(~ label, nrow = 2) +
     coord_equal() +
     scale_fill_manual(values = class_colors, drop = FALSE) +
-    labs(title = "Class composition at DBO3 stations",
-         subtitle = "Each waffle = 100 units (~ 100% relative abundance); panel: station (n samples; clusters)",
-         x = NULL, y = NULL) +
+    labs(x = NULL, y = NULL) +
     theme_void() +
-    theme(plot.title    = element_text(face = "bold", size = 16),
-          plot.subtitle = element_text(size = 11),
-          strip.text    = element_text(face = "bold", size = 10,
-                                       margin = margin(t = 6, b = 6)),
-          legend.text   = element_text(size = 9))
+    theme(strip.text  = element_text(face = "bold", size = 16,
+                                     margin = margin(t = 6, b = 6)),
+          legend.text  = element_text(size = 14),
+          legend.title = element_text(size = 15, face = "bold"))
 )
 
 # ==============================================================================
