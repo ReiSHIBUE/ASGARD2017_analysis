@@ -107,14 +107,16 @@ print(
     geom_text_repel(data = combined_df,
                     aes(x = lon, y = lat,
                         label = paste0(station, "\n", round(value, 2))),
-                    size = 2.5, max.overlaps = 25) +
+                    size = 3.5, max.overlaps = 25) +
     scale_size_continuous(range = c(2, 12), name = "Value") +
     scale_color_manual(values = var_colors, guide = "none") +
     facet_wrap(~ variable, nrow = 1) +
-    labs(title = "DBO3 station means: NO3, Chl-a, and FlECO-AFL (depth-averaged)",
-         x = "Longitude", y = "Latitude") +
-    theme(plot.title = element_text(face = "bold", size = 14),
-          strip.text = element_text(face = "bold", size = 12))
+    labs(x = "Longitude", y = "Latitude") +
+    theme(strip.text   = element_text(face = "bold", size = 18),
+          axis.title   = element_text(size = 16, face = "bold"),
+          axis.text    = element_text(size = 13),
+          legend.title = element_text(size = 15, face = "bold"),
+          legend.text  = element_text(size = 13))
 )
 
 # Page 1: per-station NO3 (depth-averaged)
