@@ -1,0 +1,5 @@
+"cluster","primary_WM","secondary_WM","bloom_index","bloom_stage","Alpha_pct","Gamma_pct","Bacteroidia_pct","characteristic_ASV","dbRDA_significant"
+"1 (FL)","AnW (48)","wSW (20)",0.39,"pre",20,37,39,"Nitrincolaceae; uncultured","salinity only"
+"2 (PA)","wSW (48)","MWW (13)",0.58,"post",21,28,42,"Flavobacteriaceae; Ulvibacter","salinity only"
+"3 (PA)","AnW (40)","MWW (20)",0.44,"mid",28,36,25,"Moraxellaceae; Psychrobacter","salinity only"
+"4 (PA)","AnW (47)","cSW (21)",0.46,"mid",21,27,48,"Flavobacteriaceae; uncultured","salinity only"
