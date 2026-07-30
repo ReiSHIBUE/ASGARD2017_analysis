@@ -19,6 +19,9 @@
 
 library(tidyverse)
 
+# 乱数固定 / Fix RNG: permutation-based tests below
+set.seed(42)
+
 # ==============================================================================
 # Section 1: Data preparation and sigma-t calculation
 # データ準備 + ポテンシャル密度 (sigma-t, EOS-80) の計算

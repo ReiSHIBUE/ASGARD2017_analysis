@@ -24,6 +24,10 @@
 library(vegan)
 library(tidyverse)
 
+# 乱数固定 / Fix RNG: adonis2(), betadisper() and mantel() are permutation
+# tests, so p-values move between runs unless the seed is set.
+set.seed(42)
+
 # ==============================================================================
 # Section 1: PERMANOVA — 環境変数ごとの寄与 / Per environmental variable
 # ==============================================================================

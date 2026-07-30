@@ -23,6 +23,9 @@ library(ggmap)
 library(ggrepel)
 library(sf)          # coastline/land polygons for filled-contour maps (Section 13)
 
+# 乱数固定 / Fix RNG: Fisher/chi-squared tests below use simulate.p.value
+set.seed(42)
+
 ggmap::register_stadiamaps(Sys.getenv("STADIA_MAPS_KEY"))
 
 # ==============================================================================
