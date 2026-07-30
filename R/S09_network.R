@@ -92,7 +92,10 @@ plot(asgard_network,
 if (requireNamespace("Rtsne", quietly = TRUE)) {
   tryCatch({
     library(Rtsne)
-    asgard_tsne <- Rtsne::Rtsne(t(asgard_frtprop)^0.25,
+    # asgard_frtprop is already fourth-root transformed in S01_data_prep.R;
+    # raising it to 0.25 again gave a sixteenth-root input to the tSNE.
+    # asgard_frtprop は S01 で既に4乗根変換済みのため、再変換しない。
+    asgard_tsne <- Rtsne::Rtsne(t(asgard_frtprop),
                                  perplexity     = 10,
                                  dims           = 2,
                                  check_duplicates = FALSE,
