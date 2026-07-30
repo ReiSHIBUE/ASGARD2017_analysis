@@ -42,9 +42,15 @@ asgard_alpha_df <- data.frame(
                          levels = hier_levels_11)
 )
 
+# S04_beta_diversity_pcoa.R adds a "Sample" column to the shared meta_asgard,
+# so rownames_to_column() would fail here with a duplicate-column error when the
+# survey pipeline is run in order. Drop it first — the row names carry the same
+# information. / S04が meta_asgard に "Sample" 列を追加するため、先に取り除く。
+meta_asgard_join <- meta_asgard[, colnames(meta_asgard) != "Sample", drop = FALSE]
+
 asgard_alpha_df <- left_join(
   asgard_alpha_df,
-  rownames_to_column(meta_asgard, var = "Sample"),
+  rownames_to_column(meta_asgard_join, var = "Sample"),
   by = "Sample"
 )
 

@@ -18,12 +18,8 @@
 library(here)
 
 # Create output subdirectories / 出力サブディレクトリを作成
-for (d in c("output/survey/heatmaps", "output/survey/maps",
-            "output/survey/beta_diversity", "output/survey/dbrda",
-            "output/survey/alpha_diversity", "output/survey/taxonomy",
-            "output/survey/network")) {
-  dir.create(here(d), showWarnings = FALSE, recursive = TRUE)
-}
+source(here("R", "00_dirs.R"))
+ensure_output_dirs()
 
 scripts <- c(
   "R/00_setup.R",
@@ -36,16 +32,59 @@ scripts <- c(
   "R/S07_alpha_diversity.R",
   "R/S08_taxonomy.R",
   "R/S09_network.R",
-  "R/S10_permanova.R"
+  "R/S10_permanova.R",
+  "R/S11_crosstable.R",
+  "R/S12_indval.R",
+  "R/S13_indval_18S.R",
+  "R/S14_sampling_period.R",
+  "R/S15_wSW_misclassification.R",
+  "R/S16_NO3_summary.R",
+  "R/S17_pca_env.R",
+  "R/S18_cluster_specific_ASVs.R",
+  "R/S19_env_boxplots.R",
+  "R/S20_stratification.R",
+  "R/S21_genus_bubble.R",
+  "R/S22_dbo3_waffle.R",
+  "R/S23_dbo3_envmap.R",
+  "R/S25_transect_compare.R",
+  "R/TS_diagram.R"
+  # heatmap_watermass.R needs the processing objects too — see 00_run_all.R
 )
 
-for (script in scripts) {
+# 各スクリプトのエラーを記録して継続する / Record per-script errors and continue,
+# so one failure (e.g. a missing Stadia Maps key) does not abort the whole run.
+.run_ok  <- logical(length(scripts))
+.run_msg <- character(length(scripts))
+
+for (.run_i in seq_along(scripts)) {
+  .run_this <- scripts[.run_i]
   message("\n", strrep("=", 60))
-  message("Running: ", script)
+  message("Running: ", .run_this)
   message(strrep("=", 60))
-  source(here(script), echo = FALSE)
+
+  .run_res <- tryCatch({
+    source(here(.run_this), echo = FALSE)
+    list(ok = TRUE, msg = "")
+  }, error = function(e) {
+    message("ERROR in ", .run_this, ": ", conditionMessage(e))
+    list(ok = FALSE, msg = conditionMessage(e))
+  })
+
+  while (dev.cur() > 1) dev.off()
+  while (sink.number() > 0) sink()
+
+  .run_ok[.run_i]  <- .run_res$ok
+  .run_msg[.run_i] <- .run_res$msg
 }
 
 message("\n", strrep("=", 60))
-message("Survey pipeline complete. Check output/survey/ for PDFs.")
+message(sprintf("%d / %d scripts completed.", sum(.run_ok), length(.run_ok)))
+if (any(!.run_ok)) {
+  message("\nFAILED:")
+  for (.run_i in which(!.run_ok)) message("  ", scripts[.run_i], ": ", .run_msg[.run_i])
+  message("\nOutputs from the failed scripts (and anything downstream) are ",
+          "missing or stale.")
+} else {
+  message("Survey pipeline complete. Check output/survey/ for PDFs.")
+}
 message(strrep("=", 60))

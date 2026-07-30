@@ -28,12 +28,17 @@ library(tidyverse)
 # Section 1: NAの確認 / Check NA counts per environmental variable
 # ==============================================================================
 
-for (var in c("salinity", "temp", "depth_m", "DO", "POC (ug/L)", "chl (ug/l)",
-              "PON (ug/L)", "SPM (ug/L)", "FlECO-AFL(mg/m^3)", "chl depth",
-              "phaeo (ug/l)", "PO4(uM)", "Sil(uM)", "NO2(uM)", "NH4(uM)",
-              "N+N (umol/L)", "NO3(uM)")) {
-  cat(var, ": NA =", sum(is.na(asgard_pcoa_df[[var]])), "\n")
+# NOTE: do not name the loop variable `var` — the scripts share one global
+# environment, and a leftover global `var` shadows stats::var() for every later
+# script (S17_pca_env.R's apply(env_mat, 2, var) failed this way).
+# ループ変数を `var` にしない（stats::var を隠してしまうため）。
+for (env_var in c("salinity", "temp", "depth_m", "DO", "POC (ug/L)", "chl (ug/l)",
+                  "PON (ug/L)", "SPM (ug/L)", "FlECO-AFL(mg/m^3)", "chl depth",
+                  "phaeo (ug/l)", "PO4(uM)", "Sil(uM)", "NO2(uM)", "NH4(uM)",
+                  "N+N (umol/L)", "NO3(uM)")) {
+  cat(env_var, ": NA =", sum(is.na(asgard_pcoa_df[[env_var]])), "\n")
 }
+rm(env_var)
 
 # ==============================================================================
 # Section 2: VIF確認 / Check VIF for variable selection
