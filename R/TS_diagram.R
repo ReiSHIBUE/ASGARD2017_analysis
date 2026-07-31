@@ -13,6 +13,7 @@
 
 library(tidyverse)
 library(ggnewscale)
+library(ggh4x)
 library(here)
 
 # ==============================================================================
@@ -106,6 +107,14 @@ print(
 )
 
 # Page 2: Faceted by cluster
+# Panel layout: row1 = A1 A2 | row2 = B1 B2a B2b | row3 = C1a C1b1 C1b2 C2a C2b1 C2b2
+# Letters map to cluster11 levels in order (A=A1, B=A2, C=B1, ... K=C2b2); # = empty cell
+ts_facet_design <- "
+AB####
+CDE###
+FGHIJK
+"
+
 print(
   ggplot() +
     geom_contour(data = grid, aes(x = S, y = T, z = sigma),
@@ -125,7 +134,7 @@ print(
     geom_point(data = ts_df, aes(x = salinity, y = temp, color = cluster11),
                size = 2, alpha = 0.8) +
     scale_color_manual(values = cc11, guide = "none") +
-    facet_wrap(~ cluster11, ncol = 4) +
+    facet_manual(~ cluster11, design = ts_facet_design) +
     coord_cartesian(xlim = c(24, 35.5), ylim = c(-2.5, 13)) +
     labs(x = "Salinity", y = "Potential Temperature (\u00B0C)") +
     theme_bw(base_size = 15) +
