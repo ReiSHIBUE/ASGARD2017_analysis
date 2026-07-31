@@ -94,6 +94,9 @@ message("  New meta_denovo_2: ", nrow(meta_denovo_2), " x ", ncol(meta_denovo_2)
   # cross-pipeline: P10 also compares processing stations against the survey
   # stations, so it needs objects from both pipelines and runs last.
   "R/P10_water_mass.R",
+  # rebuild the comparison caches from the session, then the report that reads
+  # them (previously the caches were committed artifacts with no source script)
+  "R/98_build_caches.R",
   "R/comparison_report.R"
 )
 
