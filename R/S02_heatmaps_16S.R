@@ -222,7 +222,7 @@ col_cluster_centers11 <- sapply(1:6, function(k) {
   if (length(idx) == 0) return(NA)
   mean(idx)
 })
-names(col_cluster_centers11) <- as.character(1:6)
+names(col_cluster_centers11) <- as.character(6:1)  # display labels only: rightmost column = 1
 nrow_h11 <- nrow(asgard_frtmat)
 
 # A/B/C (k=3) ラベル: 各サブツリーのルート merge 点の位置を計算
@@ -306,8 +306,7 @@ heatmap.2(asgard_frtmat,
     row_text_cols <- ifelse(
       names(cluster_centers11) %in% c("B2a", "B2b", "C2a", "C2b1"),
       "black", "white")
-    col_text_cols <- ifelse(
-      names(col_cluster_centers11) == "1", "black", "white")
+    col_text_cols <- rep("white", length(col_cluster_centers11))
     text(x = rep(-6, length(cluster_centers11)),
          y = cluster_centers11,
          labels = names(cluster_centers11),
