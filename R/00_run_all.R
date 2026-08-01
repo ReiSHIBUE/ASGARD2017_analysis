@@ -115,7 +115,9 @@ survey_scripts <- c(
   "R/S11_crosstable.R",
   "R/S12_indval.R",
   "R/S13_indval_18S.R",
-  "R/S14_sampling_period.R"
+  "R/S14_sampling_period.R",
+  # needs objects from both pipelines, so it runs after the survey scripts
+  "R/P18_accumulation_curve.R"
 )
 
 for (script in survey_scripts) {
