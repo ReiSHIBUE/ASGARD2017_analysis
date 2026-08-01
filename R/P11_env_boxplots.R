@@ -22,13 +22,14 @@ dir.create(here("output_p", "env_boxplots"),
 
 df_p <- meta_asgard_p2
 df_p$cluster   <- factor(as.character(clusnum_p[rownames(df_p)]),
-                         levels = c("1", "2", "3", "4"))
+                         levels = c("1", "2", "3", "4"),
+                         labels = clus_labels_p)
 df_p$division2 <- factor(
   ifelse(df_p$cluster == "1", "Free-living", "Particle-associated"),
   levels = c("Free-living", "Particle-associated"))
 
-cc_p <- c("1" = "#E41A1C", "2" = "#377EB8",
-          "3" = "#4DAF4A", "4" = "#984EA3")
+cc_p <- setNames(c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3"),
+                 clus_levels_p)   # FL1, PA1, PA2, PA3
 
 # ==============================================================================
 # Section 2: PDF — single-variable pages + 6-var combined grid

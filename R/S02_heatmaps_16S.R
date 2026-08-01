@@ -69,13 +69,17 @@ clusnum10     <- unname(neworder10[as.character(oldclus10)])
 names(clusnum10) <- names(oldclus10) # length 181, values 1–10
 
 # 列クラスター (ASVs) — 6クラスター / Column clusters — 6 clusters
+# Assemblages are numbered right-to-left along the column dendrogram, i.e. the
+# reverse of the left-to-right leaf order. Numbering at the source keeps every
+# downstream output (heatmap labels, waffles, cross-tables, S18) consistent.
+# アセンブラージ番号はデンドログラムの右から左（葉の並びの逆順）で付ける。
 colnclus      <- 6
 cololdclus    <- cutree(as.hclust(h1$colDendrogram), k = colnclus)
 cololdorder   <- unname(rle(cololdclus[as.hclust(h1$colDendrogram)$order])$values)
-colneworder   <- (1:colnclus)
+colneworder   <- rev(1:colnclus)
 names(colneworder) <- cololdorder
 colclusnum    <- unname(colneworder[as.character(cololdclus)])
-names(colclusnum) <- names(cololdclus) # length 258, values 1–6
+names(colclusnum) <- names(cololdclus) # length 258, values 1–6 (right to left)
 
 # 階層命名 / Hierarchical naming based on binary dendrogram splits
 # k=3: A, B, C.  Then each subtree split recursively:
@@ -96,8 +100,13 @@ cc10 <- c(
 rsc10  <- cc10[hier_names[as.character(clusnum10)]]
 names(rsc10) <- names(clusnum10)
 
-colclus_colors <- c("1"="#FB9A99", "2"="#08519C", "3"="#20B2AA",
-                     "4"="#DAA520", "5"="#DD3497", "6"="#252525")
+# Palette listed in dendrogram order and then re-keyed to the reversed numbers,
+# so each assemblage keeps the colour it had before the renumbering.
+# 色は従来どおりの並びを維持したまま、逆順の番号に対応付ける。
+colclus_colors <- setNames(
+  c("#FB9A99", "#08519C", "#20B2AA", "#DAA520", "#DD3497", "#252525"),
+  as.character(rev(1:colnclus))
+)
 colrsc <- colclus_colors[as.character(colclusnum)]
 names(colrsc) <- names(colclusnum)  # ASV名で名前付け
 
@@ -306,8 +315,14 @@ heatmap.2(asgard_frtmat,
     row_text_cols <- ifelse(
       names(cluster_centers11) %in% c("B2a", "B2b", "C2a", "C2b1"),
       "black", "white")
-    col_text_cols <- ifelse(
-      names(col_cluster_centers11) == "1", "black", "white")
+    # dark text on light assemblage colours, white on dark — keyed to the
+    # colour rather than the number, so it survives the renumbering
+    # 番号ではなく色の明度で文字色を決める
+    col_text_cols <- vapply(names(col_cluster_centers11), function(k) {
+      rgbv <- grDevices::col2rgb(colclus_colors[[k]])
+      lum  <- sum(c(0.299, 0.587, 0.114) * rgbv) / 255
+      if (lum > 0.6) "black" else "white"
+    }, character(1))
     text(x = rep(-6, length(cluster_centers11)),
          y = cluster_centers11,
          labels = names(cluster_centers11),

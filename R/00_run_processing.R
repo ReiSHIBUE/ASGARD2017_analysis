@@ -29,7 +29,10 @@ scripts <- c(
   "R/P05_beta_diversity_pcoa.R",
   "R/P06_dbrda.R",
   "R/P07_18S_heatmaps.R",
-  "R/P08_esv_heatmap.R"
+  "R/P08_esv_heatmap.R",
+  "R/P15_alpha_diversity.R",
+  "R/P16_fraction_rank_order.R",
+  "R/P17_fraction_logratio.R"
 )
 
 for (script in scripts) {

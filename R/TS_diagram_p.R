@@ -62,11 +62,12 @@ freeze_df$T <- -0.054 * freeze_df$S
 ts_df_p <- meta_asgard_p2 %>%
   filter(!is.na(temp), !is.na(salinity))
 ts_df_p$cluster <- factor(as.character(clusnum_p[rownames(ts_df_p)]),
-                          levels = c("1", "2", "3", "4"))
+                          levels = c("1", "2", "3", "4"),
+                          labels = clus_labels_p)
 ts_df_p <- ts_df_p[!is.na(ts_df_p$cluster), ]
 
-cc_p   <- c("1" = "#E41A1C", "2" = "#377EB8",
-            "3" = "#4DAF4A", "4" = "#984EA3")
+cc_p   <- setNames(c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3"),
+                   clus_levels_p)   # FL1, PA1, PA2, PA3
 
 n_ts_p   <- table(ts_df_p$cluster)
 clbl_ts_p <- paste0(names(n_ts_p), " (n=", n_ts_p, ")")
@@ -116,6 +117,31 @@ print(
 )
 
 # Page 2: faceted by cluster
+#
+# The page-2 window is zoomed (salinity 30-34), so water-mass labels anchored
+# outside it are dropped — otherwise a wide label such as "AtlW & BBW", centred
+# at 34.65, is clipped by the panel and its left half lands on top of "AnW".
+# The remaining labels are nudged clear of the data cloud (~32-33 PSU, 0-3 °C).
+# ページ2はズームしているため、範囲外のラベルは描かず、残りは点群を避けてずらす。
+
+p2_xlim <- c(30, 34)
+p2_ylim <- c(-2.5, 7.5)
+
+wm_labels_p2 <- wm_labels[
+  wm_labels$label_x > p2_xlim[1] & wm_labels$label_x < p2_xlim[2] &
+    wm_labels$label_y > p2_ylim[1] & wm_labels$label_y < p2_ylim[2], ]
+
+# per-label nudge (salinity, °C)
+p2_nudge <- data.frame(
+  name = c("cSW",  "AnW",  "MWW",  "WW"),
+  dx   = c(-0.25,   0.15,  -0.85,  -0.85),
+  dy   = c( 0.30,   0.30,   0.15,   0.30),
+  stringsAsFactors = FALSE
+)
+idx <- match(wm_labels_p2$name, p2_nudge$name)
+wm_labels_p2$label_x <- wm_labels_p2$label_x + ifelse(is.na(idx), 0, p2_nudge$dx[idx])
+wm_labels_p2$label_y <- wm_labels_p2$label_y + ifelse(is.na(idx), 0, p2_nudge$dy[idx])
+
 print(
   ggplot() +
     geom_contour(data = grid, aes(x = S, y = T, z = sigma),
@@ -131,16 +157,16 @@ print(
               show.legend = FALSE) +
     scale_fill_manual(values = setNames(wm_boxes$color, wm_boxes$name)) +
     scale_color_manual(values = setNames(wm_boxes$color, wm_boxes$name)) +
-    geom_text(data = wm_labels,
+    geom_text(data = wm_labels_p2,
               aes(x = label_x, y = label_y, label = name, color = name),
-              fontface = "bold", size = 2.5, alpha = 0.6,
+              fontface = "bold", size = 10, alpha = 0.6,
               show.legend = FALSE) +
     new_scale_color() +
     geom_point(data = ts_df_p, aes(x = salinity, y = temp, color = cluster),
-               size = 2, alpha = 0.8) +
+               size = 4, alpha = 0.8) +
     scale_color_manual(values = cc_p, guide = "none") +
     facet_wrap(~ cluster, ncol = 4) +
-    coord_cartesian(xlim = c(24, 35.5), ylim = c(-2.5, 7.5)) +
+    coord_cartesian(xlim = c(30, 34), ylim = c(-2.5, 7.5)) +
     labs(x = "Salinity", y = "Potential Temperature (°C)") +
     theme_bw(base_size = 15) +
     theme(

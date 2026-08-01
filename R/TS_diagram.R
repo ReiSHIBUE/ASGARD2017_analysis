@@ -14,6 +14,7 @@
 library(tidyverse)
 library(ggnewscale)
 library(here)
+library(gridExtra)
 
 # ==============================================================================
 # Section 1: 水塊ボックスの定義 / Water mass definitions (Danielson et al. 2020, Table 2)
@@ -59,9 +60,15 @@ freeze_df$T <- -0.054 * freeze_df$S
 # Section 3: T-Sプロット（11クラスター） / T-S diagram with 11 clusters
 # ==============================================================================
 
+# Same bloom-stage cluster ordering as the faceted survey map (Figure 4).
+# 図4と同じ、ブルームインデックス順のクラスター並び
+if (!exists("cluster11_bloom_order")) source(here::here("R", "97_bloom_order.R"))
+
 ts_df <- meta_asgard %>% filter(!is.na(temp), !is.na(salinity))
 ts_df$cluster11 <- factor(as.character(clusnum11[rownames(ts_df)]),
                           levels = hier_levels_11)
+ts_df$cluster11_bloom <- factor(as.character(ts_df$cluster11),
+                                levels = cluster11_bloom_order)
 
 n_ts <- table(ts_df$cluster11)
 clbl_ts <- paste0(names(n_ts), " (n=", n_ts, ")")
@@ -105,9 +112,22 @@ print(
     )
 )
 
-# Page 2: Faceted by cluster
-print(
-  ggplot() +
+# Page 2: one row per division (A, B, C), clusters ordered by bloom index
+# within each row — the same layout as the faceted survey map
+# 図4b と同じレイアウト：division ごとに1行、行内はブルームインデックス順
+ts_df$division <- factor(substr(as.character(ts_df$cluster11), 1, 1),
+                         levels = c("A", "B", "C"))
+
+ts_ncol_max <- max(table(unique(ts_df[, c("cluster11", "division")])$division))
+
+make_div_row_ts <- function(dv) {
+  d <- ts_df[ts_df$division == dv, ]
+  d$cluster11_row <- factor(
+    as.character(d$cluster11),
+    levels = intersect(cluster11_bloom_order, unique(as.character(d$cluster11))))
+  n <- nlevels(d$cluster11_row)
+
+  p <- ggplot() +
     geom_contour(data = grid, aes(x = S, y = T, z = sigma),
                  breaks = seq(12, 28, by = 0.5), color = "gray70", linewidth = 0.2) +
     geom_line(data = freeze_df, aes(x = S, y = T),
@@ -122,18 +142,31 @@ print(
               aes(x = label_x, y = label_y, label = name, color = name),
               fontface = "bold", size = 2.5, alpha = 0.6, show.legend = FALSE) +
     new_scale_color() +
-    geom_point(data = ts_df, aes(x = salinity, y = temp, color = cluster11),
+    geom_point(data = d, aes(x = salinity, y = temp, color = cluster11),
                size = 2, alpha = 0.8) +
     scale_color_manual(values = cc11, guide = "none") +
-    facet_wrap(~ cluster11, ncol = 4) +
+    facet_wrap(~ cluster11_row, nrow = 1) +
     coord_cartesian(xlim = c(24, 35.5), ylim = c(-2.5, 13)) +
-    labs(x = "Salinity", y = "Potential Temperature (\u00B0C)") +
+    labs(x = NULL, y = NULL) +
     theme_bw(base_size = 15) +
-    theme(
-      axis.title    = element_text(size = 18, face = "bold"),
-      axis.text     = element_text(size = 13),
-      strip.text    = element_text(face = "bold", size = 16)
-    )
+    theme(axis.text  = element_text(size = 12),
+          strip.text = element_text(face = "bold", size = 16))
+
+  # pad on the right so all rows share one panel width and align left
+  # 行ごとのパネル幅を揃えるため右側を空白で埋める
+  if (n < ts_ncol_max)
+    gridExtra::arrangeGrob(p, grid::nullGrob(), ncol = 2,
+                           widths = c(n, ts_ncol_max - n))
+  else p
+}
+
+gridExtra::grid.arrange(
+  make_div_row_ts("A"), make_div_row_ts("B"), make_div_row_ts("C"),
+  nrow = 3,
+  left   = grid::textGrob("Potential Temperature (\u00B0C)", rot = 90,
+                          gp = grid::gpar(fontsize = 18, fontface = "bold")),
+  bottom = grid::textGrob("Salinity",
+                          gp = grid::gpar(fontsize = 18, fontface = "bold"))
 )
 
 dev.off()

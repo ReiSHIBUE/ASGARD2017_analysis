@@ -88,6 +88,12 @@ names(clusnum_p) <- names(oldclus_p)
 
 # 4色パレット定義 / Define 4-colour palette
 rsc_p <- c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3")
+
+# Display labels for the four clusters: cluster 1 is the free-living (0.2 µm)
+# group, clusters 2-4 the particle-associated ones.
+# 表示用ラベル：クラスター1は自由生活性、2-4は粒子付着性。
+clus_labels_p <- c("1" = "FL1", "2" = "PA1", "3" = "PA2", "4" = "PA3")
+clus_levels_p <- unname(clus_labels_p)
 sample_rgb3 <- rsc_p[clusnum_p] # 行サイドカラー (クラスター色) / row-side colours by cluster
 
 # h8: クラスター色付きで再描画、h3のデンドログラム固定 / Replot with cluster colours, fixed dendrogram
@@ -139,7 +145,81 @@ cluster_centers_p <- sapply(c("1", "2", "3", "4"), function(cn) {
   if (length(idx) == 0) return(NA)
   mean(idx)
 })
+names(cluster_centers_p) <- clus_labels_p[names(cluster_centers_p)]
 nrow_h_p <- nrow(asgard_filtered_p_hm2)
+ncol_h_p <- ncol(asgard_filtered_p_hm2)
+
+# ==============================================================================
+# ASV assemblages (column dendrogram, k = 6)
+# 列デンドログラムを k=6 で切ってアセンブラージを定義する
+#
+# Numbered right-to-left along the dendrogram, matching the survey heatmap
+# (S02_heatmaps_16S.R). 番号は S02 と同じくデンドログラム右から左。
+# ==============================================================================
+
+colnclus_p   <- 6
+colold_p     <- cutree(as.hclust(h3$colDendrogram), k = colnclus_p)
+col_ord_p    <- as.hclust(h3$colDendrogram)$order
+colord_p     <- unname(rle(colold_p[as.hclust(h3$colDendrogram)$order])$values)
+colnew_p     <- setNames(rev(seq_len(colnclus_p)), colord_p)
+colclusnum_p <- setNames(unname(colnew_p[as.character(colold_p)]), names(colold_p))
+
+# same palette as the survey assemblages, keyed to the reversed numbering
+colclus_colors_p <- setNames(
+  c("#FB9A99", "#08519C", "#20B2AA", "#DAA520", "#DD3497", "#252525"),
+  as.character(rev(seq_len(colnclus_p)))
+)
+asv_assem_p <- colclus_colors_p[as.character(colclusnum_p)]
+names(asv_assem_p) <- names(colclusnum_p)
+
+# label positions: mean column position of each assemblage, in dendrogram order
+asvs_ord_p        <- colnames(asgard_filtered_p_hm2)[col_ord_p]
+colclus_ord_p     <- as.character(colclusnum_p[asvs_ord_p])
+col_centers_p     <- sapply(as.character(seq_len(colnclus_p)), function(k) {
+  idx <- which(colclus_ord_p == k)
+  if (length(idx) == 0) return(NA_real_)
+  mean(idx)
+})
+
+# ==============================================================================
+# Extra side-colour bars drawn by hand
+#
+# heatmap.2() takes a single RowSideColors / ColSideColors vector, so the second
+# bar on each axis is drawn as rectangles in add.expr. Inside the heatmap panel
+# the image spans x = 1..ncol and y = 1..nrow, and xpd = NA lets the rectangles
+# sit in the margin next to the bar heatmap.2 drew itself.
+#
+# heatmap.2 はサイドカラーを1本しか描けないため、2本目は add.expr で矩形を描く。
+# ==============================================================================
+
+# row bar 2: filter size (0.2 µm red / 3 µm green / 20 µm blue), as in the
+# ternary diagrams and the RGB column colours
+row_bar2_cols <- sample_rgb2[row_ord_p]
+# column bar 2: k = 6 assemblages
+col_bar2_cols <- asv_assem_p[asvs_ord_p]
+
+# margin placement (user coordinates of the heatmap panel)
+ROW_BAR2_X <- c(-0.062, -0.045) * ncol_h_p   # left of the cluster-colour bar
+COL_BAR2_Y <- c( 1.006,  1.032) * nrow_h_p   # covers the lower half of the RGB column bar
+
+draw_extra_bars <- function() {
+  rect(xleft   = ROW_BAR2_X[1],
+       xright  = ROW_BAR2_X[2],
+       ybottom = seq_along(row_bar2_cols) - 0.5,
+       ytop    = seq_along(row_bar2_cols) + 0.5,
+       col = row_bar2_cols, border = NA, xpd = NA)
+  rect(xleft   = seq_along(col_bar2_cols) - 0.5,
+       xright  = seq_along(col_bar2_cols) + 0.5,
+       ybottom = COL_BAR2_Y[1],
+       ytop    = COL_BAR2_Y[2],
+       col = col_bar2_cols, border = NA, xpd = NA)
+}
+
+# assemblage numbers, dark on light fills and white on dark ones
+col_text_cols_p <- vapply(names(col_centers_p), function(k) {
+  rgbv <- grDevices::col2rgb(colclus_colors_p[[k]])
+  if (sum(c(0.299, 0.587, 0.114) * rgbv) / 255 > 0.6) "black" else "white"
+}, character(1))
 
 # k=2 サブツリーのルート merge 点位置 (Free-living vs Particle-associated)
 hc_row2_p     <- as.hclust(h3$rowDendrogram)
@@ -199,6 +279,7 @@ heatmap.2(
   labCol    = FALSE,
   key       = FALSE,
   add.expr  = {
+    draw_extra_bars()
     text(x = rep(-6, length(cluster_centers_p)),
          y = cluster_centers_p,
          labels = names(cluster_centers_p),
@@ -206,6 +287,13 @@ heatmap.2(
          xpd = NA, adj = c(0.5, 0.5),
          srt = 90,
          cex = 3.5, font = 2)
+    # assemblage numbers over the k=6 column bar
+    text(x = col_centers_p,
+         y = rep(mean(COL_BAR2_Y), length(col_centers_p)),
+         labels = names(col_centers_p),
+         col = col_text_cols_p,
+         xpd = NA, adj = c(0.5, 0.5),
+         cex = 2.2, font = 2)
     # k=2 サブツリーのルートに Free-living / Particle-associated を縦書き
     text(x = c(fl_root_x, pa_root_x),
          y = c(fl_root_y, pa_root_y),

@@ -29,9 +29,18 @@ ggmap::register_stadiamaps(Sys.getenv("STADIA_MAPS_KEY"))
 # Section 1: ベースマップの定義 / Define base map
 # ==============================================================================
 
+# Cluster ordering by bloom stage, shared with the T-S diagram (Figure 5).
+# 図4・図5共通の、ブルームインデックス順のクラスター並び
+if (!exists("cluster11_bloom_order")) source(here::here("R", "97_bloom_order.R"))
+
 a_map <- meta_asgard %>% filter(!is.na(lat), !is.na(lon))
 a_map$cluster11  <- factor(as.character(clusnum11[rownames(a_map)]),
                            levels = hier_levels_11)
+# Same clusters, ordered post-bloom -> pre-bloom (descending bloom index, i.e.
+# reversed environmental PC1). Used for facet order; colours stay keyed to
+# cluster11 so each cluster keeps its palette entry.
+a_map$cluster11_bloom <- factor(as.character(a_map$cluster11),
+                                levels = cluster11_bloom_order)
 a_map$depth_type <- factor(a_map$depth_type, levels = c("surf", "mid", "bottom"))
 a_map$ID         <- seq_len(nrow(a_map))
 
@@ -66,7 +75,7 @@ print(
   ggmap(mapz_survey) +
     geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 2.5, alpha = 0.8) +
     scale_color_manual(values = cc11, guide = "none") +
-    facet_wrap(~ cluster11, ncol = 4) +
+    facet_wrap(~ cluster11_bloom, ncol = 4) +
     labs(title = "ASGARD 2017 Survey - 11 clusters (faceted)") +
     theme(plot.title = element_text(face = "bold", size = 16),
           strip.text = element_text(face = "bold", size = 12))
@@ -122,7 +131,11 @@ sub_row_theme <- theme(strip.text = element_text(face = "bold", size = 24),
 ncol_max <- 6   # widest row (division C)
 make_div_row <- function(dv) {
   d <- a_map[a_map$division == dv, ]
-  d$cluster11 <- droplevels(d$cluster11)
+  # within the division row, order panels by descending bloom index
+  # 各行の中はブルームインデックス降順に並べる
+  d$cluster11 <- factor(as.character(d$cluster11),
+                        levels = intersect(cluster11_bloom_order,
+                                           unique(as.character(d$cluster11))))
   n <- nlevels(d$cluster11)
   p <- ggmap(mapz_survey) +
     geom_point(data = d, aes(x = lon, y = lat, color = cluster11), size = 4, alpha = 0.85) +
@@ -143,7 +156,7 @@ print(
   ggmap(mapz_survey) +
     geom_point(data = a_map, aes(x = lon, y = lat, color = cluster11), size = 2, alpha = 0.8) +
     scale_color_manual(values = cc11, guide = "none") +
-    facet_grid(depth_type ~ cluster11) +
+    facet_grid(depth_type ~ cluster11_bloom) +
     detail_theme + theme(strip.text = element_text(face = "bold", size = 13))
 )
 
