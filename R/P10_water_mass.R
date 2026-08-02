@@ -13,6 +13,7 @@
 ### OUTPUT:
 ###   output_p/cluster_summary/processing_cluster_watermass_counts.csv
 ###   output_p/cluster_summary/processing_cluster_watermass_percent.csv
+###   output_p/cluster_summary/processing_cluster_watermass_test_results.csv
 ###   output_p/cluster_summary/processing_cluster_watermass_ranking.csv
 ###   output_p/cluster_summary/processing_cluster_watermass_primary_secondary.csv
 ###   output_p/cluster_summary/processing_mww_station_depth.csv
@@ -65,6 +66,29 @@ write.csv(as.data.frame.matrix(ct_p),
 write.csv(as.data.frame.matrix(pct_p),
           here("output_p", "cluster_summary",
                "processing_cluster_watermass_percent.csv"))
+
+# --- Association test: cluster x water mass (matches survey S11) ---
+# NA / Unclassified columns are dropped, as in the survey analysis.
+ct_p_test <- ct_p[, !colnames(ct_p) %in% c("NA", "Unclassified"), drop = FALSE]
+set.seed(1)
+chi_wm_p    <- suppressWarnings(chisq.test(ct_p_test, simulate.p.value = TRUE, B = 9999))
+fisher_wm_p <- fisher.test(ct_p_test, simulate.p.value = TRUE, B = 9999)
+
+sig_star <- function(p) ifelse(p <= 0.001, "***",
+                        ifelse(p <= 0.01,  "**",
+                        ifelse(p <= 0.05,  "*", "ns")))
+
+wm_test_p <- data.frame(
+  test      = c("Chi-squared (Monte Carlo, B=9999)", "Fisher exact (Monte Carlo, B=9999)"),
+  statistic = c(round(unname(chi_wm_p$statistic), 2), NA),
+  p_value   = c(chi_wm_p$p.value, fisher_wm_p$p.value),
+  sig       = c(sig_star(chi_wm_p$p.value), sig_star(fisher_wm_p$p.value)),
+  stringsAsFactors = FALSE)
+
+write.csv(wm_test_p,
+          here("output_p", "cluster_summary",
+               "processing_cluster_watermass_test_results.csv"),
+          row.names = FALSE)
 
 # Primary / secondary water masses
 ranking_p <- meta_p %>%
@@ -146,6 +170,9 @@ message(sprintf("  Stations shared: %d  | proc-only: %d  | survey-only: %d",
                 sum(!stn_compare$in_processing & stn_compare$in_survey)))
 message("  CSV: output_p/cluster_summary/processing_cluster_watermass_counts.csv")
 message("  CSV: output_p/cluster_summary/processing_cluster_watermass_percent.csv")
+message("  CSV: output_p/cluster_summary/processing_cluster_watermass_test_results.csv")
+message(sprintf("  Fisher (cluster x water mass): p = %.4g %s",
+                fisher_wm_p$p.value, sig_star(fisher_wm_p$p.value)))
 message("  CSV: output_p/cluster_summary/processing_cluster_watermass_ranking.csv")
 message("  CSV: output_p/cluster_summary/processing_cluster_watermass_primary_secondary.csv")
 message("  CSV: output_p/cluster_summary/processing_mww_station_depth.csv")

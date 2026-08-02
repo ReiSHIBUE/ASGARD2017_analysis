@@ -12,6 +12,8 @@
 ### OUTPUT (output_p/cluster_summary/):
 ###   processing_region_depth_counts.csv         - region x depth counts
 ###   processing_cluster_region_depth_chisq.csv  - cluster x depth / region chi-sq
+###   processing_filter_depth_counts.csv          - filter (size fraction) x depth counts
+###   processing_filter_depth_chisq.csv           - filter x depth chi-sq / Fisher
 ###   processing_station_classRA.csv             - per-station class RA
 ###   processing_stationgroup_classRA.csv        - per station-group class RA
 ###   processing_DBO3_ASV_abundance.csv          - DBO3 per-ASV abundance
@@ -78,6 +80,47 @@ chisq_df <- data.frame(
 )
 write.csv(chisq_df,
           here("output_p", "cluster_summary", "processing_cluster_region_depth_chisq.csv"),
+          row.names = FALSE)
+
+# ==============================================================================
+# Section 2b: filter (size fraction) x depth chi-square / Fisher
+# Do the 0.2 / 3 / 20 um fractions differ in their depth distribution?
+# ==============================================================================
+sig_star <- function(p) ifelse(p <= 0.001, "***",
+                        ifelse(p <= 0.01,  "**",
+                        ifelse(p <= 0.05,  "*", "ns")))
+
+filt_raw <- as.character(meta_p$filter)   # "0.2 um", "3 um", "20 um" (with unit suffix)
+filt_lab <- ifelse(grepl("^0\\.2", filt_raw), "0.2um",
+             ifelse(grepl("^3",    filt_raw), "3um",
+             ifelse(grepl("^20",   filt_raw), "20um", "Unknown")))
+
+keep_fd  <- depth != "Unknown" & filt_lab != "Unknown"
+filt_k   <- factor(filt_lab[keep_fd], levels = c("0.2um", "3um", "20um"))
+depth_fd <- factor(depth[keep_fd],    levels = c("surf", "mid", "bottom"))
+t_fd     <- table(filter = filt_k, depth = depth_fd)
+
+# contingency table (counts)
+write.csv(as.data.frame.matrix(addmargins(t_fd)),
+          here("output_p", "cluster_summary", "processing_filter_depth_counts.csv"),
+          row.names = TRUE)
+
+chi_fd <- suppressWarnings(chisq.test(t_fd))
+fis_fd <- fisher.test(t_fd)
+
+filter_depth_df <- data.frame(
+  test             = "filter x depth",
+  n                = sum(t_fd),
+  chisq            = round(unname(chi_fd$statistic), 3),
+  df               = unname(chi_fd$parameter),
+  chisq_p          = round(chi_fd$p.value, 4),
+  fisher_p         = round(fis_fd$p.value, 4),
+  sig              = sig_star(fis_fd$p.value),
+  any_expected_lt5 = any(chi_fd$expected < 5),
+  row.names        = NULL
+)
+write.csv(filter_depth_df,
+          here("output_p", "cluster_summary", "processing_filter_depth_chisq.csv"),
           row.names = FALSE)
 
 # ==============================================================================
@@ -157,3 +200,5 @@ message(sprintf("  Bering/Chukchi (cutoff %.1f N): %d / %d  (Unknown %d)",
                 sum(region == "Chukchi"), sum(region == "Unknown")))
 message(sprintf("  cluster x depth:  Fisher p = %.4f | cluster x region: Fisher p = %.4f",
                 fis_d$p.value, fis_r$p.value))
+message(sprintf("  filter x depth:   Fisher p = %.4f %s (chisq p = %.4f)",
+                fis_fd$p.value, sig_star(fis_fd$p.value), chi_fd$p.value))
