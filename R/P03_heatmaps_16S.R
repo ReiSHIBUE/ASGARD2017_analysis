@@ -490,6 +490,51 @@ heatmap.2(
   }
 )
 
+# ==============================================================================
+# Page 7: same as the main figure (Page 5) but with a thin white line separating
+# the filter-size bar from the cluster-colour bar, so FL1 (red) is not confused
+# with the 0.2 µm (red) filter colour.
+# メイン図と同じだが、フィルターサイズ帯とクラスター帯の境界に細い白線を入れた版
+# ==============================================================================
+ROW_SEP_X <- c(-10.15, -9.75)   # thin white separator between the two row bars
+
+heatmap.2(
+  (asgard_filtered_p_hm2)^.25,
+  distfun   = function(x) vegdist(x, method = "bray"),
+  hclustfun = function(x) hclust(x, method = "ward.D"),
+  col           = viridis,
+  RowSideColors = sample_rgb3,
+  Rowv          = h3$rowDendrogram,
+  ColSideColors = asv_rgb2,
+  margins   = c(2, 2),
+  scale     = "none",
+  main      = "",
+  trace     = "none",
+  labRow    = FALSE,
+  labCol    = FALSE,
+  key       = FALSE,
+  add.expr  = {
+    draw_extra_bars()
+    rect(ROW_SEP_X[1], 0.5, ROW_SEP_X[2], nrow_h_p + 0.5,
+         col = "white", border = NA, xpd = NA)
+    text(x = rep(-5, length(cluster_centers_p)),
+         y = cluster_centers_p,
+         labels = names(cluster_centers_p),
+         col = "white", xpd = NA, adj = c(0.5, 0.5), srt = 90,
+         cex = 3.5, font = 2)
+    text(x = col_centers_p,
+         y = rep(mean(COL_BAR2_Y), length(col_centers_p)),
+         labels = names(col_centers_p),
+         col = "white", xpd = NA, adj = c(0.5, 0.5),
+         cex = 2.2, font = 2)
+    text(x = c(fl_root_x, pa_root_x),
+         y = c(fl_root_y, pa_root_y),
+         labels = c("Free-living", "Particle-associated"),
+         col = "black", xpd = NA, adj = c(0.5, 0.5), srt = 90,
+         cex = 3.5, font = 2)
+  }
+)
+
 dev.off()
 
 message("03_heatmaps_16S.R: done. clusnum_p (length=", length(clusnum_p), "), PDF written.")
