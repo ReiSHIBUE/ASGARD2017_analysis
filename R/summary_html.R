@@ -20,8 +20,8 @@
 ###
 ### Usage:  Rscript R/summary_html.R
 
-setwd("/Users/shibuerei/Desktop/ASGARD2017_analysis")
-outdir <- "output/cluster_characteristics"
+library(here)
+outdir <- here("output", "cluster_characteristics")
 dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 
 # ---- data ----

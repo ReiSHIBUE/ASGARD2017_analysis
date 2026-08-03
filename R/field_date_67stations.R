@@ -1,8 +1,8 @@
-setwd("/Users/shibuerei/Desktop/ASGARD2017_analysis")
+library(here)
 suppressMessages({library(tidyverse); library(ggmap); library(ggrepel)})
 ggmap::register_stadiamaps(Sys.getenv("STADIA_MAPS_KEY"))
-sc <- readRDS("output/comparison/cache/survey_cache.rds")
-pc <- readRDS("output/comparison/cache/processing_cache.rds")
+sc <- readRDS(here("output/comparison/cache/survey_cache.rds"))
+pc <- readRDS(here("output/comparison/cache/processing_cache.rds"))
 cols <- c("station","lat","lon","date","temp","salinity","depth_m")
 s <- sc$a_map[, cols]; p <- pc$meta_asgard_p2[, cols]
 p <- p[p$station != "incubation", ]
@@ -40,7 +40,7 @@ fieldmap<-function(vals, brks, name, pal, lab_every=1){
     geom_text_repel(data=stn, aes(lon,lat,label=station), size=2, max.overlaps=Inf, alpha=0.8)+
     labs(x="Longitude", y="Latitude")+th
 }
-pdf("output/survey/maps/ASGARD_field_date_67stations_zoom6.pdf", width=12, height=9)
+pdf(here("output/survey/maps/ASGARD_field_date_67stations_zoom6.pdf"), width=12, height=9)
 print(fieldmap(fc$salinity, seq(25,33,by=0.5), "Salinity (psu)", viridisLite::viridis, lab_every=1))
 print(fieldmap(fc$temp, seq(-2,11,by=1), "Temperature (\u00B0C)", jet, lab_every=2))
 dev.off(); cat("DONE\n")
