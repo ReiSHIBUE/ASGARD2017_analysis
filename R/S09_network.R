@@ -24,6 +24,9 @@ library(tidyverse)
 if (!requireNamespace("igraph", quietly = TRUE)) stop("igraph is required: install.packages('igraph')")
 library(igraph)
 
+# 乱数固定 / Fix RNG: the tSNE layout is stochastic
+set.seed(42)
+
 # ==============================================================================
 # Section 1: スピアマン相関行列 / Spearman correlation matrix between ASVs
 # ==============================================================================

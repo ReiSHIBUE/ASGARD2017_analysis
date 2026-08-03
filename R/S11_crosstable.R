@@ -15,6 +15,9 @@
 library(tidyverse)
 library(here)
 
+# 乱数固定 / Fix RNG: Fisher's exact test is run with simulate.p.value
+set.seed(42)
+
 # ==============================================================================
 # Section 1: Water mass classification / 水塊分類
 # Danielson et al. (2020), Table 2 — mutually exclusive
