@@ -49,7 +49,7 @@ cluster_means_p <- sapply(c("1","2","3","4"), function(k) {
 })
 ternary_df$cluster_dom <- factor(
   c("1","2","3","4")[apply(cluster_means_p, 1, which.max)],
-  levels = c("1","2","3","4"))
+  levels = c("1","2","3","4"), labels = clus_labels_p)
 
 # Taxonomy
 asv_idx     <- match(ternary_df$asv, shorternames)
@@ -74,8 +74,8 @@ class_colors <- c("Bacteroidia"         = "#4DAF4A",
                   "Gammaproteobacteria" = "#FF7F00",
                   "Other"               = "gray70")[class_levels]
 
-cc_p <- c("1" = "#E41A1C", "2" = "#377EB8",
-          "3" = "#4DAF4A", "4" = "#984EA3")
+cc_p <- setNames(c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3"),
+                 clus_levels_p)   # FL1, PA1, PA2, PA3
 
 # RGB blend per ASV (same as asv_rgb2 from P02)
 ternary_df$rgb <- rgb(ternary_df$p02, ternary_df$p03, ternary_df$p20)
@@ -111,7 +111,7 @@ p1 <- ggtern(data = ternary_df,
   scale_size_continuous(range = c(1, 10),
                         name = "Mean RA (%)",
                         breaks = c(0.1, 0.5, 1, 2, 5)) +
-  labs(title = "ASVs by Class (3 bloom classes)",
+  labs(title = "ASVs by Class",
        subtitle = "Position = proportion of total RA in each filter fraction",
        x = "0.2 µm", y = "3 µm", z = "20 µm") +
   base_tern_theme + theme_showarrows() + theme_rotate(-90)
@@ -160,7 +160,7 @@ small_theme <- theme_bw(base_size = 11) +
         legend.box      = "vertical")
 
 p1s <- p1 + small_theme +
-  labs(title = "(b) ASVs by Class (3 bloom classes)") +
+  labs(title = "(b) ASVs by Class") +
   guides(color = guide_legend(nrow = 2, override.aes = list(size = 4)),
          size  = guide_legend(nrow = 1))
 p2s <- p2 + small_theme +
@@ -234,7 +234,7 @@ p2s2 <- p2 + small_theme +
   guides(color = guide_legend(nrow = 1, override.aes = list(size = 4)),
          size  = guide_legend(nrow = 1))
 p1s2 <- p1 + small_theme +
-  labs(title = "(b) ASVs by Class (3 bloom classes)") +
+  labs(title = "(b) ASVs by Class") +
   guides(color = guide_legend(nrow = 2, override.aes = list(size = 4)),
          size  = guide_legend(nrow = 1))
 p3obj_s <- p3_obj + small_theme +
@@ -249,7 +249,7 @@ grid.arrange(p2s2, p1s2, p3obj_s, nrow = 1)
 # clipped by grid.arrange, so the combined page rasterizes each standalone panel
 # (arrows preserved) before placing them side by side.
 p2s7 <- p2 + labs(title = "(A) ASVs in four clusters")
-p1s7 <- p1 + labs(title = "(B) ASVs by Class (3 bloom classes)")
+p1s7 <- p1 + labs(title = "(B) ASVs by Class")
 
 print(p2s7)   # Page 7: (A) standalone
 print(p1s7)   # Page 8: (B) standalone

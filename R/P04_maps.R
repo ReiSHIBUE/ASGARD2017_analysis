@@ -133,7 +133,8 @@ dev.off()
 
 a_map_p <- meta_asgard_p2
 a_map_p$cluster    <- factor(as.character(clusnum_p[rownames(a_map_p)]),
-                             levels = c("1", "2", "3", "4"))
+                             levels = c("1", "2", "3", "4"),
+                             labels = clus_labels_p)
 a_map_p$depth_type <- factor(a_map_p$depth_type,
                              levels = c("surf", "mid", "bottom"))
 a_map_p$division2  <- factor(ifelse(a_map_p$cluster == "1",
@@ -148,8 +149,8 @@ n_per_d2    <- table(a_map_p$division2)
 clbl_d2     <- paste0(names(n_per_d2), " (n=", n_per_d2, ")")
 names(clbl_d2) <- names(n_per_d2)
 
-cc_p   <- c("1" = "#E41A1C", "2" = "#377EB8",
-            "3" = "#4DAF4A", "4" = "#984EA3")
+cc_p   <- setNames(c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3"),
+                   clus_levels_p)   # FL1, PA1, PA2, PA3
 cc_d2  <- c("Free-living" = "#E41A1C",
             "Particle-associated" = "#377EB8")
 
@@ -174,7 +175,7 @@ print(
           legend.text = element_text(size = 11))
 )
 
-# Page 2: Faceted by cluster (no title)
+# Page 2: clusters side by side
 print(
   ggmap(mapz) +
     geom_point(data = a_map_p,
@@ -213,6 +214,32 @@ print(
 )
 
 dev.off()
+
+# ------------------------------------------------------------------------------
+# Cluster x depth-bin grid — its own portrait file, since a 4 x 3 grid of fixed
+# aspect-ratio maps does not fit the landscape page used above.
+# クラスター(行) x 深度ビン(列) のグリッドは縦長ページの別ファイルに出力する
+# ------------------------------------------------------------------------------
+
+pdf(here::here("output_p", "maps",
+               "ASGARD_processing_map_4clusters_by_depth.pdf"),
+    width = 10, height = 15)
+
+print(
+  ggmap(mapz) +
+    geom_point(data = a_map_p,
+               aes(x = lon, y = lat, color = cluster),
+               size = 3.5, alpha = 0.8) +
+    scale_color_manual(values = cc_p, guide = "none") +
+    facet_grid(cluster ~ depth_type) +
+    labs(x = "Longitude", y = "Latitude") +
+    theme(strip.text = element_text(face = "bold", size = 20),
+          axis.title = element_text(size = 18, face = "bold"),
+          axis.text  = element_text(size = 12))
+)
+
+dev.off()
+
 
 # ==============================================================================
 # Section 5: Detail maps (station labels + depth facets) — main paper figure
@@ -396,9 +423,9 @@ comp_df_c <- as.data.frame(comp_RA_mat_c) %>%
                                   levels=c("surf","mid","bottom")))
 
 comp_df_c$CC_lab <- factor(
-  paste0("Cluster ", as.character(comp_df_c$CC),
+  paste0(clus_labels_p[as.character(comp_df_c$CC)],
          " (", n_asv_cluster_p[as.character(comp_df_c$CC)], " ASVs)"),
-  levels = paste0("Cluster ", c("1","2","3","4"),
+  levels = paste0(clus_levels_p,
                   " (", n_asv_cluster_p[c("1","2","3","4")], " ASVs)")
 )
 
@@ -467,9 +494,9 @@ comp_df_p7 <- as.data.frame(comp_RA_p7) %>%
   dplyr::arrange(desc(RA_pct))   # large bubbles first
 
 comp_df_p7$Component_lab <- factor(
-  paste0("Cluster ", as.character(comp_df_p7$Component),
+  paste0(clus_labels_p[as.character(comp_df_p7$Component)],
          " (", n_asv_p7[as.character(comp_df_p7$Component)], " ASVs)"),
-  levels = paste0("Cluster ", c("1", "2", "3", "4"),
+  levels = paste0(clus_levels_p,
                   " (", n_asv_p7[c("1", "2", "3", "4")], " ASVs)")
 )
 
@@ -516,9 +543,9 @@ rich_df_p <- rich_df_p[!is.na(rich_df_p$lon) & !is.na(rich_df_p$lat) &
                        !is.na(rich_df_p$depth_type) & !is.na(rich_df_p$cluster), ]
 n_cl_p <- table(rich_df_p$cluster)
 rich_df_p$cluster_lab <- factor(
-  paste0("Cluster ", as.character(rich_df_p$cluster),
+  paste0(clus_labels_p[as.character(rich_df_p$cluster)],
          " (n=", n_cl_p[as.character(rich_df_p$cluster)], ")"),
-  levels = paste0("Cluster ", c("1", "2", "3", "4"),
+  levels = paste0(clus_levels_p,
                   " (n=", n_cl_p[c("1", "2", "3", "4")], ")"))
 
 print(

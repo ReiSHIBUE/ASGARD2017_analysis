@@ -40,8 +40,8 @@ names(asv_fam_gen_p) <- colnames(asgard_filtered_p_hm2)
 # Section 2: Per-cluster mean RA per genus (4 clusters)
 # ==============================================================================
 
-cc_p <- c("1" = "#E41A1C", "2" = "#377EB8",
-          "3" = "#4DAF4A", "4" = "#984EA3")
+cc_p <- setNames(c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3"),
+                 clus_levels_p)   # FL1, PA1, PA2, PA3
 
 long_g_p <- as.data.frame(asgard_filtered_p_hm2) %>%
   rownames_to_column("Sample") %>%
@@ -50,7 +50,8 @@ long_g_p <- as.data.frame(asgard_filtered_p_hm2) %>%
          phylum  = asv_phylum_p[ASV],
          class   = asv_class_p[ASV],
          cluster = factor(as.character(clusnum_p[Sample]),
-                          levels = c("1", "2", "3", "4"))) %>%
+                          levels = c("1", "2", "3", "4"),
+                          labels = clus_labels_p)) %>%
   group_by(Sample) %>%
   mutate(RA = Abundance / sum(Abundance)) %>%
   ungroup()
@@ -197,7 +198,8 @@ plot_df_3p <- as.data.frame(genus_mat_p) %>%
   rownames_to_column("Sample") %>%
   pivot_longer(-Sample, names_to = "fam_gen", values_to = "abundance") %>%
   mutate(cluster = factor(as.character(clusnum_p[Sample]),
-                          levels = c("1", "2", "3", "4")),
+                          levels = c("1", "2", "3", "4"),
+                          labels = clus_labels_p),
          class   = gen2class_p[fam_gen],
          RA      = abundance / sample_total_3cl_p[Sample]) %>%
   filter(fam_gen %in% selected_genera_p) %>%
