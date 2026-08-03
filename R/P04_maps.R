@@ -199,6 +199,19 @@ print(
     theme(strip.text = element_text(face = "bold", size = 13))
 )
 
+# Page 4: Page-2 map faceted additionally by depth (depth_type rows x cluster cols)
+print(
+  ggmap(mapz) +
+    geom_point(data = a_map_p,
+               aes(x = lon, y = lat, color = cluster),
+               size = 3.5, alpha = 0.8) +
+    scale_color_manual(values = cc_p, guide = "none") +
+    facet_grid(depth_type ~ cluster) +
+    theme(strip.text = element_text(face = "bold", size = 20),
+          axis.title = element_text(size = 20, face = "bold"),
+          axis.text  = element_text(size = 13))
+)
+
 dev.off()
 
 # ==============================================================================

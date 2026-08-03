@@ -140,7 +140,7 @@ print(
                size = 2, alpha = 0.8) +
     scale_color_manual(values = cc_p, guide = "none") +
     facet_wrap(~ cluster, ncol = 4) +
-    coord_cartesian(xlim = c(24, 35.5), ylim = c(-2.5, 7.5)) +
+    coord_cartesian(xlim = c(30, 34), ylim = c(-2.5, 7.5)) +
     labs(x = "Salinity", y = "Potential Temperature (°C)") +
     theme_bw(base_size = 15) +
     theme(
