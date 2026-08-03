@@ -23,6 +23,10 @@
 
 library(here)
 
+# 出力ディレクトリを作成 / Create every output directory the scripts write to
+source(here("R", "00_dirs.R"))
+ensure_output_dirs()
+
 # ==============================================================================
 # Section 1: RDSファイルの読み込み / Load raw RDS files
 # ==============================================================================

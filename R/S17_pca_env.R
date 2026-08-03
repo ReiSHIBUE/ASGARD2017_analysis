@@ -18,7 +18,7 @@ env_mat <- env_complete[, env_vars]
 
 # Check for zero variance
 cat("\nVariance per variable:\n")
-print(round(apply(env_mat, 2, var), 4))
+print(round(apply(env_mat, 2, stats::var), 4))
 
 # Log-transform skewed variables (nutrients), then scale all
 # NO3, PO4, Sil, NH4, FlECO are right-skewed -> log(x + 1) transform
@@ -1058,6 +1058,14 @@ cat("  PDF: output/survey/beta_diversity/env_C_node_pairwise_heatmap.pdf\n")
 # size = |PC score|, shape = sign (+/-), color = 11 clusters
 # ==============================================================================
 
+# This section is the only part of S17 that needs a basemap. Skip it when no
+# Stadia Maps key is configured so the PCA figures below are still produced.
+# Stadia Maps のキーが無い場合はこの地図セクションのみスキップする。
+if (!nzchar(Sys.getenv("STADIA_MAPS_KEY"))) {
+  message("  STADIA_MAPS_KEY not set — skipping PC-score maps ",
+          "(output/survey/maps/map_PC_scores.pdf).")
+} else {
+
 library(ggmap)
 ggmap::register_stadiamaps(Sys.getenv("STADIA_MAPS_KEY"))
 
@@ -1123,6 +1131,8 @@ for (pc in paste0("PC", 1:9)) {
 dev.off()
 
 cat("Done: output/survey/maps/map_PC_scores.pdf\n")
+
+}  # end of PC-score map section
 
 # ==============================================================================
 # Section: 11クラスター版 PCA biplot + 8変数まとめページ

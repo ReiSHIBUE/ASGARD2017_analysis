@@ -1,16 +1,24 @@
 ### 00_run_all.R
 ### ASGARD 2017 — Run all pipelines with corrected metadata (xlsx)
-### 修正済みメタデータ (xlsx) を使用して全パイプラインを実行し、output/ に出力
+### 修正済みメタデータ (xlsx) を使用して全パイプラインを実行
 ###
 ### Usage:
-###   setwd("~/Desktop/ASGARD2017_analysis")
-###   source("R/00_run_all.R")
+###   source("R/00_run_all.R")     # from the repository root
+###
+### Output goes to output/ and output_p/, the same place the other runners
+### write to. (Earlier versions redirected to output2/ by wrapping pdf() and
+### sink(), but write.csv()/png()/ggsave() were not redirected, so results were
+### split across two trees. If you want to keep a previous run, copy output/ and
+### output_p/ aside before sourcing this file.)
+###
+### NOTE: map scripts (P04, S06, S16, S17, S23) need a Stadia Maps API key in
+### .Renviron:  STADIA_MAPS_KEY=your_key_here
 
 library(here)
 library(readxl)
 
 # ==============================================================================
-# Step 1: Source original setup (loads ASV tables, taxonomy, etc.)
+# Step 1: Source original setup (loads ASV tables, taxonomy, output dirs, etc.)
 # ==============================================================================
 
 source(here("R", "00_setup.R"), echo = FALSE)
@@ -34,49 +42,14 @@ meta_denovo_2 <- meta_denovo_2[, -1]  # drop the rowname column
 message("  New meta_denovo_2: ", nrow(meta_denovo_2), " x ", ncol(meta_denovo_2))
 
 # ==============================================================================
-# Step 3: Override pdf() and sink() to redirect output/ -> output2/
+# Step 3: Script list
+# 変数名は .run_ 接頭辞付き（スクリプトが i / script などを上書きするため）
+# Loop variables are prefixed with .run_ because several scripts assign to
+# short names like `i` and `script` in the global environment.
 # ==============================================================================
 
-original_pdf  <- pdf
-original_sink <- sink
-
-pdf <- function(file = if (onefile) "Rplots.pdf" else "Rplot%03d.pdf", ...,
-                onefile = TRUE) {
-  if (is.character(file)) {
-    file <- sub("/output/", "/output2/", file, fixed = TRUE)
-  }
-  original_pdf(file = file, ..., onefile = onefile)
-}
-
-sink <- function(file = NULL, ...) {
-  if (!is.null(file) && is.character(file)) {
-    file <- sub("/output/", "/output2/", file, fixed = TRUE)
-  }
-  original_sink(file = file, ...)
-}
-
-# ==============================================================================
-# Step 4: Create output2/ subdirectories (in case they don't exist)
-# ==============================================================================
-
-output2_dirs <- c(
-  "output2/heatmaps", "output2/maps", "output2/ternary",
-  "output2/beta_diversity", "output2/dbrda", "output2/boxplots",
-  "output2/survey/heatmaps", "output2/survey/maps",
-  "output2/survey/beta_diversity", "output2/survey/dbrda",
-  "output2/survey/alpha_diversity", "output2/survey/taxonomy",
-  "output2/survey/network"
-)
-
-for (d in output2_dirs) {
-  dir.create(here(d), showWarnings = FALSE, recursive = TRUE)
-}
-
-# ==============================================================================
-# Step 5: Run processing pipeline (P01-P08)
-# ==============================================================================
-
-processing_scripts <- c(
+.run_scripts <- c(
+  # processing pipeline
   "R/P01_data_prep.R",
   "R/P02_ternary_plots.R",
   "R/P03_heatmaps_16S.R",
@@ -84,24 +57,14 @@ processing_scripts <- c(
   "R/P05_beta_diversity_pcoa.R",
   "R/P06_dbrda.R",
   "R/P07_18S_heatmaps.R",
-  "R/P08_esv_heatmap.R"
-)
-
-for (script in processing_scripts) {
-  message("\n", strrep("=", 60))
-  message("Running: ", script)
-  message(strrep("=", 60))
-  tryCatch(
-    source(here(script), echo = FALSE),
-    error = function(e) message("ERROR in ", script, ": ", conditionMessage(e))
-  )
-}
-
-# ==============================================================================
-# Step 6: Run survey pipeline (S01-S10)
-# ==============================================================================
-
-survey_scripts <- c(
+  "R/P08_esv_heatmap.R",
+  "R/P09_cluster_summary.R",
+  "R/P11_env_boxplots.R",
+  "R/P12_genus_bubble.R",
+  "R/P13_ternary_v2.R",
+  "R/P14_station_region_summary.R",
+  "R/TS_diagram_p.R",
+  # survey pipeline
   "R/S01_data_prep.R",
   "R/S02_heatmaps_16S.R",
   "R/S03_seq_depth.R",
@@ -115,36 +78,72 @@ survey_scripts <- c(
   "R/S11_crosstable.R",
   "R/S12_indval.R",
   "R/S13_indval_18S.R",
-  "R/S14_sampling_period.R"
+  "R/S14_sampling_period.R",
+  "R/S15_wSW_misclassification.R",
+  "R/S16_NO3_summary.R",
+  "R/S17_pca_env.R",
+  "R/S18_cluster_specific_ASVs.R",
+  "R/S19_env_boxplots.R",
+  "R/S20_stratification.R",
+  "R/S21_genus_bubble.R",
+  "R/S22_dbo3_waffle.R",
+  "R/S23_dbo3_envmap.R",
+  "R/S25_transect_compare.R",
+  "R/TS_diagram.R",
+  "R/heatmap_watermass.R",
+  # cross-pipeline: P10 also compares processing stations against the survey
+  # stations, so it needs objects from both pipelines and runs last.
+  "R/P10_water_mass.R",
+  "R/comparison_report.R"
 )
 
-for (script in survey_scripts) {
+# ==============================================================================
+# Step 4: Run
+# ==============================================================================
+
+.run_ok  <- logical(length(.run_scripts))
+.run_msg <- character(length(.run_scripts))
+
+for (.run_i in seq_along(.run_scripts)) {
+  .run_this <- .run_scripts[.run_i]
   message("\n", strrep("=", 60))
-  message("Running: ", script)
+  message("Running: ", .run_this)
   message(strrep("=", 60))
 
-  # S04 adds a "Sample" column to meta_asgard, which causes
-  # rownames_to_column(meta_asgard, var = "Sample") in S07 to fail
-  # with a duplicate column name error. Remove it before S07.
-  if (script == "R/S07_alpha_diversity.R" && "Sample" %in% colnames(meta_asgard)) {
-    meta_asgard <- meta_asgard[, colnames(meta_asgard) != "Sample", drop = FALSE]
-  }
+  .run_res <- tryCatch({
+    source(here(.run_this), echo = FALSE)
+    list(ok = TRUE, msg = "")
+  }, error = function(e) {
+    message("ERROR in ", .run_this, ": ", conditionMessage(e))
+    list(ok = FALSE, msg = conditionMessage(e))
+  })
 
-  tryCatch(
-    source(here(script), echo = FALSE),
-    error = function(e) message("ERROR in ", script, ": ", conditionMessage(e))
-  )
+  # a failing script can leave a graphics device or sink open
+  while (dev.cur() > 1) dev.off()
+  while (sink.number() > 0) sink()
+
+  .run_ok[.run_i]  <- .run_res$ok
+  .run_msg[.run_i] <- .run_res$msg
 }
 
 # ==============================================================================
-# Step 7: Restore original pdf() and sink()
+# Step 5: Report — do not claim success when scripts failed
+# 失敗したスクリプトがある場合は成功と報告しない
 # ==============================================================================
 
-pdf  <- original_pdf
-sink <- original_sink
-
 message("\n", strrep("=", 60))
-message("All pipelines complete with corrected metadata.")
-message("Output saved to: output2/")
+message(sprintf("%d / %d scripts completed.", sum(.run_ok), length(.run_ok)))
+
+if (any(!.run_ok)) {
+  message("\nFAILED:")
+  for (.run_i in which(!.run_ok)) {
+    message("  ", .run_scripts[.run_i], ": ", .run_msg[.run_i])
+  }
+  message("\nOutputs from the failed scripts (and anything downstream of them) ",
+          "are missing or stale.")
+} else {
+  message("All pipelines complete. Check output/ and output_p/ for PDFs.")
+}
 message(strrep("=", 60))
 
+invisible(data.frame(script = .run_scripts, ok = .run_ok, message = .run_msg))

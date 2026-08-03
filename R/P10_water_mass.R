@@ -132,6 +132,15 @@ write.csv(mww_p_tab,
 # Section 4: Station comparison — processing vs survey
 # ==============================================================================
 
+# This section is the only part of P10 that needs the *survey* objects. When the
+# processing pipeline is run on its own (00_run_processing.R) they do not exist,
+# so skip the comparison instead of aborting the script.
+# このセクションのみ survey オブジェクトを必要とするため、無い場合はスキップする。
+if (!exists("meta_asgard")) {
+  message("  meta_asgard not found — skipping processing vs survey station ",
+          "comparison (run S01_data_prep.R first to include it).")
+} else {
+
 stn_p <- meta_p %>%
   group_by(station) %>%
   summarise(n_processing = n(),
@@ -158,16 +167,20 @@ write.csv(stn_compare,
                "station_processing_vs_survey.csv"),
           row.names = FALSE)
 
+}  # end of survey-comparison section
+
 # ==============================================================================
 # Section 5: Log summary
 # ==============================================================================
 
 message("\nP10_water_mass.R: done.")
 message(sprintf("  MWW samples in processing: %d / 78", nrow(mww_p)))
-message(sprintf("  Stations shared: %d  | proc-only: %d  | survey-only: %d",
-                sum(stn_compare$shared),
-                sum(stn_compare$in_processing & !stn_compare$in_survey),
-                sum(!stn_compare$in_processing & stn_compare$in_survey)))
+if (exists("stn_compare")) {
+  message(sprintf("  Stations shared: %d  | proc-only: %d  | survey-only: %d",
+                  sum(stn_compare$shared),
+                  sum(stn_compare$in_processing & !stn_compare$in_survey),
+                  sum(!stn_compare$in_processing & stn_compare$in_survey)))
+}
 message("  CSV: output_p/cluster_summary/processing_cluster_watermass_counts.csv")
 message("  CSV: output_p/cluster_summary/processing_cluster_watermass_percent.csv")
 message("  CSV: output_p/cluster_summary/processing_cluster_watermass_test_results.csv")
