@@ -255,9 +255,11 @@ print(p2s7)   # Page 7: (A) standalone
 print(p1s7)   # Page 8: (B) standalone
 
 # Page 9: combined — rasterize each standalone panel, then arrange side by side
+# (B) title on this combined page only, without the "(3 bloom classes)" suffix
+p1s7_p9 <- p1 + labs(title = "(B) ASVs by Class")
 .tf_a <- tempfile(fileext = ".png"); .tf_b <- tempfile(fileext = ".png")
 png(.tf_a, width = 1100, height = 1000, res = 130); print(p2s7); dev.off()
-png(.tf_b, width = 1100, height = 1000, res = 130); print(p1s7); dev.off()
+png(.tf_b, width = 1100, height = 1000, res = 130); print(p1s7_p9); dev.off()
 grid.arrange(grid::rasterGrob(png::readPNG(.tf_a), interpolate = TRUE),
              grid::rasterGrob(png::readPNG(.tf_b), interpolate = TRUE), nrow = 1)
 
