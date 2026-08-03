@@ -145,3 +145,25 @@ output/                    # 📄 survey PDFs + shared figures
   survey/                  # 📄 survey PDFs
 output_p/                  # 📄 processing PDFs
 ```
+
+## 🐳 Reproducible run (Docker + GitHub Actions)
+
+The `Dockerfile` pins R 4.5.1, the system libraries and a dated CRAN snapshot,
+so the pipeline can be re-run from scratch on any machine:
+
+```bash
+docker build -t asgard2017 .
+docker run --rm -e STADIA_MAPS_KEY -e HOME=/tmp \
+  -v "$PWD:/work" -u "$(id -u):$(id -g)" asgard2017
+```
+
+That runs `docker/run_pipeline.R`, which sources `R/00_run_all.R`, writes
+`output/repro/script_status.csv` and `output/repro/key_numbers.txt`, and exits
+non-zero if any script failed — except the map scripts (`P04`, `S06`, `S16`,
+`S23`) when no `STADIA_MAPS_KEY` is set, since those cannot work without a key.
+
+The same container runs in CI (`.github/workflows/pipeline.yml`) on every push
+and pull request, monthly on a schedule, and on demand via *Run workflow*. Each
+run uploads the regenerated `output/` and `output_p/` trees as the
+`pipeline-output` artifact. Add `STADIA_MAPS_KEY` as a repository secret to
+include the maps.
