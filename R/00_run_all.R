@@ -84,9 +84,7 @@ processing_scripts <- c(
   "R/P05_beta_diversity_pcoa.R",
   "R/P06_dbrda.R",
   "R/P07_18S_heatmaps.R",
-  "R/P08_esv_heatmap.R",
-  "R/P15_alpha_diversity.R",
-  "R/P16_fraction_rank_order.R"
+  "R/P08_esv_heatmap.R"
 )
 
 for (script in processing_scripts) {
@@ -118,10 +116,8 @@ survey_scripts <- c(
   "R/S12_indval.R",
   "R/S13_indval_18S.R",
   "R/S14_sampling_period.R",
-  # need objects from both pipelines
-  # (processing ASV groups x survey sites, and P17's survey-weighted page)
-  "R/S26_processing_cluster_asv_map.R",
-  "R/P17_fraction_logratio.R"
+  # needs objects from both pipelines, so it runs after the survey scripts
+  "R/P18_accumulation_curve.R"
 )
 
 for (script in survey_scripts) {
