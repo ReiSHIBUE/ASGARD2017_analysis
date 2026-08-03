@@ -140,7 +140,7 @@ h3_74 <- heatmap.2(
   col       = viridis,
   margins   = c(15, 15),
   scale     = "none",
-  main      = "ASGARD_bray/ward.D2 (74 samples)",
+  main      = "ASGARD_bray/ward.D (74 samples)",
   trace     = "none",
   cexCol    = 0.2, # 列の文字サイズ / column label size
   cexRow    = 0.2, # 行の文字サイズ / row label size
