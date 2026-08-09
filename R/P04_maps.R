@@ -208,9 +208,10 @@ print(
                size = 3.5, alpha = 0.8) +
     scale_color_manual(values = cc_p, guide = "none") +
     facet_grid(depth_type ~ cluster) +
-    theme(strip.text = element_text(face = "bold", size = 20),
-          axis.title = element_text(size = 20, face = "bold"),
-          axis.text  = element_text(size = 13))
+    theme(strip.text  = element_text(face = "bold", size = 20),
+          axis.title  = element_text(size = 20, face = "bold"),
+          axis.text   = element_text(size = 13),
+          axis.text.x = element_text(size = 13, angle = 45, hjust = 1))
 )
 
 dev.off()
