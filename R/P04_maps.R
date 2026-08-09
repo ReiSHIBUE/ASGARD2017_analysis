@@ -137,7 +137,7 @@ a_map_p$cluster    <- factor(as.character(clusnum_p[rownames(a_map_p)]),
                              labels = clus_labels_p)
 a_map_p$depth_type <- factor(a_map_p$depth_type,
                              levels = c("surf", "mid", "bottom"))
-a_map_p$division2  <- factor(ifelse(a_map_p$cluster == "1",
+a_map_p$division2  <- factor(ifelse(a_map_p$cluster == clus_levels_p[1],
                                     "Free-living", "Particle-associated"),
                              levels = c("Free-living", "Particle-associated"))
 a_map_p <- a_map_p[!is.na(a_map_p$lat) & !is.na(a_map_p$lon), ]

@@ -25,7 +25,7 @@ df_p$cluster   <- factor(as.character(clusnum_p[rownames(df_p)]),
                          levels = c("1", "2", "3", "4"),
                          labels = clus_labels_p)
 df_p$division2 <- factor(
-  ifelse(df_p$cluster == "1", "Free-living", "Particle-associated"),
+  ifelse(df_p$cluster == clus_levels_p[1], "Free-living", "Particle-associated"),
   levels = c("Free-living", "Particle-associated"))
 
 cc_p <- setNames(c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3"),
@@ -78,7 +78,7 @@ for (i in seq_along(env_plot_vars)) {
     theme(strip.text  = element_text(face = "bold", size = 14),
           axis.title  = element_text(size = 14),
           axis.text.y = element_text(size = 11),
-          axis.text.x = element_text(angle = 45, hjust = 1, size = 11))
+          axis.text.x = element_text(size = 11))
 }
 
 print(gridExtra::grid.arrange(grobs = six_plot_list, ncol = 3))
@@ -128,7 +128,7 @@ pca_scores_p$bloom_index      <- 1 - rescale01(pca_scores_p$PC1)
 pca_scores_p$autotrophy_index <- rescale01(pca_scores_p$PC2)
 
 pca_scores_p$division2 <- factor(
-  ifelse(pca_scores_p$cluster == "1", "Free-living", "Particle-associated"),
+  ifelse(pca_scores_p$cluster == clus_levels_p[1], "Free-living", "Particle-associated"),
   levels = c("Free-living", "Particle-associated"))
 
 # Bring raw vars back for the dot-size plots
